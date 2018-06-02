@@ -1,0 +1,114 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
+configurations {
+    all*.exclude group: 'com.android.support'
+}
+android {
+    compileSdkVersion 'android-P'
+    defaultConfig {
+        applicationId "na.kephas.kitvei"
+        minSdkVersion 14
+        targetSdkVersion 28
+        versionCode 1
+        versionName "0.1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        resConfigs "en"
+
+    }
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    packagingOptions {
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'LICENSE.txt'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/NOTICE'
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+        }
+    }
+}
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+}
+
+dependencies {
+    def lifecycle_version  = "2.0.0-alpha1"
+    def room_version  = "2.0.0-alpha1"
+    def paging_version = "2.0.0-alpha1"
+    def picasso_version = "2.71828"
+
+    // Android support library
+    def androidx_verison = "1.0.0-alpha1"
+    implementation "com.google.android.material:material:$androidx_verison"
+    implementation "androidx.appcompat:appcompat:$androidx_verison"
+    implementation "androidx.recyclerview:recyclerview:$androidx_verison"
+    implementation "androidx.constraintlayout:constraintlayout:1.1.0"
+
+    // ViewModel-LiveData
+    implementation "androidx.lifecycle:lifecycle-extensions:$lifecycle_version"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
+    kapt "androidx.lifecycle:lifecycle-compiler:$lifecycle_version"
+
+    // Navigation
+    /*def nav_version = "1.0.0-alpha01"
+    implementation "android.arch.navigation:navigation-fragment-ktx:$nav_version"
+    implementation "android.arch.navigation:navigation-ui-ktx:$nav_version"
+    androidTestImplementation "android.arch.navigation:navigation-testing-ktx:$nav_version"*/
+
+    // Room
+    implementation "androidx.room:room-runtime:$room_version"
+    kapt "androidx.room:room-compiler:$room_version"
+
+    // Paging
+    implementation "androidx.paging:paging-runtime:$paging_version"
+
+    // Image library
+    implementation "com.squareup.picasso:picasso:$picasso_version"
+    implementation 'com.flaviofaria:kenburnsview:1.0.7'
+
+    // Leak Canary
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:1.5.4'
+    releaseImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.5.4'
+
+    // Tests
+    testImplementation 'junit:junit:4.12'
+    testImplementation "androidx.room:room-testing:$room_version"
+    testImplementation "androidx.paging:paging-common:$paging_version"
+
+    def robolectric_version = '3.4.2'
+    testImplementation "org.robolectric:robolectric:$robolectric_version"
+    androidTestImplementation 'androidx.test:rules:1.1.0-alpha3'
+    androidTestImplementation 'androidx.test:runner:1.1.0-alpha3'
+    androidTestImplementation ('androidx.test.espresso:espresso-core:3.1.0-alpha3', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+
+    def coroutines_version = '0.22.5'
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version"
+
+    // FPS
+    debugImplementation "com.github.brianPlummer:tinydancer:0.1.2"
+    releaseImplementation "com.github.brianPlummer:tinydancer-noop:0.1.2"
+    testImplementation "com.github.brianPlummer:tinydancer-noop:0.1.2"
+}

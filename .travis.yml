@@ -1,0 +1,57 @@
+language: android
+android:
+  components:
+  - tools
+  - tools
+  - platform-tools
+  - build-tools-27.0.3
+  - android-28
+  - extra-android-m2repository
+  - extra-google-m2repository
+  - extra-android-support
+  licenses:
+  - android-sdk-license-.+
+before_install:
+- yes | sdkmanager "platforms;android-27" # workaround for accepting the license
+- if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
+    openssl aes-256-cbc -K $encrypted_bb4bdb4a8207_key -iv $encrypted_bb4bdb4a8207_iv -in "$PWD/.travis/secrets.tar.enc" -out secrets.tar -d;
+    tar xf secrets.tar;
+    mv release.keystore "$HOME/.android";
+  fi
+- git clone https://github.com/urho3d/android-ndk.git $HOME/android-ndk-root
+- export ANDROID_NDK_HOME=$HOME/android-ndk-root
+- mkdir "$ANDROID_HOME/licenses" || true
+- echo -e "\n8933bad161af4178b1185d1a37fbf41ea5269c55" > "$ANDROID_HOME/licenses/android-sdk-license"
+- echo -e "\n84831b9409646a918e30573bab4c9c91346d8abd" > "$ANDROID_HOME/licenses/android-sdk-preview-license"
+script: ".travis/build.sh"
+before_cache:
+- rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+- rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+cache:
+  directories:
+  - "$HOME/.gradle/caches/"
+  - "$HOME/.gradle/wrapper/"
+  - "$HOME/.android/build-cache"
+deploy:
+- provider: releases
+  api_key:
+    secure: "HfvjHvt4l7A8sgfRYVY8I0/UHQ5lD0Y9R4/75W/UMlzkjJ6pTzC7JzM8s95wQHCPBJtdnr+sQHlZdxYIMZlU4W9qJsWjCRumrQBYwQqe+usjh4Td+4RvdAQb9Lo0O5WaX2pO5dtlHwWimJQl1F1rnzORAktPRQHYIGK9CvLzZrlylh9HdJT8zALK56l0oVK6EXUDPNJ0TsxuegwqB/abJ5eeg
+    vA85J16RzO0VVcEtBSJEPmJhl6V2aielhb649vYj9Ol9ic7XUHx8NTzANe4d8lg9Gzvu7rij2GkYAtIjGuP3s6Ixr970xcGKUXyZqapa+J97JiUPrtMgbB9Dxp15I9vT1D6nnb1/xuvl4V8JWHVd8SsQaHMfevtP853BxCb5MNB9gqcqZDNKJXlAH6fDAIGmjwhEN7LRUCI+KR7K2v+kfIRx/2NIxEeBrZ5T
+    LkzkJ+iWhy/V/K6Hi86lBNj2iLPVmyKFFAaa+rlbS5Rt1Er1kSXjIvqrkki1XS0vkB8hkrzpJfZL7xJxqihK+3AMB94CWIswKgOr62VOTOAUXYGrm0s2GhY7ke4LiWdBEkUO+xpWOLFMa6+6FROPjIylNAr5jQpNRBLZogpaW2A434dR7Vnay4MSBzN5R9zuOnYLoA4LbzeyomSDqU4cmZnIbk8+es00AiZg
+    HZk4lql09U="
+  file: kitvei-v*.apk
+  file_glob: true
+  skip_cleanup: true
+  on:
+    tags: true
+    repo: inshiro/kitvei
+env:
+  global:
+  - secure: "osmOr0Ihd2b3SLKhqCmAWSXifkkdBVFtvx7YTRSd7tZEpdxpz7zBZEy/aetpTYYyBCHRQXYieUFfBmTJNCKgxNJ3oH20zIZX8x7B30Q3yJd/6t5W5Md708QEuopHFBovC2DCaWBb6G/bjj8qDE8xyOMQgI6X1dinLKsmrp+IETlSu/R5MnzD+lSjvH7xny/2P0QgYaAvveCKJFxJlhug3eVb2
+    G4AblhqJz8DMCo+HpkVxZ5jXHf+ulOr2OIJhuxL2ANoLeQW/eGoa478ZA85GN3x8SKO9uCR82imaJjgxdnbgfG2gUbqN+dkKrpate/ki79+fXtQWZjAr7WYk8VVjwGVtzR+BS9pW6ltDuR5qVjT8lKcqtmjR7cSxjv1pzFGlm8IxPQhyLj87pdDJblBQ0pF1JXtLRCfdk5Helbcceh8ox2pyfmHjkFSwBBQ0
+    JecJKWyskVbJBErnkr4o5FkCI2ir17BN7ms9twf2vpSeoZWE2ZsTUNlk3APy9YIEeTsQlCBDwUSDUHAJJUKbldaIaw8kRXAj2UUxMX3wuh+/5ghZBfhaTapXzy3MtDv3Z+pxWRnNyyvfnAi5OPnyHbdbEfgDwCqFgSauBquxTGGj8uzDYNU5DzPwjeoiYcfDrJLEGzqlPWBRylPIqfcpt6xrjGidkDt8OnkY
+    nR55jzAGM0="
+  - secure: "BfCjtckSvP9ETc62A70XjG+CoXMdL/dUXBxq4SyXZOlKSjwlWtHYux3uy/XIP+HAU6ukG3LPvuh4RScMi0NpBDVwppX1Fg5tX3nWw8XOHvlorZBFY38YLjAL4gB5Z1Vn7Pz32plX/+qZ4ev0P19dQofUMIzbdTORCLRZgc0b118DWq+elvdBkuxZLXi2YkQgucuk8fhd1D7E2K2ZWjP6P6vmM
+   i/waTpNfR698WYKTGezkbpY/Yt/7uLHU6e6zKi3ULI9Mdem3mkqn7EeJ+/O4oFpWFFau8DatEgShpJmtSAT3KetBqIivQGlxeNyRqdZgrnTUIWAJFq51XYqRRc0X7L/crx7rb/tUxuupoWMYbHGEi7L0JdOX5MLfE4JeCaE+TGGMd0ODDZA94fxmUcJE5DbOq+yfbcbm5ajWt2d+3Tnst9MRS+Jiy3TSMNlz
+   ncqdI/bwo5jKuC3oZewATaaTKFmxJAE3Vp/iYKKq0iBFRp2aFtuw/Xq8RWi+AVcce9UB3SilUy59sPlBUsJ0XDnbcX4A2qNAa+1fG9nv8BVFOlz6fI8XiU6GrD10S1jgJkDb2X++CJ3//iljYOtS8SJKFhdKWUGZXa7K+gF8fId+CcrMt2TCie7bSitYFsLXInosjR7WHtdlN/VOdLLqyTYh65PsoNygFHPg
+   PdoeORFVbc="

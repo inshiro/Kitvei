@@ -1,0 +1,5 @@
+<resources>
+    <!-- Tablet screen -->
+    <dimen name="search_title_size">20sp</dimen>
+    <dimen name="search_verse_size">18sp</dimen>
+</resources>
