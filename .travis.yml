@@ -45,6 +45,8 @@ deploy:
   on:
     tags: true
     repo: inshiro/Kitvei
+    branch: master
+    condition: "-z $TRAVIS_TAG"
 env:
   global:
   - secure: "gg2Z6DwXg17TMuun7jZLrW5aFlzneqYxQf0+8YRAHAswksqDf56le7J4yKkDaoxKYccXXg974AjflN9xwr2F0fLgsnJRZCjuevNH6pi8skpzVZGmpvdb2wsULtvh/rttd1dsZdMlJF5Ats8QoSCru89A6UJk4Z+nDUM15m2l9V3Yrk6J8a9g65zsvdKojfcmqETfO830QEv5dHbuL0WGt4kYb
