@@ -3,7 +3,7 @@
 #git fetch --unshallow #required for commit count
 
 if ! [ -z "$TRAVIS_TAG" ]; then
-    ./gradlew clean assembleRelease
+    ./gradlew clean assembleStandardRelease
 
     TOOLS="$(ls -d ${ANDROID_HOME}/build-tools/* | tail -1)"
     export ARTIFACT="kitvei-${TRAVIS_TAG}.apk"
