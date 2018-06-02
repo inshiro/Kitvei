@@ -1,7 +1,9 @@
 package na.kephas.kitvei.activity
 
+import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
@@ -90,6 +92,12 @@ class MainActivity : AppCompatActivity(),
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            val td: ActivityManager.TaskDescription = ActivityManager.TaskDescription("Kitvei HaKodesh")
+            setTaskDescription(td)
+        }
+
         launch(backgroundPool, parent = rootParent) {
 
             // Drawer
@@ -119,7 +127,7 @@ class MainActivity : AppCompatActivity(),
         // Toolbar Title
         toolbarTitle.apply {
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 20.5f)
-            setTypeface(Typeface.SANS_SERIF, Typeface.BOLD)
+            setTypeface(Typeface.SANS_SERIF, Typeface.NORMAL)
             setTextColor(ResourcesCompat.getColor(resources, android.R.color.background_light, null))
         }
         blink(toolbarTitle, 4, 1000)
@@ -208,7 +216,7 @@ class MainActivity : AppCompatActivity(),
     }
 
     override fun onStop() {
-        super.onStop() // is.gd/sS2BEd
+        super.onStop()
         prefs.VP_Position = viewPagerPosition
     }
 

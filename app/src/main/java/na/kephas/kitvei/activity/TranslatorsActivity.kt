@@ -39,7 +39,7 @@ class TranslatorsActivity : AppCompatActivity() {
         supportActionBar?.setDisplayShowTitleEnabled(false)
 
         val cTitle = R.string.translators_title
-        val cText = R.string.translators_text
+        //val cText = R.string.translators_text
         val cDrawable = R.drawable.translators_readers
 
         toolbar_layout.title = getString(cTitle).toString()

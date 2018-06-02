@@ -33,7 +33,6 @@ class MainActivityTest {
 
     @Test
     fun swipeUntilEnd() {
-        // is.gd/PXpDMz
         for (a in prefs.VP_Position..vm.getAll().size)
             onView(allOf(withId(R.id.mainViewPager), isCompletelyDisplayed())).perform(swipeLeft())
     }

@@ -75,7 +75,7 @@ class MyViewModel(app: Application) : AndroidViewModel(app) {
        }.await()
     }
 
-    // RV Cannot be inside RSV https://is.gd/lra3Qy else paging will be on UI thread for some reason
+    // RV Cannot be inside RSV is.gd/lra3Qy else paging will be on UI thread for some reason
     suspend fun searchList(str: String = ""): LiveData<PagedList<Bible>>? =
             withContext(backgroundPool) {
                 bibleList = LivePagedListBuilder(bibleDao.searchVerses(str),

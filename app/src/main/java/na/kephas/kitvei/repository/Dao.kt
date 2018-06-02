@@ -26,6 +26,7 @@ data class Bible (
         @Query("SELECT * from Bible GROUP BY book_id, chapter_id")
         fun actualAll(): List<Bible>
 
+
         @Query("SELECT * FROM Bible WHERE REPLACE(REPLACE(verse_text, '[', ''), ']','') LIKE '%' || :search || '%'")
         fun searchVerses(search: String?): DataSource.Factory<Int, Bible>
 
