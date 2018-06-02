@@ -55,7 +55,6 @@ deploy:
     tags: true
     repo: inshiro/Kitvei
     branch: master
-    condition: "-z $TRAVIS_TAG"
 
 env:
   global:
