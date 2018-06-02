@@ -1,4 +1,5 @@
 language: android
+
 android:
   components:
   - tools
@@ -11,27 +12,33 @@ android:
   - extra-android-support
   licenses:
   - android-sdk-license-.+
+
 before_install:
-- yes | sdkmanager "platforms;android-27" # workaround for accepting the license
-- if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
-    openssl aes-256-cbc -k $STORE_PASS -in "$PWD/.travis/secrets.tar.enc" -out secrets.tar -d;
-    tar xf secrets.tar;
-    mv release.keystore "$HOME/.android";
-  fi
-- git clone https://github.com/urho3d/android-ndk.git $HOME/android-ndk-root
-- export ANDROID_NDK_HOME=$HOME/android-ndk-root
-- mkdir "$ANDROID_HOME/licenses" || true
-- echo -e "\n8933bad161af4178b1185d1a37fbf41ea5269c55" > "$ANDROID_HOME/licenses/android-sdk-license"
-- echo -e "\n84831b9409646a918e30573bab4c9c91346d8abd" > "$ANDROID_HOME/licenses/android-sdk-preview-license"
+  - yes | sdkmanager "platforms;android-27" # workaround for accepting the license
+  - chmod +x build.sh
+  - if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
+      openssl aes-256-cbc -k $STORE_PASS -in "$PWD/.travis/secrets.tar.enc" -out secrets.tar -d;
+      tar xf secrets.tar;
+      mv release.keystore "$HOME/.android";
+    fi
+  - git clone https://github.com/urho3d/android-ndk.git $HOME/android-ndk-root
+  - export ANDROID_NDK_HOME=$HOME/android-ndk-root
+  - mkdir "$ANDROID_HOME/licenses" || true
+  - echo -e "\n8933bad161af4178b1185d1a37fbf41ea5269c55" > "$ANDROID_HOME/licenses/android-sdk-license"
+  - echo -e "\n84831b9409646a918e30573bab4c9c91346d8abd" > "$ANDROID_HOME/licenses/android-sdk-preview-license"
+
 script: ".travis/build.sh"
+
 before_cache:
-- rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
-- rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+
 cache:
   directories:
-  - "$HOME/.gradle/caches/"
-  - "$HOME/.gradle/wrapper/"
-  - "$HOME/.android/build-cache"
+    - "$HOME/.gradle/caches/"
+    - "$HOME/.gradle/wrapper/"
+    - "$HOME/.android/build-cache"
+
 deploy:
 - provider: releases
   api_key:
@@ -47,6 +54,7 @@ deploy:
     repo: inshiro/Kitvei
     branch: master
     condition: "-z $TRAVIS_TAG"
+
 env:
   global:
   - secure: "gg2Z6DwXg17TMuun7jZLrW5aFlzneqYxQf0+8YRAHAswksqDf56le7J4yKkDaoxKYccXXg974AjflN9xwr2F0fLgsnJRZCjuevNH6pi8skpzVZGmpvdb2wsULtvh/rttd1dsZdMlJF5Ats8QoSCru89A6UJk4Z+nDUM15m2l9V3Yrk6J8a9g65zsvdKojfcmqETfO830QEv5dHbuL0WGt4kYb
