@@ -6,21 +6,74 @@
     android:layout_height="match_parent"
     tools:context=".activity.MainActivity">
 
+    <na.kephas.kitvei.widget.NestedScrollAppBarLayout
+        android:id="@+id/fragment_home_appBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorPrimary"
+        android:theme="@style/Theme.MyApp.Toolbar">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_scrollFlags="scroll|enterAlways">
+
+            <na.kephas.kitvei.widget.StatusBarView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:sbv_fill_in_mode="true" />
+
+            <androidx.appcompat.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="?attr/colorPrimary"
+                app:popupTheme="@style/AppTheme.PopupOverlay"
+                tools:ignore="UnusedAttribute">
+
+
+                <TextView
+                    android:id="@+id/toolbarTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="?selectableItemBackground"
+                    android:gravity="start"
+                    android:textAlignment="viewStart"
+                    android:textSize="20sp"
+                    tools:text="TITLE" />
+
+                <androidx.appcompat.widget.SearchView
+                    android:id="@+id/toolbarSearchView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:imeOptions="flagNoExtractUi"
+                    android:visibility="gone"
+                    app:actionViewClass="androidx.appcompat.widget.SearchView" />
+
+            </androidx.appcompat.widget.Toolbar>
+
+
+        </LinearLayout>
+
+    </na.kephas.kitvei.widget.NestedScrollAppBarLayout>
+    <!--
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
-        android:layout_height="?android:attr/actionBarSize">
-
+        android:paddingTop="24dp"
+        android:layout_height="72dp"
+        android:fitsSystemWindows="true">
+ ?android:attr/actionBarSize"
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?attr/colorPrimary"
-            android:elevation="7dp"
+            android:elevation="4dp"
             android:theme="@style/Theme.MyApp.Toolbar"
             app:contentInsetStart="@dimen/second_keyline"
             app:layout_behavior="@string/appbar_scrolling_view_behavior"
-            app:layout_collapseMode="pin"
             app:layout_scrollFlags="scroll|enterAlways|snap"
             app:popupTheme="@style/AppTheme.PopupOverlay">
 
@@ -34,7 +87,7 @@
                 android:textAlignment="viewStart"
                 android:textSize="20sp"
                 tools:text="TITLE" />
-            <!--
+
                         <ImageButton
                             android:id="@+id/toolbarTitleHint"
                             android:layout_width="wrap_content"
@@ -42,26 +95,25 @@
                             android:background="@android:color/transparent"
                             android:clickable="false"
                             android:src="@drawable/ic_arrow_drop_down_black_24dp"
-                            android:visibility="gone" /> -->
+                            android:visibility="gone" />
 
             <androidx.appcompat.widget.SearchView
                 android:id="@+id/toolbarSearchView"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:imeOptions="flagNoExtractUi"
                 android:visibility="gone"
                 app:actionViewClass="android.support.v7.widget.SearchView" />
         </androidx.appcompat.widget.Toolbar>
 
     </com.google.android.material.appbar.AppBarLayout>
-
+-->
     <androidx.viewpager.widget.ViewPager
         android:id="@+id/mainViewPager"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
-    <!--
-            android:background="@android:color/white" -->
+
     <androidx.cardview.widget.CardView xmlns:card_view="http://schemas.android.com/apk/res-auto"
         android:id="@+id/topStuff"
         android:layout_width="match_parent"
@@ -99,88 +151,10 @@
             <androidx.viewpager.widget.ViewPager
                 android:id="@+id/viewpager"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+                android:layout_height="match_parent" />
             <!-- android:background="?android:attr/colorBackground" -->
         </LinearLayout>
 
     </androidx.cardview.widget.CardView>
-    <!--
-        <androidx.core.widget.NestedScrollView
-            android:id="@+id/rvNestedScrollView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:clipToPadding="false"
-            android:fadeScrollbars="true"
-            android:fadingEdge="vertical"
-            android:fillViewport="true"
-            android:isScrollContainer="true"
-            android:overScrollMode="ifContentScrolls"
-            android:scrollbarSize="2dp"
-            android:scrollbarThumbVertical="@drawable/scrollbar_color"
-            android:scrollbars="vertical"
-            android:visibility="gone"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior"
-            tools:context=".activity.MainActivity"
-            tools:showIn="@layout/activity_main_content" />
 
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:clipToPadding="false"
-            android:fadeScrollbars="true"
-            android:fadingEdge="vertical"
-            android:isScrollContainer="true"
-            android:layoutDirection="locale"
-            android:visibility="gone"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior" />
-    -->
-
-    <!--
-        android:overScrollMode="ifContentScrolls"
-        android:scrollbarSize="2dp"
-        android:scrollbarStyle="outsideOverlay"
-        android:scrollbarThumbVertical="@drawable/scrollbar_color"
-        android:scrollbars="vertical"
-            app:backgroundTint="@color/colorPrimary"
-
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab_back"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|start"
-        android:layout_margin="@dimen/fab_margin"
-        app:srcCompat="@drawable/ic_navigate_before_black_24dp" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab_next"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_anchor="@id/bar"
-        android:src="@drawable/ic_navigate_next_black_24dp" />
-        -->
-    <!--
-
-        <com.google.android.material.bottomappbar.BottomAppBar
-            android:id="@+id/bottomAppBar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:backgroundTint="@color/colorPrimary"
-            android:theme="@style/AppTheme.AppBarOverlay.Transparent"
-            app:hideOnScroll="true"
-            app:navigationIcon="@drawable/ic_drag_handle_white_24dp">
-
-            <TextView
-                android:id="@+id/toolbarTitle"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:foreground="?selectableItemBackground"
-                android:background="?selectableItemBackground"
-                android:gravity="start"
-                tools:text="TITLE" />
-        </com.google.android.material.bottomappbar.BottomAppBar>
-    -->
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

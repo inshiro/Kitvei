@@ -3,16 +3,20 @@
     <style name="AppTheme" parent="Theme.GuidelinesCompat.Light.DarkToolbar.NoActionbar">
         <!-- Attributes specific for SDK 21 and up  -->
         <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorPrimaryDark">@color/colorPrimary</item>
         <item name="colorAccent">@color/colorAccent</item>
-        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
 
-        <item name="android:navigationBarColor">@color/colorPrimaryDark</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowTranslucentNavigation">@bool/translucentNavBar</item>
     </style>
 
 </resources>
 
     <!--
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:navigationBarColor">@color/colorPrimaryDark</item>
+
+
 <item name="android:statusBarColor">@android:color/transparent</item>
 
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>

@@ -16,8 +16,4 @@ class HowtoActivity : AppCompatActivity() {
 
     }
 
-    override fun onPause() {
-        super.onPause()
-        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
-    }
 }

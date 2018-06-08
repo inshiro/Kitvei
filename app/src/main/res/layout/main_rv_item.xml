@@ -10,8 +10,8 @@
     android:gravity="start"
     android:textAlignment="viewStart"
     android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-    android:textSize="20sp"
+    android:textSize="24sp"
     android:soundEffectsEnabled="false"
-    android:lineSpacingMultiplier="1.14"
+    android:lineSpacingMultiplier="1.17"
     android:textIsSelectable="false"
     tools:text="In the beginning" />

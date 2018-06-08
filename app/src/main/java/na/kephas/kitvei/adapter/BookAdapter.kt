@@ -7,20 +7,12 @@ import android.view.ViewGroup
 import android.widget.Filter
 import android.widget.Filterable
 import android.widget.TextView
-import kotlinx.android.synthetic.main.book_item.view.book_textView
 import na.kephas.kitvei.R
 
 class BookAdapter(val context: Context, var items: List<String>) : androidx.recyclerview.widget.RecyclerView.Adapter<BookAdapter.ViewHolder>(), Filterable {
     private var mClickListener: ItemClickListener? = null
-    private var mFilteredList: List<String>
-    private var backup: List<String>
-
-    init {
-        mFilteredList = ArrayList()
-        backup = ArrayList()
-        mFilteredList = items
-        backup = items
-    }
+    private var mFilteredList = items
+    private var backup = items
 
     override fun getItemCount(): Int {
         return items.size
@@ -35,7 +27,7 @@ class BookAdapter(val context: Context, var items: List<String>) : androidx.recy
     }
 
     inner class ViewHolder(view: View) : androidx.recyclerview.widget.RecyclerView.ViewHolder(view), View.OnClickListener {
-        internal val bookTextView: TextView = view.book_textView
+        internal val bookTextView: TextView = view.findViewById(R.id.book_textView)
 
         init {
             itemView.setOnClickListener(this)
@@ -44,7 +36,7 @@ class BookAdapter(val context: Context, var items: List<String>) : androidx.recy
         override fun onClick(view: View) {
             if (mClickListener != null)
                 mClickListener!!.onItemClick(view,
-                        backup.indexOfFirst { it == view.book_textView.text.toString() }
+                        backup.indexOfFirst { it == bookTextView.text.toString() }
                 )
 
         }

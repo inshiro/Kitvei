@@ -6,13 +6,13 @@ configurations {
     all*.exclude group: 'com.android.support'
 }
 android {
-    compileSdkVersion 'android-P'
+    compileSdkVersion 28
     defaultConfig {
         applicationId "na.kephas.kitvei"
         minSdkVersion 14
         targetSdkVersion 28
-        versionCode 1
-        versionName "0.1.0"
+        versionCode 2
+        versionName "0.1.4"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         resConfigs "en"
 
@@ -55,19 +55,17 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 }
 
 dependencies {
-    def lifecycle_version  = "2.0.0-alpha1"
-    def room_version  = "2.0.0-alpha1"
-    def paging_version = "2.0.0-alpha1"
-    def picasso_version = "2.71828"
 
     // Android support library
     def androidx_verison = "1.0.0-alpha1"
     implementation "com.google.android.material:material:$androidx_verison"
     implementation "androidx.appcompat:appcompat:$androidx_verison"
     implementation "androidx.recyclerview:recyclerview:$androidx_verison"
+    implementation "androidx.core:core-ktx:$androidx_verison"
     implementation "androidx.constraintlayout:constraintlayout:1.1.0"
 
     // ViewModel-LiveData
+    def lifecycle_version  = "2.0.0-alpha1"
     implementation "androidx.lifecycle:lifecycle-extensions:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
     kapt "androidx.lifecycle:lifecycle-compiler:$lifecycle_version"
@@ -79,15 +77,23 @@ dependencies {
     androidTestImplementation "android.arch.navigation:navigation-testing-ktx:$nav_version"*/
 
     // Room
+    def room_version  = "2.0.0-alpha1"
     implementation "androidx.room:room-runtime:$room_version"
     kapt "androidx.room:room-compiler:$room_version"
 
     // Paging
+    def paging_version = "2.0.0-alpha1"
     implementation "androidx.paging:paging-runtime:$paging_version"
 
     // Image library
+    def picasso_version = "2.71828"
     implementation "com.squareup.picasso:picasso:$picasso_version"
     implementation 'com.flaviofaria:kenburnsview:1.0.7'
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+
+    def coroutines_version = '0.22.5'
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version"
 
     // Leak Canary
     debugImplementation 'com.squareup.leakcanary:leakcanary-android:1.5.4'
@@ -105,11 +111,6 @@ dependencies {
     androidTestImplementation ('androidx.test.espresso:espresso-core:3.1.0-alpha3', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-
-    def coroutines_version = '0.22.5'
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version"
 
     // FPS
     debugImplementation "com.github.brianPlummer:tinydancer:0.1.2"

@@ -3,7 +3,7 @@ package na.kephas.kitvei.activity
 import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
+import android.content.res.Configuration
 import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
@@ -13,50 +13,44 @@ import android.view.*
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.view.inputmethod.InputMethodManager
-
 import androidx.annotation.ColorRes
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
+import androidx.core.app.ActivityManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.text.TextUtilsCompat
 import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
-import androidx.core.widget.NestedScrollView
 import androidx.lifecycle.ViewModelProviders
+import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager.widget.ViewPager
-
 import com.flaviofaria.kenburnsview.KenBurnsView
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.tabs.TabLayout
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.activity_main_content.*
-import kotlinx.coroutines.experimental.*
-import java.util.Locale
-
 import kotlinx.coroutines.experimental.android.UI
-
-import na.kephas.kitvei.DedicatoryActivity
+import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.delay
+import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.withContext
+import na.kephas.kitvei.*
+import na.kephas.kitvei.adapter.MainAdapter
+import na.kephas.kitvei.adapter.MainViewPagerAdapter
+import na.kephas.kitvei.adapter.SearchViewPagerAdapter
 import na.kephas.kitvei.fragment.FragmentBook
 import na.kephas.kitvei.fragment.FragmentChapter
 import na.kephas.kitvei.fragment.FragmentVerse
-import na.kephas.kitvei.HowtoActivity
-import na.kephas.kitvei.repository.MyViewModel
-import na.kephas.kitvei.R
-import na.kephas.kitvei.TranslatorsActivity
-import na.kephas.kitvei.adapter.MainAdapter
-import na.kephas.kitvei.adapter.SearchViewPagerAdapter
-import na.kephas.kitvei.adapter.MainViewPagerAdapter
-import na.kephas.kitvei.prefs
 import na.kephas.kitvei.repository.AppDatabase
 import na.kephas.kitvei.repository.Bible
-import na.kephas.kitvei.util.backgroundPool
-import na.kephas.kitvei.util.getScreenHeight
-import na.kephas.kitvei.util.rootParent
+import na.kephas.kitvei.repository.MyViewModel
+import na.kephas.kitvei.util.*
+import java.util.*
 
 class MainActivity : AppCompatActivity(),
         NavigationView.OnNavigationItemSelectedListener,
@@ -77,6 +71,7 @@ class MainActivity : AppCompatActivity(),
     private val isRTL by lazy(LazyThreadSafetyMode.NONE) { TextUtilsCompat.getLayoutDirectionFromLocale(Locale.getDefault()) != ViewCompat.LAYOUT_DIRECTION_LTR }
     //private val typeface by lazy(LazyThreadSafetyMode.NONE) { Typeface.create("sans-serif", Typeface.NORMAL) }
     private val viewModel by lazy(LazyThreadSafetyMode.NONE) { ViewModelProviders.of(this).get(MyViewModel::class.java) }
+    private val activityManager by lazy(LazyThreadSafetyMode.NONE) { baseContext.getSystemService<ActivityManager>() }
 
     companion object {
         private var row: Bible? = null
@@ -88,15 +83,38 @@ class MainActivity : AppCompatActivity(),
         private var queryFinished = false
     }
 
+    private fun isTranslucentNavBar(): Boolean {
+        val flags = window.attributes.flags
+        if ((flags and WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION) == WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
+            return true
+        return false
+    }
+
+    private fun cancelTranslucentNavBar() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
+        }
+    }
+    private fun setTranslucentNavBar() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
+        }
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration?) {
+        super.onConfigurationChanged(newConfig)
+        if (newConfig?.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            if (isTranslucentNavBar())
+                cancelTranslucentNavBar()
+        } else if (newConfig?.orientation == Configuration.ORIENTATION_PORTRAIT){
+            if (!isTranslucentNavBar())
+                setTranslucentNavBar()
+        }
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            val td: ActivityManager.TaskDescription = ActivityManager.TaskDescription("Kitvei HaKodesh")
-            setTaskDescription(td)
-        }
 
         launch(backgroundPool, parent = rootParent) {
 
@@ -133,11 +151,17 @@ class MainActivity : AppCompatActivity(),
         blink(toolbarTitle, 4, 1000)
 
         if (prefs.VP_Position == 0) setMainTitle() // Init
-        //toolbarTitle.typeface = typeface
+        toolbarTitle.typeface = Fonts.Merriweather_Black
 
         mainViewPager = findViewById(R.id.mainViewPager)
+
+        // Prefer higher quality images unless we're on a low RAM device
+        //mainViewPager.offscreenPageLimit = if (ActivityManagerCompat.isLowRamDevice(activityManager)) 1 else 2
         mainViewPager.adapter = MainViewPagerAdapter(this, viewModel, bible)
-        if (isRTL) mainViewPager.rotationY = 180f
+        if (isRTL) {
+            mainViewPager.rotationY = 180f
+            recreate()
+        }
 
         val onPageListener = object : ViewPager.OnPageChangeListener {
             override fun onPageScrollStateChanged(state: Int) {}
@@ -148,6 +172,8 @@ class MainActivity : AppCompatActivity(),
                 viewPagerPosition = position
                 row = bible[viewPagerPosition]
                 setMainTitle(row?.bookName, row?.chapterId)
+
+
             }
 
         }
@@ -282,15 +308,17 @@ class MainActivity : AppCompatActivity(),
     }
 
     override fun onItemSelectedFV(position: Int) {
+        var delay = false
+        if (mainViewPager.currentItem != getPosition(tBook, tChapter)) delay = true
         mainViewPager.setCurrentItem(getPosition(tBook, tChapter), true).also {
             queryFinished = true
             finishSearch()
         }
         launch(UI) {
-            //delay(100)
-            val nsv = mainViewPager.findViewWithTag<NestedScrollView>("nsv${mainViewPager.currentItem}")
+            if (delay) delay(70)
+            //val nsv = mainViewPager.findViewWithTag<NestedScrollView>("nsv${mainViewPager.currentItem}")
             val rv = mainViewPager.findViewWithTag<RecyclerView>("rv${mainViewPager.currentItem}")
-            rvScrollTo2(rv, nsv, position)
+            rvScrollTo(rv, position)
         }
 
     }
@@ -360,22 +388,62 @@ class MainActivity : AppCompatActivity(),
         fun onLayoutReady()
     }
 
-    fun scrollToTop2(nestedScrollView: NestedScrollView) {
-        nestedScrollView.post {
-            nestedScrollView.apply {
-                fling(0)
-                smoothScrollTo(0, 0)
+    /*
+        fun scrollToTop2(nestedScrollView: NestedScrollView) {
+            nestedScrollView.post {
+                nestedScrollView.apply {
+                    fling(0)
+                    smoothScrollTo(0, 0)
+                }
+            }
+        }
+
+
+        fun rvScrollTo2(recyclerView: RecyclerView, rvNestedScrollView: NestedScrollView, position: Int) {
+            recyclerView.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+                override fun onGlobalLayout() {
+                    if (recyclerViewReadyCallback != null) {
+                        recyclerViewReadyCallback!!.onLayoutReady()
+                    }
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
+                        @Suppress("DEPRECATION")
+                        recyclerView.viewTreeObserver.removeGlobalOnLayoutListener(this)
+                    } else
+                        recyclerView.viewTreeObserver.removeOnGlobalLayoutListener(this)
+
+                }
+            })
+            recyclerViewReadyCallback = object : RecyclerViewReadyCallback {
+                override fun onLayoutReady() {
+                    when (position) {
+                        0 -> scrollToTop2(rvNestedScrollView)
+                        else -> recyclerView.getChildAt(position)?.y?.toInt()?.let {
+                            rvNestedScrollView.post {
+                                rvNestedScrollView.apply {
+                                    //setPadding(this.paddingLeft, this.paddingTop, this.paddingRight, androidx.appcompat.R.attr.actionBarSize) // Only use if toolbar collapses
+                                    fling(0)
+                                    smoothScrollTo(0, it)
+                                    //setPadding(this.paddingLeft, this.paddingTop, this.paddingRight, this.paddingTop)
+                                }
+                            }
+                        }
+                    }
+
+                }
+            }
+        }*/
+    val smoothScroller: RecyclerView.SmoothScroller by lazy(LazyThreadSafetyMode.NONE) {
+        object : LinearSmoothScroller(this@MainActivity) {
+            override fun getVerticalSnapPreference(): Int {
+                return LinearSmoothScroller.SNAP_TO_START;
             }
         }
     }
 
-
-    fun rvScrollTo2(recyclerView: RecyclerView, rvNestedScrollView: NestedScrollView, position: Int) {
+    private fun rvScrollTo(recyclerView: RecyclerView, position: Int) {
         recyclerView.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
             override fun onGlobalLayout() {
-                if (recyclerViewReadyCallback != null) {
-                    recyclerViewReadyCallback!!.onLayoutReady()
-                }
+                if (recyclerViewReadyCallback != null) recyclerViewReadyCallback!!.onLayoutReady()
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
                     @Suppress("DEPRECATION")
                     recyclerView.viewTreeObserver.removeGlobalOnLayoutListener(this)
@@ -386,20 +454,10 @@ class MainActivity : AppCompatActivity(),
         })
         recyclerViewReadyCallback = object : RecyclerViewReadyCallback {
             override fun onLayoutReady() {
-                when (position) {
-                    0 -> scrollToTop2(rvNestedScrollView)
-                    else -> recyclerView.getChildAt(position)?.y?.toInt()?.let {
-                        rvNestedScrollView.post {
-                            rvNestedScrollView.apply {
-                                //setPadding(this.paddingLeft, this.paddingTop, this.paddingRight, androidx.appcompat.R.attr.actionBarSize) // Only use if toolbar collapses
-                                fling(0)
-                                smoothScrollTo(0, it)
-                                //setPadding(this.paddingLeft, this.paddingTop, this.paddingRight, this.paddingTop)
-                            }
-                        }
-                    }
-                }
-
+                //smoothScroller.targetPosition = position
+                //recyclerView.layoutManager?.startSmoothScroll(smoothScroller)
+                recyclerView.smoothScrollToPosition(position)
+                //(mainViewPager.findViewWithTag<RecyclerView>("rv${mainViewPager.currentItem}").layoutManager as LinearLayoutManager).startSmoothScroll(smoothScroller)
             }
         }
     }
@@ -441,11 +499,25 @@ class MainActivity : AppCompatActivity(),
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
         R.id.toggle_night -> {
             try {
-                val mA = mainViewPager.findViewWithTag<RecyclerView>("rv${mainViewPager.currentItem}").adapter as MainAdapter
                 fontSize = if (fontSize == 1f) 1.2f else 1f
-                mA.setFontSize(fontSize)
-
-                mA.notifyDataSetChanged()
+                (mainViewPager.findViewWithTag<RecyclerView>("rv${mainViewPager.currentItem}").adapter as MainAdapter).apply {
+                    setFontSize(fontSize)
+                }
+                mainViewPager.adapter?.notifyDataSetChanged()
+                /*
+                if (viewPagerPosition != 0)
+                    (mainViewPager.findViewWithTag<RecyclerView>("rv${mainViewPager.currentItem - 1}").adapter as MainAdapter).apply {
+                        setFontSize(fontSize)
+                        notifyDataSetChanged()
+                    }
+                (mainViewPager.findViewWithTag<RecyclerView>("rv${mainViewPager.currentItem}").adapter as MainAdapter).apply {
+                    setFontSize(fontSize)
+                    notifyDataSetChanged()
+                }
+                (mainViewPager.findViewWithTag<RecyclerView>("rv${mainViewPager.currentItem + 1}").adapter as MainAdapter).apply {
+                    setFontSize(fontSize)
+                    notifyDataSetChanged()
+                }*/
             } catch (e: Exception) {
                 Log.e(TAG, e.message)
             }
@@ -462,28 +534,19 @@ class MainActivity : AppCompatActivity(),
     }
 
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
+        var intent: Intent? = null
         when (item.itemId) {
             R.id.nav_epistle_dedicatory -> {
-                val intent = Intent(this, DedicatoryActivity::class.java)
-                this.startActivity(intent)
-                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
-
+                intent = Intent(this, DedicatoryActivity::class.java)
             }
             R.id.nav_translators_notes -> {
-                val intent = Intent(this, TranslatorsActivity::class.java)
-                this.startActivity(intent)
-                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
-
-
+                intent = Intent(this, TranslatorsActivity::class.java)
             }
             R.id.nav_howto -> {
-                val intent = Intent(this, HowtoActivity::class.java)
-                this.startActivity(intent)
-                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
-
+                intent = Intent(this, HowtoActivity::class.java)
             }
-
         }
+        this.startActivity(intent)
         drawer_layout.closeDrawer(GravityCompat.START)
         return true
     }

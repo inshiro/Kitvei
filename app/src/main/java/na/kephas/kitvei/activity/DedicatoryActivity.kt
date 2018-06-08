@@ -46,10 +46,6 @@ class DedicatoryActivity : AppCompatActivity() {
         webView.loadUrl("file:///android_asset/html/dedicatory.html")*/
     }
 
-    override fun onPause() {
-        super.onPause()
-        if(isFinishing) overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
-    }
 
     private fun showText(cText: Int, cDrawable: Int, showText: Boolean) {
         //val tempImage = ContextCompat.getDrawable(context, R.drawable.image)

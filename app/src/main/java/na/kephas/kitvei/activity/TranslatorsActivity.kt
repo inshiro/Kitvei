@@ -46,26 +46,18 @@ class TranslatorsActivity : AppCompatActivity() {
         toolbar_layout.setExpandedTitleTextAppearance(R.style.ExpandedAppBar)
         toolbar_layout.setCollapsedTitleTextAppearance(R.style.CollapsedAppBar)
 
-        //val tempImage = ContextCompat.getDrawable(context, R.drawable.image)
-        /*val tempImage = resources.getDrawable(R.drawable.dedicatory)
-        val kenBurnsView = findViewById(R.id.base_content_image) as KenBurnsView
-        kenBurnsView.setImageDrawable(tempImage)*/
-        //val context = this
         baseTextView.typeface = Fonts.GentiumPlus_R
         async(CommonPool) {
             val span = getText().toSpanned() //getString(cText).toSpanned()
             val kenBurnsView = findViewById<KenBurnsView>(R.id.base_content_image)
-            //val image = ContextCompat.getDrawable(context, cDrawable)
             withContext(UI) {
                 baseTextView.text = span
-                //Glide.with(context).load(cDrawable).into(kenBurnsView)
-                //kenBurnsView.setImageDrawable(image)
                 Picasso.get().load(cDrawable).into(kenBurnsView)
             }
         }
     }
 
-    fun getText():String {
+    private fun getText():String {
         return """<h1>The Translators to the Reader</h1>
 <p><b>The Best Things Have Been Calumniated</b><br></br>
 Zeal to promote the common good, whether it be by devising anything ourselves, or revising that which hath been laboured by others, deserveth certainly much respect and esteem, but yet findeth but cold entertainment in the world. It is welcomed with suspicion instead of love, and with emulation instead of thanks: and if there be any hole left for cavil to enter, (and cavil, if it do not find a hole, will make one) it is sure to be misconstrued, and in danger to be condemned. This will easily be granted by as many as know story, or have any experience. For, was there ever any thing projected, that savoured any way of newness or renewing, but the same endured many a storm of gainsaying, or opposition? A man would think that Civility, wholesome Laws, learning and eloquence, Synods, and Church-maintenance, (that we speak of no more things of this kind) should be as safe as a Sanctuary, and out of shot, as they say, that no man would lift up the heel, no, nor dog move his tongue against the motioners of them. For by the first, we are distinguished from brute beasts lead with sensuality; By the second, we are bridled and restrained from outrageous behaviour, and from doing of injuries, whether by fraud or by violence; By the third, we are enabled to inform and reform others, by the light and feeling that we have attained unto ourselves; Briefly, by the fourth being brought together to a parley face to face, we sooner compose our differences than by writings which are endless; And lastly, that the Church be sufficiently provided for, is so agreeable to good reason and conscience, that those mothers are holden to be less cruel, that kill their children as soon as they are born, than those nursing fathers and mothers (wheresoever they be) that withdraw from them who hang upon their breasts (and upon whose breasts again themselves do hang to receive the Spiritual and sincere milk of the word) livelihood and support fit for their estates. Thus it is apparent, that these things which we speak of, are of most necessary use, and therefore, that none, either without absurdity can speak against them, or without note of wickedness can spurn against them.</p>
@@ -118,10 +110,7 @@ Another thing we think good to admonish thee of (gentle Reader) that we have not
 
 <p>Many other things we might give thee warning of (gentle Reader) if we had not exceeded the measure of a Preface already. It remaineth, that we commend thee to God, and to the Spirit of his grace, which is able to build further than we can ask or think. He removeth the scales from our eyes, the veil from our hearts, opening our wits that we may understand his word, enlarging our hearts, yea correcting our affections, that we may love it above gold and silver, yea that we may love it to the end. Ye are brought unto fountains of living water which ye digged not; do not cast earth into them with the Philistines, neither prefer broken pits before them with the wicked Jews. [Gen 26:15. Jer 2:13.] Others have laboured, and you may enter into their labours; O receive not so great things in vain, O despise not so great salvation! Be not like swine to tread under foot so precious things, neither yet like dogs to tear and abuse holy things. Say not to our Saviour with the Gergesites, Depart out of our coasts [Matt 8:34]; neither yet with Esau sell your birthright for a mess of pottage [Heb 12:16]. If light be come into the world, love not darkness more than light; if food, if clothing be offered, go not naked, starve not yourselves. Remember the advice of Nazianzene, It is a grievous thing (or dangerous) to neglect a great fair, and to seek to make markets afterwards: also the encouragement of S. Chrysostom, It is altogether impossible, that he that is sober (and watchful) should at any time be neglected: Lastly, the admonition and menacing of S. Augustine, They that despise God's will inviting them, shall feel God's will taking vengeance of them. It is a fearful thing to fall into the hands of the living God; [Heb 10:31] but a blessed thing it is, and will bring us to everlasting blessedness in the end, when God speaketh unto us, to hearken; when he setteth his word before us, to read it; when he stretcheth out his hand and calleth, to answer, Here am I, here we are to do thy will, O God. The Lord work a care and conscience in us to know him and serve him, that we may be acknowledged of him at the appearing of our Lord Jesus Christ, to whom with the holy Ghost, be all praise and thanksgiving. Amen.</p>"""
     }
-    override fun onPause() {
-        super.onPause()
-        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
-    }
+
 }
 
 

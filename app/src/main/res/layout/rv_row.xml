@@ -1,19 +1,16 @@
-<?xml version="1.0" encoding="utf-8"?>
-
+<?xml version="1.0" encoding="utf-8"?><!--
 <androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/parentNestedScrollView"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:clipToPadding="false"
     android:fadeScrollbars="true"
     android:fadingEdge="vertical"
-    android:fillViewport="true"
+    android:fillViewport="false"
     android:overScrollMode="ifContentScrolls"
-    android:scrollbarSize="4dp"
     android:scrollbarStyle="outsideInset"
-    android:scrollbarThumbVertical="@drawable/scrollbar_color"
     android:scrollbars="vertical"
     android:paddingRight="16dp"
     android:paddingLeft="16dp"
@@ -21,9 +18,21 @@
     android:paddingBottom="250dp"
     tools:context=".activity.MainActivity"
     tools:showIn="@layout/activity_main_content">
+-->
+<androidx.recyclerview.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nestedRecyclerView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipToPadding="false"
+    android:fadingEdge="vertical"
+    android:paddingLeft="14dp"
+    android:paddingTop="24dp"
+    android:paddingRight="14dp"
+    android:paddingBottom="300dp"
+    android:scrollbarStyle="outsideInset"
+    android:scrollbars="vertical"
+    tools:context=".activity.MainActivity"
+    tools:showIn="@layout/activity_main_content" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/nestedRecyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-</androidx.core.widget.NestedScrollView>

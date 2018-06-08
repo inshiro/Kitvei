@@ -30,6 +30,14 @@ fun View.snackbar(str: String, duration: Int = Snackbar.LENGTH_SHORT) {
     }
 }
 
+fun getStatusBarHeight(r: Resources): Int {
+    var result = 0
+    val resourceId = r.getIdentifier("status_bar_height", "dimen", "android")
+    if (resourceId > 0) {
+        result = r.getDimensionPixelSize(resourceId)
+    }
+    return result
+}
 fun getScreenHeight(): Int = Resources.getSystem().displayMetrics.heightPixels
 fun String.toSpanned(): Spanned {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
