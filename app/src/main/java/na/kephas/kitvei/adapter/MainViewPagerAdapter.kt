@@ -1,24 +1,22 @@
 package na.kephas.kitvei.adapter
 
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
 import androidx.lifecycle.Observer
 import androidx.paging.PagedList
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager.widget.PagerAdapter
+import kotlinx.android.synthetic.*
 import na.kephas.kitvei.R
-import na.kephas.kitvei.repository.Bible
-import na.kephas.kitvei.repository.MyViewModel
-import kotlinx.android.synthetic.clearFindViewByIdCache
+import na.kephas.kitvei.data.Bible
+import na.kephas.kitvei.viewmodels.VerseListViewModel
 import na.kephas.kitvei.widget.ScrollingLinearLayoutManager
 
 
-class MainViewPagerAdapter(private val act: AppCompatActivity, private val vm: MyViewModel, private var all: List<Bible>) : PagerAdapter(), MainAdapter.ItemClickListener {
+class MainViewPagerAdapter(private val act: AppCompatActivity, private val vm: VerseListViewModel, private var all: List<Bible>) : PagerAdapter(), MainAdapter.ItemClickListener {
     private val viewPool by lazy(LazyThreadSafetyMode.NONE) { RecyclerView.RecycledViewPool() }
     private lateinit var row: Bible
     private val rvOnly = false
@@ -37,7 +35,7 @@ class MainViewPagerAdapter(private val act: AppCompatActivity, private val vm: M
         var mAdapter: MainAdapter? = null
         @Suppress("UNUSED_VARIABLE")
         val recyclerView = layout.findViewById<RecyclerView>(R.id.nestedRecyclerView).apply {
-            layoutManager = ScrollingLinearLayoutManager(act, LinearLayoutManager.VERTICAL, false, 1000)
+            layoutManager = ScrollingLinearLayoutManager(act, LinearLayoutManager.VERTICAL, false, 700)
             mAdapter = MainAdapter().apply {
                 setClickListener(this@MainViewPagerAdapter)
             }
@@ -50,7 +48,7 @@ class MainViewPagerAdapter(private val act: AppCompatActivity, private val vm: M
         }
 
         row = all[position]
-        vm.getVerseList(row.bookId!!, row.chapterId!!).observe(act, Observer<PagedList<Bible>?> { pagedList ->
+        vm.getVerses(row.bookId!!, row.chapterId!!).observe(act, Observer<PagedList<Bible>?> { pagedList ->
             mAdapter?.submitList(pagedList)
             //Log.d("instantiateItem", "current-position: $position LOADING chapter: ${position+1} size: ${pagedList?.size} ")
         })

@@ -1,24 +1,24 @@
 package na.kephas.kitvei.fragment
 
+import android.app.Activity
 import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import java.util.ArrayList
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager.widget.ViewPager
-
 import na.kephas.kitvei.R
 import na.kephas.kitvei.adapter.BookAdapter
 import na.kephas.kitvei.adapter.ChapterAdapter
 import na.kephas.kitvei.adapter.VerseAdapter
-import na.kephas.kitvei.repository.MyViewModel
+import na.kephas.kitvei.util.InjectorUtils
 import na.kephas.kitvei.util.calculateNoOfColumns
+import na.kephas.kitvei.viewmodels.MiniSearchViewModel
 
 class FragmentBook : Fragment(), BookAdapter.ItemClickListener {
     private lateinit var viewPager: ViewPager
@@ -26,15 +26,19 @@ class FragmentBook : Fragment(), BookAdapter.ItemClickListener {
     private lateinit var recyclerView: RecyclerView
     private lateinit var list: List<String>
     private lateinit var mCallback: Listener
-    private val viewModel by lazy(LazyThreadSafetyMode.NONE) { ViewModelProviders.of(this).get(MyViewModel::class.java) }
+    private val viewModel by lazy(LazyThreadSafetyMode.NONE) {
+        val factory = InjectorUtils.provideMiniSearchViewModelFactory(requireContext())
+        ViewModelProviders.of(this, factory)
+                .get(MiniSearchViewModel::class.java)
+    }
 
     interface Listener {
         fun onItemSelectedFB(view: View, position: Int)
         fun onCompleteFB()
     }
 
-    override fun onAttach(mActivity: Context) {
-        super.onAttach(mActivity.applicationContext)
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
         // This makes sure that the container activity has implemented
         // the callback interface. If not, it throws an exception
         try {
@@ -49,7 +53,7 @@ class FragmentBook : Fragment(), BookAdapter.ItemClickListener {
         super.onCreate(savedInstanceState)
         try {
             if (!this::list.isInitialized) list = ArrayList()
-            list = viewModel.getBookNames()
+            list = viewModel.getBooks()
         } catch (e: Exception) {
             android.util.Log.e("FragmentBook", e.message)
         }
@@ -93,8 +97,11 @@ class FragmentChapter : Fragment(), ChapterAdapter.ItemClickListener {
     private lateinit var mCallback: Listener
     private lateinit var mAdapter: ChapterAdapter
     private lateinit var recyclerView: RecyclerView
-    private val viewModel by lazy(LazyThreadSafetyMode.NONE) { ViewModelProviders.of(this).get(MyViewModel::class.java) }
-
+    private val viewModel by lazy(LazyThreadSafetyMode.NONE) {
+        val factory = InjectorUtils.provideMiniSearchViewModelFactory(requireContext())
+        ViewModelProviders.of(this, factory)
+                .get(MiniSearchViewModel::class.java)
+    }
     interface Listener {
         fun onItemSelectedFC(position: Int)
         fun onCompleteFC()
@@ -112,7 +119,7 @@ class FragmentChapter : Fragment(), ChapterAdapter.ItemClickListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (!this::list.isInitialized) list = ArrayList()
-        list = viewModel.getChapterIds()
+        list = viewModel.getChapters()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -141,7 +148,7 @@ class FragmentChapter : Fragment(), ChapterAdapter.ItemClickListener {
 
     fun updateList(book: Int) {
         if (!this::list.isInitialized) list = ArrayList()
-        list = viewModel.getChapterIds(book)
+        list = viewModel.getChapters(book)
         mAdapter.items = list
         recyclerView.adapter?.notifyDataSetChanged()
     }
@@ -152,8 +159,11 @@ class FragmentVerse : Fragment(), VerseAdapter.ItemClickListener {
     private lateinit var mCallback: Listener
     private lateinit var mAdapter: VerseAdapter
     private lateinit var recyclerView:RecyclerView
-    private val viewModel by lazy(LazyThreadSafetyMode.NONE) { ViewModelProviders.of(this).get(MyViewModel::class.java) }
-
+    private val viewModel by lazy(LazyThreadSafetyMode.NONE) {
+        val factory = InjectorUtils.provideMiniSearchViewModelFactory(requireContext())
+        ViewModelProviders.of(this, factory)
+                .get(MiniSearchViewModel::class.java)
+    }
     interface Listener {
         fun onItemSelectedFV(position: Int)
         fun onCompleteFV()
@@ -170,7 +180,7 @@ class FragmentVerse : Fragment(), VerseAdapter.ItemClickListener {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         if (!this::list.isInitialized) list = ArrayList()
-        list = viewModel.getVerseIds()
+        list = viewModel.getVerses()
         val v = inflater.inflate(R.layout.book_fragment, container, false)
         recyclerView = v.findViewById<RecyclerView>(R.id.recyclerview_fragment).apply {
             layoutManager = GridLayoutManager(activity, calculateNoOfColumns(activity!!.baseContext))
@@ -197,7 +207,7 @@ class FragmentVerse : Fragment(), VerseAdapter.ItemClickListener {
 
     fun updateList(book:Int, chapter: Int = 1) {
         if (!this::list.isInitialized) list = ArrayList()
-        list = viewModel.getVerseIds(book, chapter)
+        list = viewModel.getVerses(book, chapter)
         mAdapter.items = list
         recyclerView.adapter?.notifyDataSetChanged()
     }

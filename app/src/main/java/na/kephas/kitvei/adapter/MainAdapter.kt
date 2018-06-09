@@ -18,7 +18,7 @@ import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import na.kephas.kitvei.R
-import na.kephas.kitvei.repository.Bible
+import na.kephas.kitvei.data.Bible
 import na.kephas.kitvei.util.Fonts
 import java.util.Locale
 import java.util.regex.Pattern

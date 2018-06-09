@@ -17,7 +17,6 @@ import androidx.annotation.ColorRes
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
-import androidx.core.app.ActivityManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.DrawableCompat
@@ -42,14 +41,14 @@ import kotlinx.coroutines.experimental.withContext
 import na.kephas.kitvei.*
 import na.kephas.kitvei.adapter.MainAdapter
 import na.kephas.kitvei.adapter.MainViewPagerAdapter
-import na.kephas.kitvei.adapter.SearchViewPagerAdapter
+import na.kephas.kitvei.adapter.MiniSearchViewPagerAdapter
+import na.kephas.kitvei.data.AppDatabase
+import na.kephas.kitvei.data.Bible
 import na.kephas.kitvei.fragment.FragmentBook
 import na.kephas.kitvei.fragment.FragmentChapter
 import na.kephas.kitvei.fragment.FragmentVerse
-import na.kephas.kitvei.repository.AppDatabase
-import na.kephas.kitvei.repository.Bible
-import na.kephas.kitvei.repository.MyViewModel
 import na.kephas.kitvei.util.*
+import na.kephas.kitvei.viewmodels.VerseListViewModel
 import java.util.*
 
 class MainActivity : AppCompatActivity(),
@@ -62,15 +61,25 @@ class MainActivity : AppCompatActivity(),
     private lateinit var tabLayout: TabLayout
     private lateinit var searchViewPager: ViewPager
     private lateinit var mainViewPager: ViewPager
-    private lateinit var searchViewPagerAdapter: SearchViewPagerAdapter
+    private lateinit var miniSearchViewPagerAdapter: MiniSearchViewPagerAdapter
     private lateinit var bookFragment: FragmentBook
     private lateinit var chapterFragment: FragmentChapter
     private lateinit var verseFragment: FragmentVerse
-    private lateinit var bible: List<Bible>
     private val imm by lazy(LazyThreadSafetyMode.NONE) { getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager }
     private val isRTL by lazy(LazyThreadSafetyMode.NONE) { TextUtilsCompat.getLayoutDirectionFromLocale(Locale.getDefault()) != ViewCompat.LAYOUT_DIRECTION_LTR }
     //private val typeface by lazy(LazyThreadSafetyMode.NONE) { Typeface.create("sans-serif", Typeface.NORMAL) }
-    private val viewModel by lazy(LazyThreadSafetyMode.NONE) { ViewModelProviders.of(this).get(MyViewModel::class.java) }
+    private val viewModel by lazy(LazyThreadSafetyMode.NONE) {
+
+        val factory = InjectorUtils.provideVerseListViewModelFactory(this)
+        ViewModelProviders.of(this, factory)
+                .get(VerseListViewModel::class.java)
+        //ViewModelProviders.of(this).getInstance(MyViewModel::class.java)
+        // TODO requireContext() on a fragment
+
+    }
+    private val bible: List<Bible> by lazy(LazyThreadSafetyMode.NONE) {
+        viewModel.getPages()
+    }
     private val activityManager by lazy(LazyThreadSafetyMode.NONE) { baseContext.getSystemService<ActivityManager>() }
 
     companion object {
@@ -95,6 +104,7 @@ class MainActivity : AppCompatActivity(),
             window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
         }
     }
+
     private fun setTranslucentNavBar() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
@@ -106,11 +116,12 @@ class MainActivity : AppCompatActivity(),
         if (newConfig?.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             if (isTranslucentNavBar())
                 cancelTranslucentNavBar()
-        } else if (newConfig?.orientation == Configuration.ORIENTATION_PORTRAIT){
+        } else if (newConfig?.orientation == Configuration.ORIENTATION_PORTRAIT) {
             if (!isTranslucentNavBar())
                 setTranslucentNavBar()
         }
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -139,7 +150,6 @@ class MainActivity : AppCompatActivity(),
             }
         }
 
-        bible = viewModel.getAll()
         row = bible[viewPagerPosition]
 
         // Toolbar Title
@@ -190,18 +200,18 @@ class MainActivity : AppCompatActivity(),
         // ViewPager Setup
         searchViewPager = findViewById<View>(R.id.viewpager) as androidx.viewpager.widget.ViewPager
         tabLayout = findViewById<View>(R.id.tablayout) as com.google.android.material.tabs.TabLayout
-        searchViewPagerAdapter = SearchViewPagerAdapter(supportFragmentManager)
-        searchViewPager.adapter = searchViewPagerAdapter
+        miniSearchViewPagerAdapter = MiniSearchViewPagerAdapter(supportFragmentManager)
+        searchViewPager.adapter = miniSearchViewPagerAdapter
         tabLayout.setupWithViewPager(searchViewPager)
         searchViewPager.offscreenPageLimit = 2
 
 
         // Create an initial view to display; must be a subclass of FrameLayout.
-        searchViewPagerAdapter.startUpdate(searchViewPager)
-        bookFragment = searchViewPagerAdapter.instantiateItem(searchViewPager, 0) as FragmentBook
-        chapterFragment = searchViewPagerAdapter.instantiateItem(searchViewPager, 1) as FragmentChapter
-        verseFragment = searchViewPagerAdapter.instantiateItem(searchViewPager, 2) as FragmentVerse
-        searchViewPagerAdapter.finishUpdate(searchViewPager)
+        miniSearchViewPagerAdapter.startUpdate(searchViewPager)
+        bookFragment = miniSearchViewPagerAdapter.instantiateItem(searchViewPager, 0) as FragmentBook
+        chapterFragment = miniSearchViewPagerAdapter.instantiateItem(searchViewPager, 1) as FragmentChapter
+        verseFragment = miniSearchViewPagerAdapter.instantiateItem(searchViewPager, 2) as FragmentVerse
+        miniSearchViewPagerAdapter.finishUpdate(searchViewPager)
 
 
         // Open SearchView. Prevent keyboard show
@@ -315,10 +325,12 @@ class MainActivity : AppCompatActivity(),
             finishSearch()
         }
         launch(UI) {
-            if (delay) delay(70)
-            //val nsv = mainViewPager.findViewWithTag<NestedScrollView>("nsv${mainViewPager.currentItem}")
             val rv = mainViewPager.findViewWithTag<RecyclerView>("rv${mainViewPager.currentItem}")
-            rvScrollTo(rv, position)
+            if (delay) {
+                delay(70)
+                rvScrollTo(rv, position)
+            } else
+                rv.smoothScrollToPosition(position)
         }
 
     }
@@ -388,78 +400,25 @@ class MainActivity : AppCompatActivity(),
         fun onLayoutReady()
     }
 
-    /*
-        fun scrollToTop2(nestedScrollView: NestedScrollView) {
-            nestedScrollView.post {
-                nestedScrollView.apply {
-                    fling(0)
-                    smoothScrollTo(0, 0)
-                }
-            }
-        }
-
-
-        fun rvScrollTo2(recyclerView: RecyclerView, rvNestedScrollView: NestedScrollView, position: Int) {
-            recyclerView.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
-                override fun onGlobalLayout() {
-                    if (recyclerViewReadyCallback != null) {
-                        recyclerViewReadyCallback!!.onLayoutReady()
-                    }
-                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
-                        @Suppress("DEPRECATION")
-                        recyclerView.viewTreeObserver.removeGlobalOnLayoutListener(this)
-                    } else
-                        recyclerView.viewTreeObserver.removeOnGlobalLayoutListener(this)
-
-                }
-            })
-            recyclerViewReadyCallback = object : RecyclerViewReadyCallback {
-                override fun onLayoutReady() {
-                    when (position) {
-                        0 -> scrollToTop2(rvNestedScrollView)
-                        else -> recyclerView.getChildAt(position)?.y?.toInt()?.let {
-                            rvNestedScrollView.post {
-                                rvNestedScrollView.apply {
-                                    //setPadding(this.paddingLeft, this.paddingTop, this.paddingRight, androidx.appcompat.R.attr.actionBarSize) // Only use if toolbar collapses
-                                    fling(0)
-                                    smoothScrollTo(0, it)
-                                    //setPadding(this.paddingLeft, this.paddingTop, this.paddingRight, this.paddingTop)
-                                }
-                            }
-                        }
-                    }
-
-                }
-            }
-        }*/
-    val smoothScroller: RecyclerView.SmoothScroller by lazy(LazyThreadSafetyMode.NONE) {
-        object : LinearSmoothScroller(this@MainActivity) {
-            override fun getVerticalSnapPreference(): Int {
-                return LinearSmoothScroller.SNAP_TO_START;
-            }
-        }
-    }
-
     private fun rvScrollTo(recyclerView: RecyclerView, position: Int) {
+
+        recyclerViewReadyCallback = object : RecyclerViewReadyCallback {
+            override fun onLayoutReady() {
+                recyclerView.smoothScrollToPosition(position)
+            }
+        }
+
         recyclerView.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
             override fun onGlobalLayout() {
-                if (recyclerViewReadyCallback != null) recyclerViewReadyCallback!!.onLayoutReady()
+                if (recyclerViewReadyCallback != null)
+                    recyclerViewReadyCallback!!.onLayoutReady()
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
                     @Suppress("DEPRECATION")
                     recyclerView.viewTreeObserver.removeGlobalOnLayoutListener(this)
                 } else
                     recyclerView.viewTreeObserver.removeOnGlobalLayoutListener(this)
-
             }
         })
-        recyclerViewReadyCallback = object : RecyclerViewReadyCallback {
-            override fun onLayoutReady() {
-                //smoothScroller.targetPosition = position
-                //recyclerView.layoutManager?.startSmoothScroll(smoothScroller)
-                recyclerView.smoothScrollToPosition(position)
-                //(mainViewPager.findViewWithTag<RecyclerView>("rv${mainViewPager.currentItem}").layoutManager as LinearLayoutManager).startSmoothScroll(smoothScroller)
-            }
-        }
     }
 
     private fun tintMenuIcon(item: MenuItem, @ColorRes color: Int) {

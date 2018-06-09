@@ -8,42 +8,36 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.rule.ActivityTestRule
 import androidx.test.runner.AndroidJUnit4
 import na.kephas.kitvei.R
+import na.kephas.kitvei.data.AppDatabase
 import na.kephas.kitvei.prefs
-import na.kephas.kitvei.repository.MyViewModel
-import na.kephas.kitvei.repository.AppDatabase
+import na.kephas.kitvei.util.InjectorUtils
+import na.kephas.kitvei.viewmodels.VerseListViewModel
 import org.hamcrest.CoreMatchers.allOf
 import org.junit.After
 import org.junit.Before
-import org.junit.Assert.*
 import org.junit.Rule
-import org.junit.runner.RunWith
 import org.junit.Test
+import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class MainActivityTest {
-    private lateinit var vm: MyViewModel
+    private lateinit var vm: VerseListViewModel
 
     @Rule @JvmField
     var mActivityRule: ActivityTestRule<MainActivity> = ActivityTestRule(MainActivity::class.java)
 
     @Before
     fun setUp() {
-        vm = ViewModelProviders.of(mActivityRule.activity).get(MyViewModel::class.java)
+        val factory = InjectorUtils.provideVerseListViewModelFactory(mActivityRule.activity)
+        vm = ViewModelProviders.of(mActivityRule.activity, factory)
+                .get(VerseListViewModel::class.java)
     }
 
     @Test
     fun swipeUntilEnd() {
-        for (a in prefs.VP_Position..vm.getAll().size)
+        for (a in prefs.VP_Position..vm.getPages().size)
             onView(allOf(withId(R.id.mainViewPager), isCompletelyDisplayed())).perform(swipeLeft())
     }
-
-    /*
-        @Test
-        fun useAppContext() {
-            // Context of the app under test.
-            val appContext = InstrumentationRegistry.getTargetContext()
-            assertEquals("na.kephas.kitvei", appContext.packageName)
-        }*/
 
     @After
     fun tearDown() {

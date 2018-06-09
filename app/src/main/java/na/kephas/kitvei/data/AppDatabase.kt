@@ -1,4 +1,4 @@
-package na.kephas.kitvei.repository
+package na.kephas.kitvei.data
 
 import android.content.Context
 import android.util.Log
@@ -8,24 +8,23 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.sqlite.db.framework.AssetSQLiteOpenHelperFactory
+import na.kephas.kitvei.util.DATABASE_NAME
 
-@Database(entities = arrayOf((Bible::class)), version = 2, exportSchema = false)
+@Database(entities = arrayOf(Bible::class), version = 2, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
-    abstract fun bibleDao(): Bible.BibleDao
+    abstract fun verseDao(): VerseDao
+    abstract fun searchDao(): SearchDao
+    abstract fun miniSearchDao(): MiniSearchDao
 
     companion object {
-        private const val DB_NAME = "kjv-pce-v2.db"
 
         @Volatile
-        private var INSTANCE: AppDatabase? = null
-
-        //@Synchronized
-        //operator fun get(ctx: Context): AppDatabase? = INSTANCE ?: create(ctx)
+        private var instance: AppDatabase? = null
 
         @Synchronized
-        operator fun get(ctx: Context): AppDatabase {
-            if (INSTANCE != null)
-                return INSTANCE!!
+        fun getInstance(ctx: Context): AppDatabase {
+            if (instance != null)
+                return instance!!
 
             val MIGRATION_1_2 =
                     object : Migration(1, 2) {
@@ -41,15 +40,15 @@ abstract class AppDatabase : RoomDatabase() {
                         }
                     }
 
-            val db = Room.databaseBuilder(ctx.applicationContext, AppDatabase::class.java, DB_NAME)
-            INSTANCE = db.openHelperFactory(AssetSQLiteOpenHelperFactory())
+            val db = Room.databaseBuilder(ctx.applicationContext, AppDatabase::class.java, DATABASE_NAME)
+            instance = db.openHelperFactory(AssetSQLiteOpenHelperFactory())
                     .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                     .build()
-            return INSTANCE!!
+            return instance!!
         }
 
         fun destroyInstance() {
-            INSTANCE = null
+            instance = null
         }
     }
 

@@ -7,7 +7,7 @@ import na.kephas.kitvei.fragment.FragmentBook
 import na.kephas.kitvei.fragment.FragmentChapter
 import na.kephas.kitvei.fragment.FragmentVerse
 
-class SearchViewPagerAdapter(fm: FragmentManager) : FragmentStatePagerAdapter(fm) {
+class MiniSearchViewPagerAdapter(fm: FragmentManager) : FragmentStatePagerAdapter(fm) {
     override fun getItem(position: Int): Fragment? {
         return when(position) {
             0 -> FragmentBook()

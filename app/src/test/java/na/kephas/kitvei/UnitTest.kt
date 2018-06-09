@@ -1,12 +1,16 @@
 package na.kephas.kitvei
 
-import android.util.Log
 import androidx.lifecycle.ViewModelProviders
 import na.kephas.kitvei.activity.MainActivity
-import na.kephas.kitvei.repository.AppDatabase
-import na.kephas.kitvei.repository.MyViewModel
-import org.junit.*
-import org.junit.Assert.*
+import na.kephas.kitvei.data.AppDatabase
+import na.kephas.kitvei.util.InjectorUtils
+import na.kephas.kitvei.viewmodels.VerseListViewModel
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Before
+import org.junit.FixMethodOrder
+import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.MethodSorters
 import org.robolectric.Robolectric
@@ -25,14 +29,15 @@ import org.robolectric.annotation.Config
 @FixMethodOrder(MethodSorters.JVM)
 class UnitTest {
 
-    private lateinit var vm: MyViewModel
+    private lateinit var vm: VerseListViewModel
     private var ma: MainActivity? = null
-
 
     @Before
     fun setup() {
         ma = Robolectric.buildActivity(MainActivity::class.java).create().get()
-        vm = ViewModelProviders.of(ma!!).get(MyViewModel::class.java)
+        val factory = InjectorUtils.provideVerseListViewModelFactory(ma!!)
+        vm = ViewModelProviders.of(ma!!, factory)
+                .get(VerseListViewModel::class.java)
     }
 
     @Test
@@ -43,14 +48,8 @@ class UnitTest {
 
     @Test
     fun listSize_is1189() {
-        assertEquals(1189, vm.getAll().size)
+        assertEquals(1189, vm.getPages().size)
     }
-
-    /*
-    @Test
-    fun addition_isCorrect() {
-        assertEquals(4, 2 + 2)
-    }*/
 
     @After
     fun tearDown() {

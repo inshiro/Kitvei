@@ -20,7 +20,7 @@ import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 
 import na.kephas.kitvei.R
-import na.kephas.kitvei.repository.Bible
+import na.kephas.kitvei.data.Bible
 import na.kephas.kitvei.util.Fonts
 import na.kephas.kitvei.util.rootParent
 import java.util.regex.Pattern

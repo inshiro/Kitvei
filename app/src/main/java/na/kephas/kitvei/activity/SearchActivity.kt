@@ -13,17 +13,25 @@ import androidx.paging.PagedList
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import kotlinx.android.synthetic.main.search_activity.*
-import kotlinx.coroutines.experimental.*
+import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.android.UI
-
+import kotlinx.coroutines.experimental.delay
+import kotlinx.coroutines.experimental.launch
 import na.kephas.kitvei.R
 import na.kephas.kitvei.adapter.SearchAdapter
-import na.kephas.kitvei.repository.Bible
-import na.kephas.kitvei.repository.MyViewModel
+import na.kephas.kitvei.data.Bible
+import na.kephas.kitvei.util.InjectorUtils
 import na.kephas.kitvei.util.snackbar
+import na.kephas.kitvei.viewmodels.SearchListViewModel
 
 class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
-    private val viewModel by lazy(LazyThreadSafetyMode.NONE) { ViewModelProviders.of(this).get(MyViewModel::class.java) }
+    private val viewModel by lazy(LazyThreadSafetyMode.NONE) {
+
+        val factory = InjectorUtils.provideSearchListViewModelFactory(this)
+        ViewModelProviders.of(this, factory)
+                .get(SearchListViewModel::class.java)
+        //ViewModelProviders.of(this).getInstance(MyViewModel::class.java)
+    }
     private lateinit var mRecyclerView: RecyclerView
     private lateinit var mAdapter: SearchAdapter
     private lateinit var mLayoutManager: StaggeredGridLayoutManager
@@ -97,7 +105,7 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
                 if (regex.matches(newText)) {
                     queryTextChangedJob = launch(UI) {
                         delay(DEBOUNCE_MS)
-                        viewModel.searchList(newText)?.observe(this@SearchActivity, Observer<PagedList<Bible>?> { pagedList ->
+                        viewModel.getVerses(newText).observe(this@SearchActivity, Observer<PagedList<Bible>?> { pagedList ->
                             mAdapter.submitList(pagedList)
                             //mAdapter::submitList
                             if (validQuery != newText.trim()) {

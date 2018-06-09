@@ -1,4 +1,4 @@
-package na.kephas.kitvei.repository
+package na.kephas.kitvei.data
 
 import android.content.Context
 import android.content.SharedPreferences
