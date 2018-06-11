@@ -130,7 +130,7 @@ class MainActivity : AppCompatActivity(),
         }
     }
 
-    private lateinit var actionBarDrawerToggle:ActionBarDrawerToggle
+    private lateinit var actionBarDrawerToggle: ActionBarDrawerToggle
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -256,30 +256,33 @@ class MainActivity : AppCompatActivity(),
         }
 
         toolbarSearchView.setOnCloseListener {
-            if (!findInPageMenu) {
+            if (findInPageMenu)
+                closeFindInPageSearch()
+            else
                 finishSearch()
-            }
-            actionBarDrawerToggle.isDrawerIndicatorEnabled = true
-            toolbarSearchView.clearFocus()
-            //hideSoftInput(toolbarSearchView)
-            toolbarTitle.visibility = View.VISIBLE
-            toolbarSearchView.visibility = View.GONE
-            toolbarSearchView.setQuery("", false)
-            hideSearch = false
-            invalidateOptionsMenu()
-            val rv = mainViewPager.findViewWithTag<RecyclerView>("rv${mainViewPager.currentItem}")
-            (rv.adapter as MainAdapter).findInPage(null)
-            rv!!.adapter?.notifyDataSetChanged()
-            toolbarSearchView.setOnQueryTextListener(null)
-            toolbarSearchView.setOnQueryTextListener(miniSearchListener)
-            findInPageMenu = false
             true
         }
-
 
     }
 
     private var findInPageMenu = false
+
+    private fun closeFindInPageSearch() {
+        actionBarDrawerToggle.isDrawerIndicatorEnabled = true
+        toolbarSearchView.clearFocus()
+        //hideSoftInput(toolbarSearchView)
+        toolbarTitle.visibility = View.VISIBLE
+        toolbarSearchView.visibility = View.GONE
+        toolbarSearchView.setQuery("", false)
+        hideSearch = false
+        invalidateOptionsMenu()
+        val rv = mainViewPager.findViewWithTag<RecyclerView>("rv${mainViewPager.currentItem}")
+        (rv.adapter as MainAdapter).findInPage(null)
+        rv!!.adapter?.notifyDataSetChanged()
+        toolbarSearchView.setOnQueryTextListener(null)
+        toolbarSearchView.setOnQueryTextListener(miniSearchListener)
+        findInPageMenu = false
+    }
 
     private fun showFindInPageSearch() {
         showSearch()
@@ -290,24 +293,30 @@ class MainActivity : AppCompatActivity(),
             toolbarSearchView.queryHint = getString(R.string.find_in_page)
             toolbarSearchView.setOnQueryTextListener(null)
             toolbarSearchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+                val rv = mainViewPager.findViewWithTag<RecyclerView>("rv${mainViewPager.currentItem}")
                 override fun onQueryTextSubmit(query: String): Boolean {
                     return false
                 }
 
                 override fun onQueryTextChange(newText: String): Boolean {
-                    val rv = mainViewPager.findViewWithTag<RecyclerView>("rv${mainViewPager.currentItem}")
-                    if (newText == "")
-                        (rv.adapter as MainAdapter).findInPage(null)
-                    else
-                        (rv.adapter as MainAdapter).findInPage(newText)
-                    (rv.adapter as MainAdapter).notifyDataSetChanged()
+                    rv.post {
+                        (rv.adapter as MainAdapter).let {
+                            if (newText == "")
+                                it.findInPage(null)
+                            else
+                                it.findInPage(newText)
+                            it.notifyDataSetChanged()
+                        }
+
+                    }
+
                     return true
                 }
             })
         }
     }
 
-    fun showSearch() {
+    private fun showSearch() {
         toolbarTitle.clearAnimation()
         toolbarTitle.visibility = View.GONE
         toolbarSearchView.visibility = View.VISIBLE
@@ -503,7 +512,10 @@ class MainActivity : AppCompatActivity(),
         if (drawer_layout.isDrawerOpen(GravityCompat.START)) {
             drawer_layout.closeDrawer(GravityCompat.START)
         } else if (toolbarSearchView.visibility == View.VISIBLE) {
-            finishSearch()
+            if (findInPageMenu)
+                closeFindInPageSearch()
+            else
+                finishSearch()
         } else {
             super.onBackPressed()
         }

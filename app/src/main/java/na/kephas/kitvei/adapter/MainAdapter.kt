@@ -18,8 +18,8 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import na.kephas.kitvei.R
 import na.kephas.kitvei.data.Bible
+import na.kephas.kitvei.prefs
 import na.kephas.kitvei.util.Fonts
-import java.util.Locale
 import java.util.regex.Pattern
 
 class MainAdapter : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBACK) {
@@ -57,6 +57,7 @@ class MainAdapter : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBAC
         fun onItemClick(view: View, position: Int)
     }
 
+    // Removes delimeter in matched string, replaces all occurrences and applies style span
     fun modify(text: CharSequence, mode: Any, regex: String): SpannableStringBuilder {
         val pattern = Pattern.compile(regex)
         val ssb = SpannableStringBuilder(text)
@@ -75,6 +76,7 @@ class MainAdapter : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBAC
         return ssb
     }
 
+    // Replaces all occurrences and applies style span
     fun modify2(text: CharSequence, mode: Any, regex: String): SpannableStringBuilder {
         val pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE)
         val ssb = SpannableStringBuilder(text)
@@ -95,13 +97,12 @@ class MainAdapter : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBAC
         fontSize = size
     }
 
-    var findInPageQuery: String? = null
     fun findInPage(query: String?) {
         findInPageQuery = query
     }
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView), View.OnClickListener {
-        private val isRTL: Boolean by lazy { TextUtilsCompat.getLayoutDirectionFromLocale(Locale.getDefault()) != ViewCompat.LAYOUT_DIRECTION_LTR }
+        private val isRTL: Boolean by lazy { TextUtilsCompat.getLayoutDirectionFromLocale(java.util.Locale.getDefault()) != ViewCompat.LAYOUT_DIRECTION_LTR }
         private val textView: TextView = itemView.findViewById(R.id.mainTextView)
 
         init {
@@ -123,7 +124,7 @@ class MainAdapter : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBAC
                 nums.apply {
                     setSpan(ForegroundColorSpan(Color.parseColor("#877f66")), 0, nums.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
                     append(" ")
-                    setSpan(RelativeSizeSpan(0.55f), 0, nums.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    setSpan(RelativeSizeSpan(fontSize/1.5f), 0, nums.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
                 }
 
                 text = bible.verseText!!.replace('[', '_').replace(']', '_')
@@ -143,11 +144,12 @@ class MainAdapter : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBAC
 
                 sText.setSpan(ForegroundColorSpan(Color.parseColor("#414141")), 0, sText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
 
-                if (fontSize > -1f)
+                //if (fontSize > -1f)
                     sText.setSpan(RelativeSizeSpan(fontSize), 0, sText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
 
                 if (findInPageQuery != null)
                     sText = modify2(sText, BackgroundColorSpan(ContextCompat.getColor(itemView.context, R.color.highlight_color_dark)), "($findInPageQuery)")
+
 
                 textView.setText(TextUtils.concat("\t\t", nums, sText), TextView.BufferType.SPANNABLE)
                 //textView.setTextColor(Color.parseColor("#414141"))
@@ -158,7 +160,8 @@ class MainAdapter : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBAC
     }
 
     companion object {
-        private var fontSize = -1f
+        private var fontSize = prefs.fontSize
+        private var findInPageQuery: String? = null
         private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<Bible>() {
             override fun areItemsTheSame(oldItem: Bible, newItem: Bible): Boolean = oldItem.id == newItem.id
             override fun areContentsTheSame(oldItem: Bible, newItem: Bible): Boolean = oldItem == newItem
