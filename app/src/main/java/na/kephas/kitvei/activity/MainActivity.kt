@@ -7,7 +7,6 @@ import android.content.res.Configuration
 import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.util.TypedValue
 import android.view.*
 import android.view.animation.AlphaAnimation
@@ -24,7 +23,6 @@ import androidx.core.text.TextUtilsCompat
 import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
 import androidx.lifecycle.ViewModelProviders
-import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager.widget.ViewPager
 import com.flaviofaria.kenburnsview.KenBurnsView
@@ -44,12 +42,12 @@ import na.kephas.kitvei.adapter.MainViewPagerAdapter
 import na.kephas.kitvei.adapter.MiniSearchViewPagerAdapter
 import na.kephas.kitvei.data.AppDatabase
 import na.kephas.kitvei.data.Bible
+import na.kephas.kitvei.fragment.BottomSheetFragment
 import na.kephas.kitvei.fragment.FragmentBook
 import na.kephas.kitvei.fragment.FragmentChapter
 import na.kephas.kitvei.fragment.FragmentVerse
 import na.kephas.kitvei.util.*
 import na.kephas.kitvei.viewmodels.VerseListViewModel
-import java.util.*
 
 class MainActivity : AppCompatActivity(),
         NavigationView.OnNavigationItemSelectedListener,
@@ -60,13 +58,13 @@ class MainActivity : AppCompatActivity(),
     private val TAG by lazy { MainActivity::class.java.simpleName }
     private lateinit var tabLayout: TabLayout
     private lateinit var searchViewPager: ViewPager
-    private lateinit var mainViewPager: ViewPager
+    lateinit var mainViewPager: ViewPager
     private lateinit var miniSearchViewPagerAdapter: MiniSearchViewPagerAdapter
     private lateinit var bookFragment: FragmentBook
     private lateinit var chapterFragment: FragmentChapter
     private lateinit var verseFragment: FragmentVerse
     private val imm by lazy(LazyThreadSafetyMode.NONE) { getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager }
-    private val isRTL by lazy(LazyThreadSafetyMode.NONE) { TextUtilsCompat.getLayoutDirectionFromLocale(Locale.getDefault()) != ViewCompat.LAYOUT_DIRECTION_LTR }
+    private val isRTL by lazy(LazyThreadSafetyMode.NONE) { TextUtilsCompat.getLayoutDirectionFromLocale(java.util.Locale.getDefault()) != ViewCompat.LAYOUT_DIRECTION_LTR }
     //private val typeface by lazy(LazyThreadSafetyMode.NONE) { Typeface.create("sans-serif", Typeface.NORMAL) }
     private val viewModel by lazy(LazyThreadSafetyMode.NONE) {
 
@@ -81,6 +79,7 @@ class MainActivity : AppCompatActivity(),
         viewModel.getPages()
     }
     private val activityManager by lazy(LazyThreadSafetyMode.NONE) { baseContext.getSystemService<ActivityManager>() }
+    private lateinit var bottomSheetFragment: BottomSheetFragment
 
     companion object {
         private var row: Bible? = null
@@ -92,20 +91,20 @@ class MainActivity : AppCompatActivity(),
         private var queryFinished = false
     }
 
-    private fun isTranslucentNavBar(): Boolean {
+    fun isTranslucentNavBar(): Boolean {
         val flags = window.attributes.flags
         if ((flags and WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION) == WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
             return true
         return false
     }
 
-    private fun cancelTranslucentNavBar() {
+    fun cancelTranslucentNavBar() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
         }
     }
 
-    private fun setTranslucentNavBar() {
+    fun setTranslucentNavBar() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
         }
@@ -113,6 +112,15 @@ class MainActivity : AppCompatActivity(),
 
     override fun onConfigurationChanged(newConfig: Configuration?) {
         super.onConfigurationChanged(newConfig)
+        var proceed = true
+
+        // Do not touch NavBar if BottomSheet is shown
+        if (bottomSheetFragment.isAdded)
+            proceed = !(bottomSheetFragment != null && bottomSheetFragment.dialog != null
+                    && bottomSheetFragment.dialog.isShowing)
+        if (!proceed)
+            return
+
         if (newConfig?.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             if (isTranslucentNavBar())
                 cancelTranslucentNavBar()
@@ -122,27 +130,31 @@ class MainActivity : AppCompatActivity(),
         }
     }
 
+    private lateinit var actionBarDrawerToggle:ActionBarDrawerToggle
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
+        if (savedInstanceState == null)
+            bottomSheetFragment = BottomSheetFragment()
+
         launch(backgroundPool, parent = rootParent) {
 
             // Drawer
             val navHeaderView: View = nav_view.inflateHeaderView(R.layout.nav_header_main)
-            val toggle = ActionBarDrawerToggle(this@MainActivity, drawer_layout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
-            drawer_layout.addDrawerListener(toggle)
+            actionBarDrawerToggle = ActionBarDrawerToggle(this@MainActivity, drawer_layout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
+            drawer_layout.addDrawerListener(actionBarDrawerToggle)
 
             val coverView: KenBurnsView = navHeaderView.findViewById(R.id.coverView)
             // coverView.setImageResource(R.drawable.cover)
 
-            toggle.syncState()
+            actionBarDrawerToggle.syncState()
             nav_view.setNavigationItemSelectedListener(this@MainActivity)
             supportActionBar?.setDisplayShowTitleEnabled(false)
             supportActionBar?.setHomeButtonEnabled(true)
-            supportActionBar?.setDisplayHomeAsUpEnabled(true)
-            supportActionBar?.setHomeAsUpIndicator(R.drawable.ic_drag_handle_white_24dp)
+            //supportActionBar?.setDisplayHomeAsUpEnabled(true)
+            //supportActionBar?.setHomeAsUpIndicator(R.drawable.ic_drag_handle_white_24dp)
             //val image = ContextCompat.getDrawable(applicationContext, R.drawable.cover)
 
             withContext(UI) {
@@ -161,9 +173,10 @@ class MainActivity : AppCompatActivity(),
         blink(toolbarTitle, 4, 1000)
 
         if (prefs.VP_Position == 0) setMainTitle() // Init
-        toolbarTitle.typeface = Fonts.Merriweather_Black
+        //toolbarTitle.typeface = Fonts.Merriweather_Black
 
         mainViewPager = findViewById(R.id.mainViewPager)
+        mainViewPager.tag = "MainVP"
 
         // Prefer higher quality images unless we're on a low RAM device
         //mainViewPager.offscreenPageLimit = if (ActivityManagerCompat.isLowRamDevice(activityManager)) 1 else 2
@@ -226,11 +239,8 @@ class MainActivity : AppCompatActivity(),
 
         toolbarTitle.setOnClickListener {
             searchViewPager.currentItem = 0
-            toolbarTitle.clearAnimation()
-            toolbarTitle.visibility = View.GONE
-            toolbarSearchView.visibility = View.VISIBLE
-            hideSearch = true
-            invalidateOptionsMenu()
+
+            showSearch()
 
             topStuff.alpha = 0f
             topStuff.visibility = View.VISIBLE
@@ -246,9 +256,64 @@ class MainActivity : AppCompatActivity(),
         }
 
         toolbarSearchView.setOnCloseListener {
-            finishSearch()
+            if (!findInPageMenu) {
+                finishSearch()
+            }
+            actionBarDrawerToggle.isDrawerIndicatorEnabled = true
+            toolbarSearchView.clearFocus()
+            //hideSoftInput(toolbarSearchView)
+            toolbarTitle.visibility = View.VISIBLE
+            toolbarSearchView.visibility = View.GONE
+            toolbarSearchView.setQuery("", false)
+            hideSearch = false
+            invalidateOptionsMenu()
+            val rv = mainViewPager.findViewWithTag<RecyclerView>("rv${mainViewPager.currentItem}")
+            (rv.adapter as MainAdapter).findInPage(null)
+            rv!!.adapter?.notifyDataSetChanged()
+            toolbarSearchView.setOnQueryTextListener(null)
+            toolbarSearchView.setOnQueryTextListener(miniSearchListener)
+            findInPageMenu = false
             true
         }
+
+
+    }
+
+    private var findInPageMenu = false
+
+    private fun showFindInPageSearch() {
+        showSearch()
+        if (!findInPageMenu) {
+            findInPageMenu = true
+            actionBarDrawerToggle.isDrawerIndicatorEnabled = false
+            toolbarSearchView.isIconified = false
+            toolbarSearchView.queryHint = getString(R.string.find_in_page)
+            toolbarSearchView.setOnQueryTextListener(null)
+            toolbarSearchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+                override fun onQueryTextSubmit(query: String): Boolean {
+                    return false
+                }
+
+                override fun onQueryTextChange(newText: String): Boolean {
+                    val rv = mainViewPager.findViewWithTag<RecyclerView>("rv${mainViewPager.currentItem}")
+                    if (newText == "")
+                        (rv.adapter as MainAdapter).findInPage(null)
+                    else
+                        (rv.adapter as MainAdapter).findInPage(newText)
+                    (rv.adapter as MainAdapter).notifyDataSetChanged()
+                    return true
+                }
+            })
+        }
+    }
+
+    fun showSearch() {
+        toolbarTitle.clearAnimation()
+        toolbarTitle.visibility = View.GONE
+        toolbarSearchView.visibility = View.VISIBLE
+        hideSearch = true
+        invalidateOptionsMenu()
+
     }
 
     override fun onStop() {
@@ -278,8 +343,8 @@ class MainActivity : AppCompatActivity(),
     }
 
 
-    override fun onCompleteFB() {
-        toolbarSearchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+    private val miniSearchListener: SearchView.OnQueryTextListener  by lazy {
+        object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String): Boolean {
                 return false
             }
@@ -289,7 +354,11 @@ class MainActivity : AppCompatActivity(),
                     bookFragment.filter(newText)
                 return true
             }
-        })
+        }
+    }
+
+    override fun onCompleteFB() {
+        toolbarSearchView.setOnQueryTextListener(miniSearchListener)
     }
 
     override fun onCompleteFC() {}
@@ -443,6 +512,8 @@ class MainActivity : AppCompatActivity(),
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         val retValue = super.onCreateOptionsMenu(menu)
+        if (hideSearch)
+            return false
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.main, menu)
         val searchItem = menu.findItem(R.id.search_menu)
@@ -456,7 +527,20 @@ class MainActivity : AppCompatActivity(),
 
     private var fontSize = 1f
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
-        R.id.toggle_night -> {
+
+        R.id.search_menu -> {
+            val intent = Intent(this, SearchActivity::class.java)
+            this.startActivity(intent)
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+            true
+        }
+        R.id.find_in_page_menu -> {
+            showFindInPageSearch()
+            true
+        }
+        R.id.font_and_theme_menu -> {
+            bottomSheetFragment.show(supportFragmentManager, "TAG")
+            /*
             try {
                 fontSize = if (fontSize == 1f) 1.2f else 1f
                 (mainViewPager.findViewWithTag<RecyclerView>("rv${mainViewPager.currentItem}").adapter as MainAdapter).apply {
@@ -479,14 +563,11 @@ class MainActivity : AppCompatActivity(),
                 }*/
             } catch (e: Exception) {
                 Log.e(TAG, e.message)
-            }
+            }*/
             true
         }
 
-        R.id.search_menu -> {
-            val intent = Intent(this, SearchActivity::class.java)
-            this.startActivity(intent)
-            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+        R.id.settings_menu -> {
             true
         }
         else -> super.onOptionsItemSelected(item)

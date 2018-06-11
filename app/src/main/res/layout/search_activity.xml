@@ -5,13 +5,53 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <na.kephas.kitvei.widget.NestedScrollAppBarLayout
+        android:id="@+id/search_appBarLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorPrimary"
+        android:theme="@style/Theme.MyApp.Toolbar">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <na.kephas.kitvei.widget.StatusBarView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:sbv_fill_in_mode="true" />
+
+            <androidx.appcompat.widget.Toolbar
+                android:id="@+id/search_toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="?attr/colorPrimary"
+                app:popupTheme="@style/AppTheme.PopupOverlay"
+                tools:ignore="UnusedAttribute" >
+
+                <androidx.appcompat.widget.SearchView
+                    android:id="@+id/searchView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:focusableInTouchMode="false"
+                    android:imeOptions="flagNoExtractUi"
+                    android:inputType="textNoSuggestions"
+                    android:windowSoftInputMode="adjustNothing"
+                    app:iconifiedByDefault="false"
+                    app:searchIcon="@null" />
+
+            </androidx.appcompat.widget.Toolbar>
+        </LinearLayout>
+    </na.kephas.kitvei.widget.NestedScrollAppBarLayout>
+    <!--
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/search_appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:theme="@style/AppTheme.AppBarOverlay"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
-        <!-- app:layout_behavior="@string/appbar_scrolling_view_behavior" allows RV overscroll glow -->
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" allows RV overscroll glow
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/search_toolbar"
             android:layout_width="match_parent"
@@ -37,7 +77,7 @@
         </androidx.appcompat.widget.Toolbar>
     </com.google.android.material.appbar.AppBarLayout>
 
-
+-->
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/search_recyclerview"
@@ -47,9 +87,9 @@
         android:fadingEdge="vertical"
         android:overScrollMode="ifContentScrolls"
         android:paddingTop="16dp"
-        android:paddingBottom="16dp"
-        android:paddingLeft="8dp"
-        android:paddingRight="8dp"
+        android:paddingBottom="300dp"
+        android:paddingLeft="14dp"
+        android:paddingRight="14dp"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         tools:itemCount="5"
         tools:listItem="@layout/card_row" />

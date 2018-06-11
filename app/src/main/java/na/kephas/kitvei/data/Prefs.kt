@@ -11,6 +11,7 @@ class Prefs (context: Context) {
     val CHAPTER_LENGTH = "CHAPTER_LENGTH"
     val DAY_MODE = "DAY_MODE"
     val VP_POSITION = "VP_POSITION"
+    val FONT_SIZE = "FONT_SIZE"
     private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_FILENAME, 0)
 
     var Book: Int
@@ -31,4 +32,7 @@ class Prefs (context: Context) {
     var VP_Position: Int
         get() = prefs.getInt(VP_POSITION, 0)
         set(value) = prefs.edit().putInt(VP_POSITION, value).apply()
+    var fontSize: Float
+        get() = prefs.getFloat(FONT_SIZE, 1f)
+        set(value) = prefs.edit().putFloat(FONT_SIZE, value).apply()
 }

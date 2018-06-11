@@ -8,7 +8,7 @@ import androidx.core.content.systemService
 @TargetApi(Build.VERSION_CODES.M)
 inline fun <reified T> Context.getSystemService(): T {
     if (isM()) {
-        return systemService<T>()
+        return systemService<T>()!!
     } else {
         return when (T::class) {
             android.view.WindowManager::class -> Context.WINDOW_SERVICE

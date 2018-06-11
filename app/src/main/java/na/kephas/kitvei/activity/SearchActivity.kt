@@ -88,6 +88,7 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
         var validQuery = ""
         val DEBOUNCE_MS = 300
         val regex = Regex("""^([a-zA-Z,.;:()'? ]+)( [1-9]\d{0,2}+:[1-9]\d{0,2}+)*$""")
+        searchView.queryHint = getString(R.string.search_verses) + "..."
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String): Boolean {
                 return false

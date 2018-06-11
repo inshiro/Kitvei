@@ -57,12 +57,12 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 dependencies {
 
     // Android support library
-    def androidx_verison = "1.0.0-alpha1"
+    def androidx_verison = "1.0.0-alpha3"
     implementation "com.google.android.material:material:$androidx_verison"
     implementation "androidx.appcompat:appcompat:$androidx_verison"
     implementation "androidx.recyclerview:recyclerview:$androidx_verison"
     implementation "androidx.core:core-ktx:$androidx_verison"
-    implementation "androidx.constraintlayout:constraintlayout:1.1.0"
+    implementation "androidx.constraintlayout:constraintlayout:1.1.1"
 
     // ViewModel-LiveData
     def lifecycle_version  = "2.0.0-alpha1"
