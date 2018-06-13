@@ -15,5 +15,8 @@ interface VerseDao {
     fun getPages(): List<Bible>
 
     @RawQuery(observedEntities = arrayOf(Bible::class))
+    fun getVersesRaw(query: SupportSQLiteQuery): List<Bible>
+
+    @RawQuery(observedEntities = arrayOf(Bible::class))
     fun getVerses(query: SupportSQLiteQuery): DataSource.Factory<Int, Bible>
 }

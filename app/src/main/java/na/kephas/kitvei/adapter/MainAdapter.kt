@@ -33,6 +33,7 @@ class MainAdapter : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBAC
         setHasStableIds(true)
     }
 
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.main_rv_item, parent, false))
     }
@@ -77,7 +78,7 @@ class MainAdapter : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBAC
     }
 
     // Replaces all occurrences and applies style span
-    fun modify2(text: CharSequence, mode: Any, regex: String): SpannableStringBuilder {
+    fun modify2(text: CharSequence, mode: Any, regex: String, position: Int): SpannableStringBuilder {
         val pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE)
         val ssb = SpannableStringBuilder(text)
         if (pattern != null) {
@@ -89,7 +90,9 @@ class MainAdapter : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBAC
                 ssb.setSpan(CharacterStyle.wrap(mode as CharacterStyle), start, end, 0)
                 matchesSoFar++
             }
+            matchesList[position] = matchesSoFar
         }
+
         return ssb
     }
 
@@ -100,6 +103,25 @@ class MainAdapter : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBAC
     fun findInPage(query: String?) {
         findInPageQuery = query
     }
+
+    fun getCurrentListSize(): Int {
+        var count = 0
+        matchesList.count {
+            if (it != 0)
+                count += it
+            it != 0
+        }
+        return count
+    }
+
+    fun getMatchesList(): IntArray {
+        return matchesList
+    }
+
+    fun fixMatchesListSize(size: Int) {
+        matchesList = IntArray(size)
+    }
+
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView), View.OnClickListener {
         private val isRTL: Boolean by lazy { TextUtilsCompat.getLayoutDirectionFromLocale(java.util.Locale.getDefault()) != ViewCompat.LAYOUT_DIRECTION_LTR }
@@ -124,7 +146,7 @@ class MainAdapter : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBAC
                 nums.apply {
                     setSpan(ForegroundColorSpan(Color.parseColor("#877f66")), 0, nums.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
                     append(" ")
-                    setSpan(RelativeSizeSpan(fontSize/1.5f), 0, nums.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    setSpan(RelativeSizeSpan(fontSize / 1.5f), 0, nums.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
                 }
 
                 text = bible.verseText!!.replace('[', '_').replace(']', '_')
@@ -142,13 +164,16 @@ class MainAdapter : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBAC
                     sText.append(text.replace("_", ""))
                 }
 
-                sText.setSpan(ForegroundColorSpan(Color.parseColor("#414141")), 0, sText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                sText.setSpan(ForegroundColorSpan(ContextCompat.getColor(itemView.context, R.color.textColor)), 0, sText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
 
                 //if (fontSize > -1f)
-                    sText.setSpan(RelativeSizeSpan(fontSize), 0, sText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                sText.setSpan(RelativeSizeSpan(fontSize), 0, sText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
 
                 if (findInPageQuery != null)
-                    sText = modify2(sText, BackgroundColorSpan(ContextCompat.getColor(itemView.context, R.color.highlight_color_dark)), "($findInPageQuery)")
+                    if (Regex("""([,.;:()'? ]+)""").matches(findInPageQuery!!))
+                        sText = modify2(sText, BackgroundColorSpan(ContextCompat.getColor(itemView.context, R.color.highlight_color_dark)), "[$findInPageQuery]", adapterPosition)
+                    else
+                        sText = modify2(sText, BackgroundColorSpan(ContextCompat.getColor(itemView.context, R.color.highlight_color_dark)), "($findInPageQuery)", adapterPosition)
 
 
                 textView.setText(TextUtils.concat("\t\t", nums, sText), TextView.BufferType.SPANNABLE)
@@ -159,9 +184,11 @@ class MainAdapter : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBAC
         }
     }
 
+
     companion object {
         private var fontSize = prefs.fontSize
         private var findInPageQuery: String? = null
+        private var matchesList = IntArray(1)
         private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<Bible>() {
             override fun areItemsTheSame(oldItem: Bible, newItem: Bible): Boolean = oldItem.id == newItem.id
             override fun areContentsTheSame(oldItem: Bible, newItem: Bible): Boolean = oldItem == newItem

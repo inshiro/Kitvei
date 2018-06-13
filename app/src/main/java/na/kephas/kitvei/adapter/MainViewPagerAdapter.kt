@@ -49,59 +49,10 @@ class MainViewPagerAdapter(private val act: AppCompatActivity, private val vm: V
 
         row = all[position]
         vm.getVerses(row.bookId!!, row.chapterId!!).observe(act, Observer<PagedList<Bible>?> { pagedList ->
-            mAdapter?.submitList(pagedList)
-            //Log.d("instantiateItem", "current-position: $position LOADING chapter: ${position+1} size: ${pagedList?.size} ")
+            if (pagedList != null) {
+                mAdapter?.submitList(pagedList)
+            }
         })
-
-        /*
-        @Suppress("UNUSED_VARIABLE")
-        val nestedScrollView = layout.findViewById<NestedScrollView>(R.id.parentNestedScrollView).apply {
-            setOnScrollChangeListener(NestedScrollView.OnScrollChangeListener { _, _, scrollY, _, oldScrollY ->
-                if (scrollY > oldScrollY) {
-                    act.window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LOW_PROFILE // Scrolling up
-
-                }
-                else {
-                    act.window.decorView.systemUiVisibility = 0 // Scrolling down
-                }
-            })
-            tag = "nsv$position"
-        }
-        */
-
-        /*
-        if (rvOnly) {
-            recyclerView.clearOnScrollListeners()
-
-            // Add overscroll
-            val overScrollListener = object : RecyclerView.OnScrollListener() {
-                override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-                    when (newState) {
-                        RecyclerView.SCROLL_STATE_DRAGGING -> {
-                            if (!recyclerView.canScrollVertically(-1)) {
-                                val e = MotionEvent.obtain(
-                                        System.currentTimeMillis(),
-                                        System.currentTimeMillis() + 100,
-                                        MotionEvent.ACTION_UP,
-                                        100f, 100f, 0)
-                                recyclerView.dispatchTouchEvent(e)
-                            } else if (!recyclerView.canScrollVertically(1)) {
-                                val e = MotionEvent.obtain(
-                                        System.currentTimeMillis(),
-                                        System.currentTimeMillis() + 100,
-                                        MotionEvent.ACTION_UP,
-                                        100f, 100f, 0)
-                                recyclerView.dispatchTouchEvent(e)
-                            }
-                        }
-                    }
-                    super.onScrollStateChanged(recyclerView, newState)
-                }
-            }
-
-            recyclerView.addOnScrollListener(overScrollListener)
-            }
-*/
 
         recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             //var hidden: Boolean = false

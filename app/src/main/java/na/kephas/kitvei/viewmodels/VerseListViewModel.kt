@@ -23,6 +23,12 @@ class VerseListViewModel internal constructor(
         }.await()
     }
 
+    fun getVersesRaw(book: Int, chapter: Int): List<Bible> = runBlocking {
+        async(backgroundPool) {
+            verseRepository.getVersesRaw(book, chapter)
+        }.await()
+    }
+
     fun getVerses(book: Int, chapter: Int): LiveData<PagedList<Bible>> = runBlocking {
         async(backgroundPool) {
             LivePagedListBuilder(verseRepository.getVerses(book, chapter),

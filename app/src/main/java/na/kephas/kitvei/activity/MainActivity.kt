@@ -7,8 +7,12 @@ import android.content.res.Configuration
 import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.util.TypedValue
-import android.view.*
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import android.view.WindowManager
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.view.inputmethod.InputMethodManager
@@ -195,7 +199,9 @@ class MainActivity : AppCompatActivity(),
                 viewPagerPosition = position
                 row = bible[viewPagerPosition]
                 setMainTitle(row?.bookName, row?.chapterId)
-
+                if (toolbarSearchView.visibility == View.VISIBLE)
+                    if (findInPageMenu)
+                        closeFindInPageSearch()
 
             }
 
@@ -284,9 +290,59 @@ class MainActivity : AppCompatActivity(),
         findInPageMenu = false
     }
 
+    private lateinit var matchesList: IntArray
+    fun getMatchCount(text: String, regex: String, position: Int) {
+        /*val pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE)
+        var matchesSoFar = 0
+        if (pattern != null) {
+            val matcher = pattern.matcher(text)
+            while (matcher.find()) {
+                matchesSoFar++
+            }
+            matchesList[position] = matchesSoFar
+        }*/
+        matchesList[position] = text.countSubstring(regex)
+
+    }
+
+
+    fun getCurrentListSize(): Int {
+        var count = 0
+        matchesList.count {
+            if (it != 0)
+                count += it
+            it != 0
+        }
+        return count
+    }
+
+    fun formatText(vText: String): String {
+        var text = vText.replace('[', '_').replace(']', '_')
+
+        if (text.indexOf('<') == 0) {
+            text = text.substring(text.lastIndexOf('>') + 1, text.length).trim()
+        } else if (text.contains('<')) {
+            text = text.substring(0, text.indexOf('<')).trim()
+        }
+
+        if (text.contains('_'))
+            text = text.replace("_", "")
+
+        return text
+    }
+
+    private fun String.countSubstring(sub: String): Int {
+        val temp = this.replace(sub,"", true)
+        return (this.length - temp.length) / sub.length
+    }//this.split(sub,true,0).size - 1
+
     private fun showFindInPageSearch() {
         showSearch()
         if (!findInPageMenu) {
+            val regex = Regex("""([a-zA-Z,.;:()'? ]+)""")
+            val versesRaw = viewModel.getVersesRaw(row!!.bookId!!, row!!.chapterId!!)
+            matchesList = IntArray(versesRaw.size)
+
             findInPageMenu = true
             actionBarDrawerToggle.isDrawerIndicatorEnabled = false
             toolbarSearchView.isIconified = false
@@ -299,12 +355,27 @@ class MainActivity : AppCompatActivity(),
                 }
 
                 override fun onQueryTextChange(newText: String): Boolean {
+
                     rv.post {
                         (rv.adapter as MainAdapter).let {
                             if (newText == "")
                                 it.findInPage(null)
-                            else
+                            else if (regex.matches(newText)) {
+                                //if (it.getMatchesList().size != it.currentList!!.size)
+                                    it.fixMatchesListSize(it.currentList!!.size)
+                                for (index in 0 until versesRaw.size)
+                                    getMatchCount(formatText(versesRaw.get(index).verseText!!), newText, index)
+
+                                Log.d(TAG, "[new] Text: $newText Matches found: ${getCurrentListSize()}")
                                 it.findInPage(newText)
+                            }
+                            rv.addOnLayoutChangeListener(object : View.OnLayoutChangeListener {
+                                override fun onLayoutChange(p0: View?, p1: Int, p2: Int, p3: Int, p4: Int, p5: Int, p6: Int, p7: Int, p8: Int) {
+                                    rv.removeOnLayoutChangeListener(this)
+                                    Log.d(TAG, "[prev] Text: $newText Matches found: ${it.getCurrentListSize()}")
+                                }
+                            })
+
                             it.notifyDataSetChanged()
                         }
 
@@ -402,6 +473,14 @@ class MainActivity : AppCompatActivity(),
             queryFinished = true
             finishSearch()
         }
+        val rv = mainViewPager.findViewWithTag<RecyclerView>("rv${mainViewPager.currentItem}")
+        rv.post {
+            if (delay)
+                rvScrollTo(rv, position)
+            else
+                rv.smoothScrollToPosition(position)
+        }
+/*
         launch(UI) {
             val rv = mainViewPager.findViewWithTag<RecyclerView>("rv${mainViewPager.currentItem}")
             if (delay) {
@@ -410,7 +489,7 @@ class MainActivity : AppCompatActivity(),
             } else
                 rv.smoothScrollToPosition(position)
         }
-
+*/
     }
 
     private fun hideSoftInput(view: View) {
@@ -472,14 +551,22 @@ class MainActivity : AppCompatActivity(),
 
     }
 
+    /*
     private var recyclerViewReadyCallback: RecyclerViewReadyCallback? = null
 
     interface RecyclerViewReadyCallback {
         fun onLayoutReady()
-    }
+    }*/
 
     private fun rvScrollTo(recyclerView: RecyclerView, position: Int) {
 
+        recyclerView.addOnLayoutChangeListener(object : View.OnLayoutChangeListener {
+            override fun onLayoutChange(p0: View?, p1: Int, p2: Int, p3: Int, p4: Int, p5: Int, p6: Int, p7: Int, p8: Int) {
+                recyclerView.removeOnLayoutChangeListener(this)
+                recyclerView.smoothScrollToPosition(position)
+            }
+        })
+        /*
         recyclerViewReadyCallback = object : RecyclerViewReadyCallback {
             override fun onLayoutReady() {
                 recyclerView.smoothScrollToPosition(position)
@@ -497,6 +584,7 @@ class MainActivity : AppCompatActivity(),
                     recyclerView.viewTreeObserver.removeOnGlobalLayoutListener(this)
             }
         })
+        */
     }
 
     private fun tintMenuIcon(item: MenuItem, @ColorRes color: Int) {

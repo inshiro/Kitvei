@@ -9,6 +9,9 @@ class VerseRepository private constructor(private val verseDao: VerseDao) {
 
     fun getPages() = verseDao.getPages()
 
+    fun getVersesRaw(book: Int, chapter: Int) = verseDao.getVersesRaw(SimpleSQLiteQuery("SELECT * FROM Bible WHERE book_id=? AND chapter_id=?", arrayOf<Any>(book, chapter)))
+
+
     fun getVerses(book: Int, chapter: Int) =
             verseDao.getVerses(SimpleSQLiteQuery("SELECT * FROM Bible WHERE book_id=? AND chapter_id=?", arrayOf<Any>(book, chapter)))
 

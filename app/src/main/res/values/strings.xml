@@ -3,10 +3,10 @@
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="drawer_epistle_dedicatory">Epistle Dedicatory</string>
-    <string name="drawer_translators_notes">Translator\'s Notes</string>
+    <string name="drawer_translators_notes">Translators to the Reader</string>
     <string name="drawer_howto">How To Know</string>
     <string name="dedicatory_title">Epistle Dedicatory</string>
-    <string name="translators_title">The Translators To The Reader</string>
+    <string name="translators_title">The Translators to the Reader</string>
     <string name="howto_title">How to Know</string>
     <bool name="is_tablet">false</bool>
 
