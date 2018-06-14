@@ -4,9 +4,12 @@ import android.content.Context
 import android.content.res.Resources
 import android.os.Build
 import android.text.Html
+import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.view.View
 import com.google.android.material.snackbar.Snackbar
+import java.util.regex.Pattern
+
 /*
 import android.graphics.drawable.Drawable
 import android.os.Looper
@@ -30,6 +33,75 @@ fun View.snackbar(str: String, duration: Int = Snackbar.LENGTH_SHORT) {
     }
 }
 
+// Returns number of occurrence of substring in String, or additional does something with values.
+fun String.occurrence(sub: String, ignoreCase: Boolean = true, removeDelimeter: Boolean = false, additional: (matches: Int, start: Int, end: Int) -> Unit = { _, _, _ -> }): Int {
+    val pattern = if (ignoreCase)
+        Pattern.compile(sub, Pattern.LITERAL or Pattern.CASE_INSENSITIVE) ?: return 0
+    else
+        Pattern.compile(sub)
+    val matcher = pattern.matcher(this)
+    var matches = 0
+    var start: Int
+    var end: Int
+    while (matcher.find()) {
+        matches++
+        if (removeDelimeter) {
+            start = matcher.start() - (matches * 2)
+            end = matcher.end() - (matches * 2)
+            additional.invoke(matches, start + 1, end - 1)
+            this.removeRange(start, start + 1)
+            this.removeRange(end - 2, end - 1)
+        } else {
+            start = matcher.start()
+            end = matcher.end()
+            additional.invoke(matches, start, end)
+        }
+
+    }
+    return matches
+}
+fun SpannableStringBuilder.occurrence(sub: String, ignoreCase: Boolean = true, removeDelimeter: Boolean = false, additional: (matches: Int, start: Int, end: Int) -> Unit = { _, _, _ -> }): Int {
+    val pattern = if (ignoreCase)
+        Pattern.compile(sub, Pattern.LITERAL or Pattern.CASE_INSENSITIVE) ?: return 0
+    else
+        Pattern.compile(sub)
+    val matcher = pattern.matcher(this)
+    var matches = 0
+    var start: Int
+    var end: Int
+    while (matcher.find()) {
+        matches++
+        if (removeDelimeter) {
+            start = matcher.start() - (matches * 2)
+            end = matcher.end() - (matches * 2)
+            additional.invoke(matches, start + 1, end - 1)
+            this.delete(start, start + 1)
+            this.delete(end - 2, end - 1)
+        } else {
+            start = matcher.start()
+            end = matcher.end()
+            additional.invoke(matches, start, end)
+        }
+
+    }
+    return matches
+}
+
+fun String.formatText(): String {
+    var text = this.replace('[', '_').replace(']', '_')
+
+    if (text.indexOf('<') == 0) {
+        text = text.substring(text.lastIndexOf('>') + 1, text.length).trim()
+    } else if (text.contains('<')) {
+        text = text.substring(0, text.indexOf('<')).trim()
+    }
+
+    if (text.contains('_'))
+        text = text.replace("_", "")
+
+    return text
+}
+
 fun getStatusBarHeight(r: Resources): Int {
     var result = 0
     val resourceId = r.getIdentifier("status_bar_height", "dimen", "android")
@@ -38,6 +110,7 @@ fun getStatusBarHeight(r: Resources): Int {
     }
     return result
 }
+
 fun getScreenHeight(): Int = Resources.getSystem().displayMetrics.heightPixels
 fun String.toSpanned(): Spanned {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {

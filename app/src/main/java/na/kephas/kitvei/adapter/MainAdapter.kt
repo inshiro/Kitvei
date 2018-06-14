@@ -21,6 +21,7 @@ import na.kephas.kitvei.R
 import na.kephas.kitvei.data.Bible
 import na.kephas.kitvei.prefs
 import na.kephas.kitvei.util.Fonts
+import na.kephas.kitvei.util.occurrence
 import java.util.regex.Pattern
 
 class MainAdapter : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBACK) {
@@ -78,30 +79,6 @@ class MainAdapter : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBAC
         return ssb
     }
 
-    // Replaces all occurrences and applies style span
-    fun modify2(text: CharSequence, mode: Any, regex: String, position: Int, context: Context? = null): SpannableStringBuilder {
-        val pattern = Pattern.compile(Pattern.quote(regex), Pattern.CASE_INSENSITIVE)
-        val ssb = SpannableStringBuilder(text)
-        if (pattern != null) {
-            val matcher = pattern.matcher(text)
-            var matchesSoFar = 0
-            while (matcher.find()) {
-                val start = matcher.start()
-                val end = matcher.end()
-                matchesSoFar++
-                if (currentHighlightElementIndex != null && currentHighlightElementIndex == matchesSoFar && currentHighlightIndex == position) {
-                    ssb.setSpan(CharacterStyle.wrap(BackgroundColorSpan(ContextCompat.getColor(context!!, R.color.highlight_focus_color)) as CharacterStyle), start, end, 0)
-                    //currentHighlightElementIndex = null
-                } else
-                    ssb.setSpan(CharacterStyle.wrap(mode as CharacterStyle), start, end, 0)
-
-            }
-            matchesList[position] = matchesSoFar
-        }
-
-        return ssb
-    }
-
     fun setFontSize(size: Float) {
         fontSize = size
     }
@@ -128,7 +105,7 @@ class MainAdapter : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBAC
         matchesList = IntArray(size)
     }
 
-    fun setCurrentlyHighlighted(index: Int?,element: Int?) {
+    fun setCurrentlyHighlighted(index: Int?, element: Int?) {
         currentHighlightIndex = index
         currentHighlightElementIndex = element
     }
@@ -169,7 +146,11 @@ class MainAdapter : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBAC
                 }
 
                 if (text.contains('_')) {
+                    //if (!this@MainAdapter::sText.isInitialized) sText = SpannableStringBuilder(text)
                     sText = modify(text, StyleSpan(Typeface.ITALIC), "_(.*?)_")
+                    //sText.occurrence("_(.*?)_", true, true) { _, start, end ->
+                    //    sText.setSpan(CharacterStyle.wrap(StyleSpan(Typeface.ITALIC) as CharacterStyle), start + 1, end - 1, 0)
+                    //}
                 } else {
                     sText = SpannableStringBuilder()
                     sText.append(text.replace("_", ""))
@@ -181,8 +162,14 @@ class MainAdapter : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBAC
                 sText.setSpan(RelativeSizeSpan(fontSize), 0, sText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
 
                 if (findInPageQuery != null)
-                    sText = modify2(sText, BackgroundColorSpan(ContextCompat.getColor(itemView.context, R.color.highlight_color_dark)), findInPageQuery!!, adapterPosition, itemView.context)
-
+                    sText.occurrence(findInPageQuery!!) { matches, start, end ->
+                        if (currentHighlightElementIndex != null && currentHighlightElementIndex == matches && currentHighlightIndex == adapterPosition) {
+                            sText.setSpan(CharacterStyle.wrap(BackgroundColorSpan(ContextCompat.getColor(itemView.context, R.color.highlight_focus_color)) as CharacterStyle), start, end, 0)
+                        } else {
+                            sText.setSpan(CharacterStyle.wrap(BackgroundColorSpan(ContextCompat.getColor(itemView.context, R.color.highlight_color_dark)) as CharacterStyle), start, end, 0)
+                        }
+                        matchesList[adapterPosition] = matches
+                    }
 
                 textView.setText(TextUtils.concat("\t\t", nums, sText), TextView.BufferType.SPANNABLE)
                 //textView.setTextColor(Color.parseColor("#414141"))

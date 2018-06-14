@@ -327,21 +327,6 @@ class MainActivity : AppCompatActivity(),
         return count
     }
 
-    fun formatText(vText: String): String {
-        var text = vText.replace('[', '_').replace(']', '_')
-
-        if (text.indexOf('<') == 0) {
-            text = text.substring(text.lastIndexOf('>') + 1, text.length).trim()
-        } else if (text.contains('<')) {
-            text = text.substring(0, text.indexOf('<')).trim()
-        }
-
-        if (text.contains('_'))
-            text = text.replace("_", "")
-
-        return text
-    }
-
     private val closeButton: ImageView? by lazy {
         var button: ImageView? = null
         try {
@@ -484,7 +469,7 @@ class MainActivity : AppCompatActivity(),
                             //if (it.getMatchesList().size != it.currentList!!.size)
                             it.fixMatchesListSize(it.currentList!!.size)
                             for (index in 0 until versesRaw.size)
-                                formatText(versesRaw.get(index).verseText!!).getMatchCount(newText, index)
+                                versesRaw[index].verseText!!.formatText().occurrence(newText) { matches, _, _ ->  matchesList[index] = matches}
                             val matchCount = getCurrentListSize()
                             findInPageMatch = if (matchCount == 0) 0 else 1
 
