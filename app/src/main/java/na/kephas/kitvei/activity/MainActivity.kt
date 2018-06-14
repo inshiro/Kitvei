@@ -16,6 +16,8 @@ import android.view.WindowManager
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.view.inputmethod.InputMethodManager
+import android.widget.ImageButton
+import android.widget.ImageView
 import androidx.annotation.ColorRes
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
@@ -52,6 +54,8 @@ import na.kephas.kitvei.fragment.FragmentChapter
 import na.kephas.kitvei.fragment.FragmentVerse
 import na.kephas.kitvei.util.*
 import na.kephas.kitvei.viewmodels.VerseListViewModel
+import java.lang.reflect.Field
+import java.util.regex.Pattern
 
 class MainActivity : AppCompatActivity(),
         NavigationView.OnNavigationItemSelectedListener,
@@ -261,6 +265,12 @@ class MainActivity : AppCompatActivity(),
 
         }
 
+
+        fipCloseButton.setOnClickListener {
+            if (findInPageMenu)
+                closeFindInPageSearch()
+        }
+
         toolbarSearchView.setOnCloseListener {
             if (findInPageMenu)
                 closeFindInPageSearch()
@@ -274,37 +284,38 @@ class MainActivity : AppCompatActivity(),
     private var findInPageMenu = false
 
     private fun closeFindInPageSearch() {
+        toggleSearchViewCloseButton(false)
         actionBarDrawerToggle.isDrawerIndicatorEnabled = true
         toolbarSearchView.clearFocus()
         //hideSoftInput(toolbarSearchView)
+        findInSearchContainer.visibility = View.GONE
         toolbarTitle.visibility = View.VISIBLE
         toolbarSearchView.visibility = View.GONE
         toolbarSearchView.setQuery("", false)
         hideSearch = false
         invalidateOptionsMenu()
         val rv = mainViewPager.findViewWithTag<RecyclerView>("rv${mainViewPager.currentItem}")
-        (rv.adapter as MainAdapter).findInPage(null)
-        rv!!.adapter?.notifyDataSetChanged()
+        (rv.adapter as MainAdapter).apply {
+            findInPage(null)
+            setCurrentlyHighlighted(null, null)
+            notifyDataSetChanged()
+        }
         toolbarSearchView.setOnQueryTextListener(null)
         toolbarSearchView.setOnQueryTextListener(miniSearchListener)
         findInPageMenu = false
     }
 
     private lateinit var matchesList: IntArray
-    fun getMatchCount(text: String, regex: String, position: Int) {
-        /*val pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE)
+    fun String.getMatchCount(regex: String, position: Int): Int {
+        val pattern = Pattern.compile(Pattern.quote(regex), Pattern.CASE_INSENSITIVE) ?: return 0
+        val matcher = pattern.matcher(this)
         var matchesSoFar = 0
-        if (pattern != null) {
-            val matcher = pattern.matcher(text)
-            while (matcher.find()) {
-                matchesSoFar++
-            }
-            matchesList[position] = matchesSoFar
-        }*/
-        matchesList[position] = text.countSubstring(regex)
-
+        while (matcher.find()) {
+            matchesSoFar++
+        }
+        matchesList[position] = matchesSoFar
+        return matchesSoFar
     }
-
 
     fun getCurrentListSize(): Int {
         var count = 0
@@ -331,60 +342,185 @@ class MainActivity : AppCompatActivity(),
         return text
     }
 
-    private fun String.countSubstring(sub: String): Int {
-        val temp = this.replace(sub,"", true)
-        return (this.length - temp.length) / sub.length
-    }//this.split(sub,true,0).size - 1
+    private val closeButton: ImageView? by lazy {
+        var button: ImageView? = null
+        try {
+            val searchField: Field = SearchView::class.java.getDeclaredField("mCloseButton")
+            searchField.isAccessible = true
+            button = searchField.get(toolbarSearchView) as ImageView
+        } catch (e: Exception) {
+            Log.e(TAG, "Error finding close button", e)
+        }
+        button
+    }
+
+    private fun toggleSearchViewCloseButton(close: Boolean) {
+        closeButton?.let {
+            it.isEnabled = !close
+            it.setImageDrawable(if (close) null else ContextCompat.getDrawable(this, R.drawable.ic_close_white_24dp))
+        }
+    }
+
+    private var findInPageMatch = 1
+    private var fipIndex = 0
+    private var fipElement = 1
+    fun resetFIPS() {
+        findInPageMatch = 1
+        fipIndex = 0
+        fipElement = 1
+
+    }
+
+    private fun setClickListener(button: ImageButton, recyclerView: RecyclerView) {
+
+
+        button.setOnClickListener {
+            if (!findInPageMenu)
+                return@setOnClickListener
+            val count = getCurrentListSize()
+            if (count < 1)
+                return@setOnClickListener
+
+            run loop@{
+                if (button == fipUpButton) {
+                    //if (findInPageMatch == 1) findInPageMatch = count
+                    //findInPageMatch--
+                } else if (button == fipDownButton) {
+                    if (findInPageMatch == count) {
+                        matchesList.forEachIndexed { index, element ->
+                            if (element != 0) {
+                                (recyclerView.adapter as MainAdapter).apply {
+                                    setCurrentlyHighlighted(index, 1)
+                                    notifyDataSetChanged()
+                                }
+                                recyclerView.scrollToPosition(index)
+                                resetFIPS()
+                                fipCountText.text = ("$findInPageMatch/$count")
+                                return@setOnClickListener
+                            }
+
+                        }
+
+                    }
+                    for (index in fipIndex until matchesList.size)
+                        if (matchesList[index] != 0)
+                            for (element in fipElement..matchesList[index]) {
+                                fipIndex = index
+                                fipElement++
+                                findInPageMatch++
+                                if (fipElement == matchesList[index] + 1) {
+                                    fipIndex++
+                                    // Get next index
+                                    run loop2@{
+                                        for (i in fipIndex until matchesList.size)
+                                            if (matchesList[i] != 0) {
+                                                fipIndex = i
+                                                return@loop2
+                                            }
+                                    }
+                                    fipElement = 1
+                                }
+
+                                recyclerView.post {
+                                    rvScrollTo(recyclerView, fipIndex)
+                                    Log.d(TAG, "Called scrolled down index: $fipIndex fipElement: $fipElement findInPageMatch: $findInPageMatch")
+
+                                    (recyclerView.adapter as MainAdapter).apply {
+                                        setCurrentlyHighlighted(fipIndex, fipElement)
+                                        notifyDataSetChanged()
+                                        //notifyItemChanged(fipIndex)
+                                        //if (fipIndex - 1 >= 0 && fipElement == 1)
+                                        //    notifyItemChanged(fipIndex - 1)
+                                    }
+                                }
+                                return@loop
+                            }
+
+                }
+            }
+
+            fipCountText.text = ("$findInPageMatch/$count")
+
+        }
+
+    }
 
     private fun showFindInPageSearch() {
         showSearch()
-        if (!findInPageMenu) {
-            val regex = Regex("""([a-zA-Z,.;:()'? ]+)""")
-            val versesRaw = viewModel.getVersesRaw(row!!.bookId!!, row!!.chapterId!!)
-            matchesList = IntArray(versesRaw.size)
+        findInPageMenu = true
+        val regex = Regex("""([a-zA-Z,.;:()'? ]+)""")
+        val versesRaw = viewModel.getVersesRaw(row!!.bookId!!, row!!.chapterId!!)
+        val rv = mainViewPager.findViewWithTag<RecyclerView>("rv${mainViewPager.currentItem}")
+        matchesList = IntArray(versesRaw.size)
+        findInSearchContainer.visibility = View.VISIBLE
+        setClickListener(fipUpButton, rv)
+        setClickListener(fipDownButton, rv)
+        toggleSearchViewCloseButton(true)
+        actionBarDrawerToggle.isDrawerIndicatorEnabled = false
 
-            findInPageMenu = true
-            actionBarDrawerToggle.isDrawerIndicatorEnabled = false
-            toolbarSearchView.isIconified = false
-            toolbarSearchView.queryHint = getString(R.string.find_in_page)
-            toolbarSearchView.setOnQueryTextListener(null)
-            toolbarSearchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-                val rv = mainViewPager.findViewWithTag<RecyclerView>("rv${mainViewPager.currentItem}")
-                override fun onQueryTextSubmit(query: String): Boolean {
-                    return false
-                }
+        toolbarSearchView.isIconified = false
+        toolbarSearchView.queryHint = getString(R.string.find_in_page)
+        toolbarSearchView.setOnQueryTextListener(null)
 
-                override fun onQueryTextChange(newText: String): Boolean {
+        toolbarSearchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String): Boolean {
+                return false
+            }
 
-                    rv.post {
-                        (rv.adapter as MainAdapter).let {
-                            if (newText == "")
-                                it.findInPage(null)
-                            else if (regex.matches(newText)) {
-                                //if (it.getMatchesList().size != it.currentList!!.size)
-                                    it.fixMatchesListSize(it.currentList!!.size)
-                                for (index in 0 until versesRaw.size)
-                                    getMatchCount(formatText(versesRaw.get(index).verseText!!), newText, index)
+            override fun onQueryTextChange(newText: String): Boolean {
 
-                                Log.d(TAG, "[new] Text: $newText Matches found: ${getCurrentListSize()}")
-                                it.findInPage(newText)
+                rv.post {
+                    (rv.adapter as MainAdapter).let {
+                        if (newText == "") {
+                            it.findInPage(null)
+                            fipCountText.text = null
+                            if (getCurrentListSize() > 0) {
+                                matchesList.forEachIndexed { index, element ->
+                                    if (element != 0)
+                                        matchesList[index] = 0
+                                }
                             }
+                        } else if (regex.matches(newText)) {
+                            //if (it.getMatchesList().size != it.currentList!!.size)
+                            it.fixMatchesListSize(it.currentList!!.size)
+                            for (index in 0 until versesRaw.size)
+                                formatText(versesRaw.get(index).verseText!!).getMatchCount(newText, index)
+                            val matchCount = getCurrentListSize()
+                            findInPageMatch = if (matchCount == 0) 0 else 1
+
+                            resetFIPS()
+                            it.findInPage(newText)
+                            fipCountText.text = ("$findInPageMatch/$matchCount")
+                            Log.d(TAG, "[new] Text: $newText Matches found: $matchCount")
+
+                            run loop@{
+                                matchesList.forEachIndexed { index, element ->
+                                    if (element != 0) {
+                                        rvScrollTo(rv, index)
+                                        it.setCurrentlyHighlighted(index, 1)
+                                        return@loop
+                                    }
+
+                                }
+                            }
+
                             rv.addOnLayoutChangeListener(object : View.OnLayoutChangeListener {
                                 override fun onLayoutChange(p0: View?, p1: Int, p2: Int, p3: Int, p4: Int, p5: Int, p6: Int, p7: Int, p8: Int) {
                                     rv.removeOnLayoutChangeListener(this)
                                     Log.d(TAG, "[prev] Text: $newText Matches found: ${it.getCurrentListSize()}")
                                 }
                             })
-
-                            it.notifyDataSetChanged()
                         }
 
+                        it.notifyDataSetChanged()
                     }
 
-                    return true
                 }
-            })
-        }
+
+                return true
+            }
+        })
+
     }
 
     private fun showSearch() {
@@ -563,7 +699,10 @@ class MainActivity : AppCompatActivity(),
         recyclerView.addOnLayoutChangeListener(object : View.OnLayoutChangeListener {
             override fun onLayoutChange(p0: View?, p1: Int, p2: Int, p3: Int, p4: Int, p5: Int, p6: Int, p7: Int, p8: Int) {
                 recyclerView.removeOnLayoutChangeListener(this)
+                recyclerView.fling(0, 0)
                 recyclerView.smoothScrollToPosition(position)
+                //recyclerView.fling(0,0)
+                //(recyclerView.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(position,0)
             }
         })
         /*

@@ -23,7 +23,6 @@ import android.database.sqlite.SQLiteDatabase.CursorFactory
 import android.database.sqlite.SQLiteException
 import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
-import kotlinx.coroutines.experimental.channels.NULL_VALUE
 
 import java.io.File
 import java.io.FileOutputStream

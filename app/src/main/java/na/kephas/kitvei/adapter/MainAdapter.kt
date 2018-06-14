@@ -1,5 +1,6 @@
 package na.kephas.kitvei.adapter
 
+import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
 import android.text.Spannable
@@ -78,8 +79,8 @@ class MainAdapter : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBAC
     }
 
     // Replaces all occurrences and applies style span
-    fun modify2(text: CharSequence, mode: Any, regex: String, position: Int): SpannableStringBuilder {
-        val pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE)
+    fun modify2(text: CharSequence, mode: Any, regex: String, position: Int, context: Context? = null): SpannableStringBuilder {
+        val pattern = Pattern.compile(Pattern.quote(regex), Pattern.CASE_INSENSITIVE)
         val ssb = SpannableStringBuilder(text)
         if (pattern != null) {
             val matcher = pattern.matcher(text)
@@ -87,8 +88,13 @@ class MainAdapter : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBAC
             while (matcher.find()) {
                 val start = matcher.start()
                 val end = matcher.end()
-                ssb.setSpan(CharacterStyle.wrap(mode as CharacterStyle), start, end, 0)
                 matchesSoFar++
+                if (currentHighlightElementIndex != null && currentHighlightElementIndex == matchesSoFar && currentHighlightIndex == position) {
+                    ssb.setSpan(CharacterStyle.wrap(BackgroundColorSpan(ContextCompat.getColor(context!!, R.color.highlight_focus_color)) as CharacterStyle), start, end, 0)
+                    //currentHighlightElementIndex = null
+                } else
+                    ssb.setSpan(CharacterStyle.wrap(mode as CharacterStyle), start, end, 0)
+
             }
             matchesList[position] = matchesSoFar
         }
@@ -120,6 +126,11 @@ class MainAdapter : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBAC
 
     fun fixMatchesListSize(size: Int) {
         matchesList = IntArray(size)
+    }
+
+    fun setCurrentlyHighlighted(index: Int?,element: Int?) {
+        currentHighlightIndex = index
+        currentHighlightElementIndex = element
     }
 
 
@@ -170,10 +181,7 @@ class MainAdapter : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBAC
                 sText.setSpan(RelativeSizeSpan(fontSize), 0, sText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
 
                 if (findInPageQuery != null)
-                    if (Regex("""([,.;:()'? ]+)""").matches(findInPageQuery!!))
-                        sText = modify2(sText, BackgroundColorSpan(ContextCompat.getColor(itemView.context, R.color.highlight_color_dark)), "[$findInPageQuery]", adapterPosition)
-                    else
-                        sText = modify2(sText, BackgroundColorSpan(ContextCompat.getColor(itemView.context, R.color.highlight_color_dark)), "($findInPageQuery)", adapterPosition)
+                    sText = modify2(sText, BackgroundColorSpan(ContextCompat.getColor(itemView.context, R.color.highlight_color_dark)), findInPageQuery!!, adapterPosition, itemView.context)
 
 
                 textView.setText(TextUtils.concat("\t\t", nums, sText), TextView.BufferType.SPANNABLE)
@@ -189,6 +197,9 @@ class MainAdapter : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBAC
         private var fontSize = prefs.fontSize
         private var findInPageQuery: String? = null
         private var matchesList = IntArray(1)
+        private var currentHighlightIndex: Int? = null
+        private var currentHighlightElementIndex: Int? = null
+
         private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<Bible>() {
             override fun areItemsTheSame(oldItem: Bible, newItem: Bible): Boolean = oldItem.id == newItem.id
             override fun areContentsTheSame(oldItem: Bible, newItem: Bible): Boolean = oldItem == newItem

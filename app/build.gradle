@@ -26,10 +26,14 @@ android {
     }
     packagingOptions {
         exclude 'META-INF/DEPENDENCIES'
-        exclude 'LICENSE.txt'
         exclude 'META-INF/LICENSE'
         exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/license.txt'
         exclude 'META-INF/NOTICE'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/notice.txt'
+        exclude 'META-INF/ASL2.0'
+        exclude 'META-INF/main.kotlin_module'
     }
     lintOptions {
         abortOnError false
@@ -92,7 +96,7 @@ dependencies {
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
-    def coroutines_version = '0.22.5'
+    def coroutines_version = '0.23.1'
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version"
 
     // Leak Canary

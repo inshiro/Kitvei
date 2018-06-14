@@ -78,9 +78,10 @@ fun launchSilent(
         context: CoroutineContext = backgroundPool,
         start: CoroutineStart = CoroutineStart.DEFAULT,
         parent: Job? = rootParent,
+        onCompletion: CompletionHandler? = null,
         block: suspend CoroutineScope.() -> Unit
 ) {
-    launch(context, start, parent, block)
+    launch(context, start, parent, onCompletion, block)
     // ${Thread.currentThread().name}
 }
 

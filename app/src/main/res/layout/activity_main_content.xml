@@ -15,9 +15,9 @@
         android:theme="@style/Theme.MyApp.Toolbar">
 
         <LinearLayout
-            android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:orientation="vertical"
             app:layout_scrollFlags="scroll|enterAlways">
 
             <na.kephas.kitvei.widget.StatusBarView
@@ -29,15 +29,15 @@
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
-                android:elevation="7dp"
                 android:background="?attr/colorPrimary"
+                android:elevation="7dp"
                 app:popupTheme="@style/AppTheme.PopupOverlay"
                 tools:ignore="UnusedAttribute">
 
 
                 <TextView
                     android:id="@+id/toolbarTitle"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="?selectableItemBackground"
                     android:gravity="start"
@@ -45,13 +45,64 @@
                     android:textSize="20sp"
                     tools:text="TITLE" />
 
-                <androidx.appcompat.widget.SearchView
-                    android:id="@+id/toolbarSearchView"
+                <androidx.constraintlayout.ConstraintLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:imeOptions="flagNoExtractUi"
-                    android:visibility="gone"
-                    app:actionViewClass="androidx.appcompat.widget.SearchView" />
+                    android:layout_height="match_parent">
+
+                    <androidx.appcompat.widget.SearchView
+                        android:id="@+id/toolbarSearchView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:imeOptions="flagNoExtractUi"
+                        android:visibility="gone"
+                        app:actionViewClass="androidx.appcompat.widget.SearchView"
+                        app:layout_constraintStart_toStartOf="parent" />
+
+                    <LinearLayout
+                        android:id="@+id/findInSearchContainer"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal"
+                        android:visibility="gone"
+                        app:layout_constraintRight_toRightOf="parent">
+
+                        <TextView
+                            android:id="@+id/fipCountText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="center"
+                            android:gravity="center"
+                            android:textSize="13sp"
+                            tools:text="123/123" />
+
+                        <ImageButton
+                            android:id="@+id/fipUpButton"
+                            android:layout_width="48dp"
+                            android:layout_height="match_parent"
+                            android:background="?selectableItemBackground"
+                            android:contentDescription="Find next above"
+                            android:src="@drawable/ic_keyboard_arrow_up_white_24dp"
+                            tools:ignore="HardcodedText" />
+
+                        <ImageButton
+                            android:id="@+id/fipDownButton"
+                            android:layout_width="48dp"
+                            android:layout_height="match_parent"
+                            android:background="?selectableItemBackground"
+                            android:contentDescription="Find next below"
+                            android:src="@drawable/ic_keyboard_arrow_down_white_24dp"
+                            tools:ignore="HardcodedText" />
+
+                        <ImageButton
+                            android:id="@+id/fipCloseButton"
+                            android:layout_width="48dp"
+                            android:layout_height="match_parent"
+                            android:background="?selectableItemBackground"
+                            android:contentDescription="Close find in page"
+                            android:src="@drawable/ic_close_white_24dp"
+                            tools:ignore="HardcodedText" />
+                    </LinearLayout>
+                </androidx.constraintlayout.ConstraintLayout>
 
             </androidx.appcompat.widget.Toolbar>
 
