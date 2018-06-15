@@ -1,6 +1,5 @@
 package na.kephas.kitvei.adapter
 
-import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
 import android.text.Spannable
@@ -21,8 +20,7 @@ import na.kephas.kitvei.R
 import na.kephas.kitvei.data.Bible
 import na.kephas.kitvei.prefs
 import na.kephas.kitvei.util.Fonts
-import na.kephas.kitvei.util.occurrence
-import java.util.regex.Pattern
+import na.kephas.kitvei.util.occurrences
 
 class MainAdapter : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBACK) {
 
@@ -34,7 +32,6 @@ class MainAdapter : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBAC
     init {
         setHasStableIds(true)
     }
-
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.main_rv_item, parent, false))
@@ -58,25 +55,6 @@ class MainAdapter : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBAC
 
     interface ItemClickListener {
         fun onItemClick(view: View, position: Int)
-    }
-
-    // Removes delimeter in matched string, replaces all occurrences and applies style span
-    fun modify(text: CharSequence, mode: Any, regex: String): SpannableStringBuilder {
-        val pattern = Pattern.compile(regex)
-        val ssb = SpannableStringBuilder(text)
-        if (pattern != null) {
-            val matcher = pattern.matcher(text)
-            var matchesSoFar = 0
-            while (matcher.find()) {
-                val start = matcher.start() - (matchesSoFar * 2)
-                val end = matcher.end() - (matchesSoFar * 2)
-                ssb.setSpan(CharacterStyle.wrap(mode as CharacterStyle), start + 1, end - 1, 0)
-                ssb.delete(start, start + 1)
-                ssb.delete(end - 2, end - 1)
-                matchesSoFar++
-            }
-        }
-        return ssb
     }
 
     fun setFontSize(size: Float) {
@@ -137,32 +115,35 @@ class MainAdapter : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBAC
                     setSpan(RelativeSizeSpan(fontSize / 1.5f), 0, nums.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
                 }
 
-                text = bible.verseText!!.replace('[', '_').replace(']', '_')
+                text = bible.verseText!!
+                if (text.contains('['))
+                    text = text.replace('[', '_').replace(']', '_')
 
+                // Trim << [TEXT] >>
                 if (text.indexOf('<') == 0) {
                     text = text.substring(text.lastIndexOf('>') + 1, text.length).trim()
                 } else if (text.contains('<')) {
                     text = text.substring(0, text.indexOf('<')).trim()
                 }
 
+                sText = SpannableStringBuilder(text)
+
+                // Apply italics
                 if (text.contains('_')) {
-                    //if (!this@MainAdapter::sText.isInitialized) sText = SpannableStringBuilder(text)
-                    sText = modify(text, StyleSpan(Typeface.ITALIC), "_(.*?)_")
-                    //sText.occurrence("_(.*?)_", true, true) { _, start, end ->
-                    //    sText.setSpan(CharacterStyle.wrap(StyleSpan(Typeface.ITALIC) as CharacterStyle), start + 1, end - 1, 0)
-                    //}
-                } else {
-                    sText = SpannableStringBuilder()
-                    sText.append(text.replace("_", ""))
+                    //sText = modify(text, StyleSpan(Typeface.ITALIC), "_(.*?)_")
+                    sText.toString().occurrences("_(.*?)_", 0,true) { _, start, end ->
+                        sText.setSpan(CharacterStyle.wrap(StyleSpan(Typeface.ITALIC) as CharacterStyle), start+1, end-1, 0)
+                        sText.delete(start, start + 1)
+                        sText.delete(end - 2, end - 1)
+                    }
                 }
 
                 sText.setSpan(ForegroundColorSpan(ContextCompat.getColor(itemView.context, R.color.textColor)), 0, sText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
 
-                //if (fontSize > -1f)
                 sText.setSpan(RelativeSizeSpan(fontSize), 0, sText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
 
                 if (findInPageQuery != null)
-                    sText.occurrence(findInPageQuery!!) { matches, start, end ->
+                    sText.toString().occurrences(findInPageQuery!!) { matches, start, end ->
                         if (currentHighlightElementIndex != null && currentHighlightElementIndex == matches && currentHighlightIndex == adapterPosition) {
                             sText.setSpan(CharacterStyle.wrap(BackgroundColorSpan(ContextCompat.getColor(itemView.context, R.color.highlight_focus_color)) as CharacterStyle), start, end, 0)
                         } else {

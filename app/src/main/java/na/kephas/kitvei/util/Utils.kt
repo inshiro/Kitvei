@@ -4,9 +4,9 @@ import android.content.Context
 import android.content.res.Resources
 import android.os.Build
 import android.text.Html
-import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.view.View
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import java.util.regex.Pattern
 
@@ -33,59 +33,34 @@ fun View.snackbar(str: String, duration: Int = Snackbar.LENGTH_SHORT) {
     }
 }
 
-// Returns number of occurrence of substring in String, or additional does something with values.
-fun String.occurrence(sub: String, ignoreCase: Boolean = true, removeDelimeter: Boolean = false, additional: (matches: Int, start: Int, end: Int) -> Unit = { _, _, _ -> }): Int {
-    val pattern = if (ignoreCase)
-        Pattern.compile(sub, Pattern.LITERAL or Pattern.CASE_INSENSITIVE) ?: return 0
-    else
-        Pattern.compile(sub)
+// Returns number of occurrences of substring in String, or additional does something with values.
+fun String.occurrences(sub: String, flags: Int = Pattern.LITERAL or Pattern.CASE_INSENSITIVE, removeDelimiter: Boolean = false, additional: (matches: Int, start: Int, end: Int) -> Unit = { _, _, _ -> }): Int {
+    val pattern = Pattern.compile(sub, flags) ?: return 0
     val matcher = pattern.matcher(this)
     var matches = 0
     var start: Int
     var end: Int
+    //var s = this
     while (matcher.find()) {
-        matches++
-        if (removeDelimeter) {
+        if (removeDelimiter) {
             start = matcher.start() - (matches * 2)
             end = matcher.end() - (matches * 2)
-            additional.invoke(matches, start + 1, end - 1)
-            this.removeRange(start, start + 1)
-            this.removeRange(end - 2, end - 1)
+
+            // Removes delimeter in matched string, replaces all occurrences and applies style span
+            additional.invoke(matches, start, end)
+            //s = s.replaceRange(start, start + 1, "")
+            //s = s.replaceRange(end - 2, end - 1, "")
+            matches++
         } else {
+            matches++
             start = matcher.start()
             end = matcher.end()
             additional.invoke(matches, start, end)
         }
-
     }
     return matches
 }
-fun SpannableStringBuilder.occurrence(sub: String, ignoreCase: Boolean = true, removeDelimeter: Boolean = false, additional: (matches: Int, start: Int, end: Int) -> Unit = { _, _, _ -> }): Int {
-    val pattern = if (ignoreCase)
-        Pattern.compile(sub, Pattern.LITERAL or Pattern.CASE_INSENSITIVE) ?: return 0
-    else
-        Pattern.compile(sub)
-    val matcher = pattern.matcher(this)
-    var matches = 0
-    var start: Int
-    var end: Int
-    while (matcher.find()) {
-        matches++
-        if (removeDelimeter) {
-            start = matcher.start() - (matches * 2)
-            end = matcher.end() - (matches * 2)
-            additional.invoke(matches, start + 1, end - 1)
-            this.delete(start, start + 1)
-            this.delete(end - 2, end - 1)
-        } else {
-            start = matcher.start()
-            end = matcher.end()
-            additional.invoke(matches, start, end)
-        }
 
-    }
-    return matches
-}
 
 fun String.formatText(): String {
     var text = this.replace('[', '_').replace(']', '_')
@@ -100,6 +75,50 @@ fun String.formatText(): String {
         text = text.replace("_", "")
 
     return text
+}
+
+fun measureTimeMillis(block: () -> Unit): Long {
+    val startTime = System.currentTimeMillis()
+    block.invoke()
+    return System.currentTimeMillis() - startTime
+}
+
+fun benchmark(range: IntRange, block: () -> Unit): Double {
+    val average = (range).map {
+        measureTimeMillis { block() }
+    }.average()
+    return average
+}
+
+// Custom scrolling that waits for layout change
+fun RecyclerView.scrollTo(position: Int, smoothScroll: Boolean = false, post: Boolean = false) {
+    this.onLayoutChanged(post) {
+        this.fling(0, 0)
+        if (smoothScroll)
+            this.smoothScrollToPosition(position)
+        else
+            this.scrollToPosition(position)
+    }
+}
+
+fun RecyclerView.onLayoutChanged(post: Boolean = false, block: () -> Unit) {
+    if (post) {
+        this.post {
+            this.addOnLayoutChangeListener(object : View.OnLayoutChangeListener {
+                override fun onLayoutChange(p0: View?, p1: Int, p2: Int, p3: Int, p4: Int, p5: Int, p6: Int, p7: Int, p8: Int) {
+                    this@onLayoutChanged.removeOnLayoutChangeListener(this)
+                    block()
+                }
+            })
+        }
+    } else {
+        this.addOnLayoutChangeListener(object : View.OnLayoutChangeListener {
+            override fun onLayoutChange(p0: View?, p1: Int, p2: Int, p3: Int, p4: Int, p5: Int, p6: Int, p7: Int, p8: Int) {
+                this@onLayoutChanged.removeOnLayoutChangeListener(this)
+                block()
+            }
+        })
+    }
 }
 
 fun getStatusBarHeight(r: Resources): Int {

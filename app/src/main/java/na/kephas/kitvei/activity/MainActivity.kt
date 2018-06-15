@@ -55,7 +55,6 @@ import na.kephas.kitvei.fragment.FragmentVerse
 import na.kephas.kitvei.util.*
 import na.kephas.kitvei.viewmodels.VerseListViewModel
 import java.lang.reflect.Field
-import java.util.regex.Pattern
 
 class MainActivity : AppCompatActivity(),
         NavigationView.OnNavigationItemSelectedListener,
@@ -306,16 +305,6 @@ class MainActivity : AppCompatActivity(),
     }
 
     private lateinit var matchesList: IntArray
-    fun String.getMatchCount(regex: String, position: Int): Int {
-        val pattern = Pattern.compile(Pattern.quote(regex), Pattern.CASE_INSENSITIVE) ?: return 0
-        val matcher = pattern.matcher(this)
-        var matchesSoFar = 0
-        while (matcher.find()) {
-            matchesSoFar++
-        }
-        matchesList[position] = matchesSoFar
-        return matchesSoFar
-    }
 
     fun getCurrentListSize(): Int {
         var count = 0
@@ -374,11 +363,13 @@ class MainActivity : AppCompatActivity(),
                     if (findInPageMatch == count) {
                         matchesList.forEachIndexed { index, element ->
                             if (element != 0) {
+                                recyclerView.fling(0,0)
+                                recyclerView.scrollToPosition(index)
                                 (recyclerView.adapter as MainAdapter).apply {
                                     setCurrentlyHighlighted(index, 1)
                                     notifyDataSetChanged()
                                 }
-                                recyclerView.scrollToPosition(index)
+
                                 resetFIPS()
                                 fipCountText.text = ("$findInPageMatch/$count")
                                 return@setOnClickListener
@@ -407,7 +398,8 @@ class MainActivity : AppCompatActivity(),
                                 }
 
                                 recyclerView.post {
-                                    rvScrollTo(recyclerView, fipIndex)
+                                    recyclerView.fling(0,0)
+                                    recyclerView.smoothScrollToPosition(fipIndex)
                                     Log.d(TAG, "Called scrolled down index: $fipIndex fipElement: $fipElement findInPageMatch: $findInPageMatch")
 
                                     (recyclerView.adapter as MainAdapter).apply {
@@ -469,11 +461,10 @@ class MainActivity : AppCompatActivity(),
                             //if (it.getMatchesList().size != it.currentList!!.size)
                             it.fixMatchesListSize(it.currentList!!.size)
                             for (index in 0 until versesRaw.size)
-                                versesRaw[index].verseText!!.formatText().occurrence(newText) { matches, _, _ ->  matchesList[index] = matches}
+                                versesRaw[index].verseText!!.formatText().occurrences(newText) { matches, _, _ -> matchesList[index] = matches }
                             val matchCount = getCurrentListSize()
-                            findInPageMatch = if (matchCount == 0) 0 else 1
-
                             resetFIPS()
+                            findInPageMatch = if (matchCount == 0) 0 else 1
                             it.findInPage(newText)
                             fipCountText.text = ("$findInPageMatch/$matchCount")
                             Log.d(TAG, "[new] Text: $newText Matches found: $matchCount")
@@ -481,7 +472,7 @@ class MainActivity : AppCompatActivity(),
                             run loop@{
                                 matchesList.forEachIndexed { index, element ->
                                     if (element != 0) {
-                                        rvScrollTo(rv, index)
+                                        rv.scrollToPosition(index)
                                         it.setCurrentlyHighlighted(index, 1)
                                         return@loop
                                     }
@@ -489,12 +480,10 @@ class MainActivity : AppCompatActivity(),
                                 }
                             }
 
-                            rv.addOnLayoutChangeListener(object : View.OnLayoutChangeListener {
-                                override fun onLayoutChange(p0: View?, p1: Int, p2: Int, p3: Int, p4: Int, p5: Int, p6: Int, p7: Int, p8: Int) {
-                                    rv.removeOnLayoutChangeListener(this)
-                                    Log.d(TAG, "[prev] Text: $newText Matches found: ${it.getCurrentListSize()}")
-                                }
-                            })
+                            rv.onLayoutChanged {
+                                Log.d(TAG, "[prev] Text: $newText Matches found: ${it.getCurrentListSize()}")
+                            }
+
                         }
 
                         it.notifyDataSetChanged()
@@ -597,20 +586,12 @@ class MainActivity : AppCompatActivity(),
         val rv = mainViewPager.findViewWithTag<RecyclerView>("rv${mainViewPager.currentItem}")
         rv.post {
             if (delay)
-                rvScrollTo(rv, position)
-            else
-                rv.smoothScrollToPosition(position)
+                rv.scrollTo(position, true)
+            else {
+                rv.fling(0,0)
+                rv.smoothScrollToPosition(position) // Don't wait for layout change because we are on same page.
+            }
         }
-/*
-        launch(UI) {
-            val rv = mainViewPager.findViewWithTag<RecyclerView>("rv${mainViewPager.currentItem}")
-            if (delay) {
-                delay(70)
-                rvScrollTo(rv, position)
-            } else
-                rv.smoothScrollToPosition(position)
-        }
-*/
     }
 
     private fun hideSoftInput(view: View) {
@@ -679,37 +660,6 @@ class MainActivity : AppCompatActivity(),
         fun onLayoutReady()
     }*/
 
-    private fun rvScrollTo(recyclerView: RecyclerView, position: Int) {
-
-        recyclerView.addOnLayoutChangeListener(object : View.OnLayoutChangeListener {
-            override fun onLayoutChange(p0: View?, p1: Int, p2: Int, p3: Int, p4: Int, p5: Int, p6: Int, p7: Int, p8: Int) {
-                recyclerView.removeOnLayoutChangeListener(this)
-                recyclerView.fling(0, 0)
-                recyclerView.smoothScrollToPosition(position)
-                //recyclerView.fling(0,0)
-                //(recyclerView.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(position,0)
-            }
-        })
-        /*
-        recyclerViewReadyCallback = object : RecyclerViewReadyCallback {
-            override fun onLayoutReady() {
-                recyclerView.smoothScrollToPosition(position)
-            }
-        }
-
-        recyclerView.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
-            override fun onGlobalLayout() {
-                if (recyclerViewReadyCallback != null)
-                    recyclerViewReadyCallback!!.onLayoutReady()
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
-                    @Suppress("DEPRECATION")
-                    recyclerView.viewTreeObserver.removeGlobalOnLayoutListener(this)
-                } else
-                    recyclerView.viewTreeObserver.removeOnGlobalLayoutListener(this)
-            }
-        })
-        */
-    }
 
     private fun tintMenuIcon(item: MenuItem, @ColorRes color: Int) {
         val normalDrawable = item.icon
