@@ -5,6 +5,7 @@ import android.content.res.Resources
 import android.os.Build
 import android.text.Html
 import android.text.Spanned
+import android.util.Log
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
@@ -19,6 +20,10 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import na.kephas.kitvei.R
 */
+
+inline fun d(tag: String = "TAG", msg: () -> String) {
+    Log.d(tag, msg())
+}
 
 fun calculateNoOfColumns(context: Context): Int {
     val displayMetrics = context.resources.displayMetrics
@@ -77,17 +82,16 @@ fun String.formatText(): String {
     return text
 }
 
-fun measureTimeMillis(block: () -> Unit): Long {
+inline fun measureTimeMillis(block: () -> Unit): Long {
     val startTime = System.currentTimeMillis()
     block.invoke()
     return System.currentTimeMillis() - startTime
 }
 
-fun benchmark(range: IntRange, block: () -> Unit): Double {
-    val average = (range).map {
+inline fun benchmark(range: IntRange, block: () -> Unit): Double {
+    return (range).map {
         measureTimeMillis { block() }
     }.average()
-    return average
 }
 
 // Custom scrolling that waits for layout change
@@ -140,6 +144,67 @@ fun String.toSpanned(): Spanned {
     }
 }
 
+/**
+ * MutableList Extension Functions
+ */
+fun MutableList<Int>.reset(size: Int = this.size) {
+    if (size < 1)
+        return
+    // If size is user set, clear list
+    if (size != this.size)
+        this.clear()
+    for (a in 0 until size)
+        if (size != this.size)
+            this.add(0)
+        else
+            if (this[a] != 0)
+                this[a] = 0
+
+}
+
+fun MutableList<Int>.sum(): Int = this.filter { it != 0 }.sumBy { it }
+
+fun MutableList<Int>.nextValue(startIndex: Int = 0, startValue: Int = 1): Int {
+    val mIndex = this.nextIndex(startIndex)
+    if (startValue > this[mIndex] || startValue < 0)
+        return -1
+    for (a in startValue..this[mIndex])
+        return a
+    return -1
+}
+
+fun MutableList<Int>.nextIndex(startIndex: Int = 0): Int {
+    if (startIndex >= this.size || startIndex < 0)
+        return -1
+
+    // 0 .. this.size
+    for (a in startIndex until this.size)
+        if (this[a] != 0)
+            return a
+
+    // Finish code
+    return -1
+}
+
+inline fun MutableList<Int>.next(end: Boolean = false, block: (index: Int, value: Int) -> Unit) {
+
+    var index = 0
+    var value: Int
+    while (this.nextIndex(index) != -1) {
+        index = this.nextIndex(index)
+        value = 1
+
+
+        while (this.nextValue(index, value) != -1) {
+            block(index, value)
+            if (end) return
+            ++value
+        }
+
+        index++
+
+    }
+}
 /*
 var snackbarDrawable: Drawable? = null
 private fun getSnackbarDrawable(context: Context): Drawable {

@@ -3,7 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="na.kephas.kitvei">
 
-    <uses-sdk tools:overrideLibrary="com.codemonkeylabs.fpslibrary, com.codemonkeylabs.fpslibrary.noop" />
+    <uses-permission android:name="android.permission.VIBRATE"/>
+    <!--
+    <uses-sdk tools:overrideLibrary="com.codemonkeylabs.fpslibrary, com.codemonkeylabs.fpslibrary.noop" /> -->
 
     <application
         android:name=".App"

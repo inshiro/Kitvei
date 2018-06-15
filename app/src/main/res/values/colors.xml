@@ -6,6 +6,7 @@
     <color name="highlight_focus_color">#ff9632</color>
     <color name="highlight_color">#ffff00</color>
     <color name="highlight_color_dark">#f8ec20</color>
+    <color name="search_not_found">#d32f2f</color>
 
     <!-- Application Colors -->
     <color name="colorPrimary">#54759E</color>
