@@ -7,19 +7,11 @@ import android.text.Html
 import android.text.Spanned
 import android.util.Log
 import android.view.View
+import android.view.WindowManager
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import java.util.regex.Pattern
-
-/*
-import android.graphics.drawable.Drawable
-import android.os.Looper
-import android.util.DisplayMetrics
-import android.view.ViewGroup
-import androidx.core.content.ContextCompat
-import androidx.core.view.ViewCompat
-import na.kephas.kitvei.R
-*/
 
 inline fun d(tag: String = "TAG", msg: () -> String) {
     Log.d(tag, msg())
@@ -144,12 +136,34 @@ fun String.toSpanned(): Spanned {
     }
 }
 
+val AppCompatActivity.isTranslucentNavBar: () -> Boolean
+    get() = {
+        val flags = this.window.attributes.flags
+        if ((flags and WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION) == WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
+            true
+        false
+    }
 /**
  * MutableList Extension Functions
  */
-fun MutableList<Int>.reset(size: Int = this.size) {
+val MutableList<Int>.sum: Int
+    get() = this.filter { it != 0 }.sumBy { it }
+
+fun <T> MutableList<T>.count(predicate: () -> Boolean): Int {
+    var count = 0
+
+    for (element in this) {
+        if (predicate()) {
+            count += 1
+        }
+    }
+
+    return count
+}
+
+fun MutableList<Int>.reset(size: Int = this.size): Boolean {
     if (size < 1)
-        return
+        return false
     // If size is user set, clear list
     if (size != this.size)
         this.clear()
@@ -159,52 +173,24 @@ fun MutableList<Int>.reset(size: Int = this.size) {
         else
             if (this[a] != 0)
                 this[a] = 0
-
+    return true
 }
 
-fun MutableList<Int>.sum(): Int = this.filter { it != 0 }.sumBy { it }
-
-fun MutableList<Int>.nextValue(startIndex: Int = 0, startValue: Int = 1): Int {
-    val mIndex = this.nextIndex(startIndex)
-    if (startValue > this[mIndex] || startValue < 0)
-        return -1
-    for (a in startValue..this[mIndex])
-        return a
-    return -1
-}
-
-fun MutableList<Int>.nextIndex(startIndex: Int = 0): Int {
-    if (startIndex >= this.size || startIndex < 0)
-        return -1
-
-    // 0 .. this.size
-    for (a in startIndex until this.size)
-        if (this[a] != 0)
-            return a
-
-    // Finish code
-    return -1
-}
 
 inline fun MutableList<Int>.next(end: Boolean = false, block: (index: Int, value: Int) -> Unit) {
-
-    var index = 0
-    var value: Int
-    while (this.nextIndex(index) != -1) {
-        index = this.nextIndex(index)
-        value = 1
-
-
-        while (this.nextValue(index, value) != -1) {
-            block(index, value)
-            if (end) return
-            ++value
+    this.forEachIndexed { index, mValue ->
+        if (mValue != 0) {
+            (1..mValue).forEach { value ->
+                block(index, value)
+                if (end) return
+            }
         }
-
-        index++
-
     }
 }
+/**
+ * =====================================================================
+ */
+
 /*
 var snackbarDrawable: Drawable? = null
 private fun getSnackbarDrawable(context: Context): Drawable {
