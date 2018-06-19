@@ -143,6 +143,14 @@ val AppCompatActivity.isTranslucentNavBar: () -> Boolean
             true
         false
     }
+
+inline fun <T> tryy(block: () -> T) {
+    try {
+        block()
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
+}
 /**
  * MutableList Extension Functions
  */

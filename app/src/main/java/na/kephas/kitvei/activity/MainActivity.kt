@@ -121,14 +121,14 @@ class MainActivity : AppCompatActivity(),
 
     override fun onConfigurationChanged(newConfig: Configuration?) {
         super.onConfigurationChanged(newConfig)
-        var proceed = true
+
+        if (!this::bottomSheetFragment.isInitialized)
+            bottomSheetFragment = BottomSheetFragment()
 
         // Do not touch NavBar if BottomSheet is shown
         if (bottomSheetFragment.isAdded)
-            proceed = !(bottomSheetFragment != null && bottomSheetFragment.dialog != null
-                    && bottomSheetFragment.dialog.isShowing)
-        if (!proceed)
-            return
+            (bottomSheetFragment != null && bottomSheetFragment.dialog != null
+                    && bottomSheetFragment.dialog.isShowing).let { if(it) return }
 
         if (newConfig?.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             if (isTranslucentNavBar())
@@ -618,19 +618,18 @@ class MainActivity : AppCompatActivity(),
     }
 
     override fun onItemSelectedFV(position: Int) {
-        var delay = false
-        if (mainViewPager.currentItem != getPosition(tBook, tChapter)) delay = true
+        //var delay = false
+        //if (mainViewPager.currentItem != getPosition(tBook, tChapter)) delay = true
         mainViewPager.setCurrentItem(getPosition(tBook, tChapter), true).also {
             queryFinished = true
             finishSearch()
         }
-        val rv = mainViewPager.findViewWithTag<RecyclerView>("rv${mainViewPager.currentItem}")
-        rv.post {
-            if (delay)
-                rv.scrollTo(position, true)
-            else {
-                rv.fling(0, 0)
-                rv.smoothScrollToPosition(position) // Don't wait for layout change because we are on same page.
+        mainViewPager.findViewWithTag<RecyclerView>("rv${mainViewPager.currentItem}").apply {
+            tryy {
+                onLayoutChanged(true) {
+                    fling(0, 0)
+                    smoothScrollToPosition(position)
+                }
             }
         }
     }
