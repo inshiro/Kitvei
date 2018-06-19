@@ -151,6 +151,57 @@ inline fun <T> tryy(block: () -> T) {
         e.printStackTrace()
     }
 }
+
+/**
+ *
+ * Map Extensions
+ *
+ */
+// onEachValue
+
+infix fun <T> T.eq(other: T): Boolean = this == other
+
+infix fun <T> T.neq(other: T): Boolean = this != other
+
+inline fun <K : Comparable<K>, V, M : Map<out K, V>, T> M.onEachValue(action: (k: K, v: Int) -> T): M {
+    return apply {
+        for (element in this)
+            (element.value as Int).let {
+                ((if (it < 1) it else 1)..it)
+                        .forEach { v ->
+                            action(element.key, v).also {
+                                if (it is Boolean && it)
+                                    return this
+                            }
+                        }
+            }
+    }
+}
+
+// sum
+val <K, V, M : Map<out K, V>> M.sum: Int
+    get() = this.asIterable().sumBy { it.value as Int }
+
+// onMax
+inline fun <K : Comparable<K>, V, M : Map<out K, V>, T> M.onMax(action: (k: K, v: V) -> T): Map<K, V> {
+    maxBy { it.key }?.let {
+        return mapOf(it.toPair())
+                .also {
+                    with(it.entries.first()) { action(key, value) }
+                }
+    } ?: return mapOf()
+}
+// onMin
+
+inline fun <K : Comparable<K>, V, M : Map<out K, V>, T> M.onMin(action: (k: K, v: V) -> T): Map<K, V> {
+    minBy { it.key }?.let {
+        return mapOf(it.toPair())
+                .also {
+                    with(it.entries.first()) { action(key, value) }
+                }
+    } ?: return mapOf()
+}
+
 /**
  * MutableList Extension Functions
  */
