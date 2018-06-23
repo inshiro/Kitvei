@@ -12,6 +12,7 @@ import androidx.viewpager.widget.PagerAdapter
 import kotlinx.android.synthetic.*
 import na.kephas.kitvei.R
 import na.kephas.kitvei.data.Bible
+import na.kephas.kitvei.util.RedLetterDatabase
 import na.kephas.kitvei.viewmodels.VerseListViewModel
 import na.kephas.kitvei.widget.ScrollingLinearLayoutManager
 
@@ -20,6 +21,7 @@ class MainViewPagerAdapter(private val act: AppCompatActivity, private val vm: V
     private val viewPool by lazy(LazyThreadSafetyMode.NONE) { RecyclerView.RecycledViewPool() }
     private lateinit var row: Bible
     private val rvOnly = false
+    private val redLetters by lazy { RedLetterDatabase.getRedLetters(act.baseContext) }
 
     override fun onItemClick(view: View, position: Int) {
         //view.snackbar("Clicked position: $position")
@@ -50,7 +52,9 @@ class MainViewPagerAdapter(private val act: AppCompatActivity, private val vm: V
         row = all[position]
         vm.getVerses(row.bookId!!, row.chapterId!!).observe(act, Observer<PagedList<Bible>?> { pagedList ->
             if (pagedList != null) {
+                mAdapter?.redIdx = redLetters.indexOfFirst { (row.bookId!! == it.bookId && row.chapterId!! == it.chapterId) }
                 mAdapter?.submitList(pagedList)
+                // mAdapter?.notifyDataSetChanged()
             }
         })
 

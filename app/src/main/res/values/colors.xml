@@ -7,6 +7,8 @@
     <color name="highlight_color">#ffff00</color>
     <color name="highlight_color_dark">#f8ec20</color>
     <color name="search_not_found">#d32f2f</color>
+    <color name="redletter_color">#db4d57</color>
+    <color name="redletter_color_dark">#b71c1c</color>
 
     <!-- Application Colors -->
     <color name="colorPrimary">#54759E</color>

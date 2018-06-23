@@ -14,4 +14,5 @@
     android:soundEffectsEnabled="false"
     android:lineSpacingMultiplier="1.17"
     android:textIsSelectable="false"
+    android:layout_weight="1"
     tools:text="In the beginning" />

@@ -39,11 +39,8 @@ import com.google.android.material.tabs.TabLayout
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.activity_main_content.*
+import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.delay
-import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.withContext
 import na.kephas.kitvei.*
 import na.kephas.kitvei.adapter.MainAdapter
 import na.kephas.kitvei.adapter.MainViewPagerAdapter
@@ -85,7 +82,11 @@ class MainActivity : AppCompatActivity(),
 
     }
     private val bible: List<Bible> by lazy(LazyThreadSafetyMode.NONE) {
-        viewModel.getPages()
+        runBlocking {
+            async(backgroundPool) {
+                viewModel.getPages()
+            }.await()
+        }
     }
     private val activityManager by lazy(LazyThreadSafetyMode.NONE) { baseContext.getSystemService<ActivityManager>() }
     private lateinit var bottomSheetFragment: BottomSheetFragment
