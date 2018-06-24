@@ -29,6 +29,9 @@ class UiThreadExecutor : Executor {
 
 val rootParent: Job by lazy { Job() }
 val backgroundPool: CoroutineDispatcher by lazy(LazyThreadSafetyMode.PUBLICATION) {
+    Executors.newCachedThreadPool().asCoroutineDispatcher()
+}
+val fixedThreadPool: CoroutineDispatcher by lazy(LazyThreadSafetyMode.PUBLICATION) {
     // Fix for dual or single core devices
     val numProcessors = Runtime.getRuntime().availableProcessors()
     //val numProcessors = ForkJoinPool.commonPool().parallelism

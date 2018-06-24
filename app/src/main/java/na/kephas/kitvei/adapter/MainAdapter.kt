@@ -28,9 +28,7 @@ import na.kephas.kitvei.util.*
 class MainAdapter(context: Context) : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBACK) {
 
     private var bible: Bible? = null
-    private val redLetterDatabase by lazy { RedLetterDatabase }
-    private val redLetters: MutableSet<RedLetter> by lazy { redLetterDatabase.getRedLetters(context) }
-    private val foundRedIdx by lazy { redLetterDatabase.getRedLetters(context).indexOfFirst { (bible?.bookId == it.bookId && bible?.chapterId == it.chapterId) } }
+    private val redLetters: MutableSet<RedLetter> by lazy { RedLetterDatabase.getRedLetters(context) }
     private val TextColor by lazy { ContextCompat.getColor(context, R.color.textColor) }
     private val NumColor by lazy { Color.parseColor("#877f66") }
     private val RedLetterColor by lazy { ContextCompat.getColor(context, R.color.redletter_color_dark) }
@@ -103,7 +101,7 @@ class MainAdapter(context: Context) : PagedListAdapter<Bible, MainAdapter.ViewHo
 
             if (bible != null) {
 
-                launch(backgroundPool) {
+                launch(fixedThreadPool) {
 
                     val nums = SpannableStringBuilder(bible.verseId.toString())
                     nums.apply {
@@ -151,20 +149,16 @@ class MainAdapter(context: Context) : PagedListAdapter<Bible, MainAdapter.ViewHo
                             ) as CharacterStyle), start, end, 0)
                         }
 
-                    // Check if current page has atleast one RedLetter
-                    if (foundRedIdx >= 0) {
-
-                        // Get the index of correct RedLetter to style the current verse
-                        val idx = redLetters.each(foundRedIdx) { (bible.bookId == it.bookId && bible.chapterId == it.chapterId && bible.verseId == it.verseId) }
+                    // Get the index of correct RedLetter to style the current verse
+                    if (adapterPosition >= 0) {
+                        val idx = redLetters.indexOfFirst { (bible.bookId == it.bookId && bible.chapterId == it.chapterId && bible.verseId == it.verseId) }
                         if (idx >= 0) {
                             //d { "redIdx: $foundRedIdx pos: $adapterPosition b: ${bible.bookId}|${bible.bookAbbr} c: ${bible.chapterId} v: ${bible.verseId}" }
-
                             redLetters.elementAtOrNull(idx)?.run {
-                                for (it in this.positions)
+                                for (it in positions)
                                     sText.setSpan(CharacterStyle.wrap(ForegroundColorSpan(RedLetterColor) as CharacterStyle), it.first, if (it.second - 1 > sText.length) it.second - 2 else it.second - 1, 0)
                             }
                         }
-
                     }
 
                     withContext(UI) {
