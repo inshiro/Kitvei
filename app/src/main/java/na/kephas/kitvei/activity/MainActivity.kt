@@ -31,6 +31,7 @@ import androidx.core.text.TextUtilsCompat
 import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
 import androidx.lifecycle.ViewModelProviders
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager.widget.ViewPager
 import com.flaviofaria.kenburnsview.KenBurnsView
@@ -83,9 +84,9 @@ class MainActivity : AppCompatActivity(),
     }
     private val bible: List<Bible> by lazy(LazyThreadSafetyMode.NONE) {
         runBlocking {
-            async(backgroundPool) {
+            withContext(backgroundPool) {
                 viewModel.getPages()
-            }.await()
+            }
         }
     }
     private val activityManager by lazy(LazyThreadSafetyMode.NONE) { baseContext.getSystemService<ActivityManager>() }
@@ -129,7 +130,7 @@ class MainActivity : AppCompatActivity(),
         // Do not touch NavBar if BottomSheet is shown
         if (bottomSheetFragment.isAdded)
             (bottomSheetFragment != null && bottomSheetFragment.dialog != null
-                    && bottomSheetFragment.dialog.isShowing).let { if(it) return }
+                    && bottomSheetFragment.dialog.isShowing).let { if (it) return }
 
         if (newConfig?.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             if (isTranslucentNavBar())
@@ -191,10 +192,10 @@ class MainActivity : AppCompatActivity(),
         // Prefer higher quality images unless we're on a low RAM device
         //mainViewPager.offscreenPageLimit = if (ActivityManagerCompat.isLowRamDevice(activityManager)) 1 else 2
         mainViewPager.adapter = MainViewPagerAdapter(this, viewModel, bible)
-        if (isRTL) {
+        /*if (isRTL) {
             mainViewPager.rotationY = 180f
-            recreate()
-        }
+            (mainViewPager.adapter as? MainViewPagerAdapter)?.notifyDataSetChanged()
+        }*/
 
         val onPageListener = object : ViewPager.OnPageChangeListener {
             override fun onPageScrollStateChanged(state: Int) {}
@@ -314,7 +315,7 @@ class MainActivity : AppCompatActivity(),
         toolbarSearchView.setQuery("", false)
         hideSearch = false
         invalidateOptionsMenu()
-        val rv = mainViewPager.findViewWithTag<RecyclerView>("rv${mainViewPager.currentItem}")
+        val rv = mainViewPager.findViewWithTag<RecyclerView>(0)
         (rv.adapter as MainAdapter).apply {
             findInPage(null)
             setCurrentlyHighlighted(null, null)
@@ -619,16 +620,28 @@ class MainActivity : AppCompatActivity(),
     }
 
     override fun onItemSelectedFV(position: Int) {
-        //var delay = false
-        //if (mainViewPager.currentItem != getPosition(tBook, tChapter)) delay = true
-        mainViewPager.setCurrentItem(getPosition(tBook, tChapter), true).also {
-            queryFinished = true
-            finishSearch()
+        var delay = false
+        getPosition(tBook, tChapter).let {
+            if (mainViewPager.currentItem != it) delay = true
+            mainViewPager.setCurrentItem(it, true)
         }
-        mainViewPager.findViewWithTag<RecyclerView>("rv${mainViewPager.currentItem}").apply {
-            tryy {
-                onLayoutChanged(true) {
-                    fling(0, 0)
+
+        queryFinished = true
+        finishSearch()
+
+        tryy {
+            mainViewPager.findViewWithTag<RecyclerView>("rv${mainViewPager.currentItem}").run {
+                fling(0, 0)
+                if (delay) {
+                    launch {
+                        while ((layoutManager as LinearLayoutManager).findFirstCompletelyVisibleItemPosition() < 0 && (layoutManager as LinearLayoutManager).findLastVisibleItemPosition() < 0) {
+                            delay(20)
+                        }
+                        delay(80)
+                        smoothScrollToPosition(position)
+                    }
+
+                } else {
                     smoothScrollToPosition(position)
                 }
             }

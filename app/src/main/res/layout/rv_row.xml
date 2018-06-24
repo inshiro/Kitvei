@@ -19,6 +19,7 @@
     tools:context=".activity.MainActivity"
     tools:showIn="@layout/activity_main_content">
 -->
+
 <androidx.recyclerview.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -26,6 +27,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:clipToPadding="false"
+    android:orientation="horizontal"
     android:paddingLeft="16dp"
     android:paddingTop="24dp"
     android:paddingRight="16dp"
@@ -34,4 +36,3 @@
     android:scrollbars="vertical"
     tools:context=".activity.MainActivity"
     tools:showIn="@layout/activity_main_content" />
-

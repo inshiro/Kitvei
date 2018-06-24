@@ -13,6 +13,7 @@ import kotlinx.android.synthetic.*
 import na.kephas.kitvei.R
 import na.kephas.kitvei.data.Bible
 import na.kephas.kitvei.util.RedLetterDatabase
+import na.kephas.kitvei.util.d
 import na.kephas.kitvei.viewmodels.VerseListViewModel
 import na.kephas.kitvei.widget.ScrollingLinearLayoutManager
 
@@ -20,8 +21,6 @@ import na.kephas.kitvei.widget.ScrollingLinearLayoutManager
 class MainViewPagerAdapter(private val act: AppCompatActivity, private val vm: VerseListViewModel, private var all: List<Bible>) : PagerAdapter(), MainAdapter.ItemClickListener {
     private val viewPool by lazy(LazyThreadSafetyMode.NONE) { RecyclerView.RecycledViewPool() }
     private lateinit var row: Bible
-    private val rvOnly = false
-    private val redLetters by lazy { RedLetterDatabase.getRedLetters(act.baseContext) }
 
     override fun onItemClick(view: View, position: Int) {
         //view.snackbar("Clicked position: $position")
@@ -38,7 +37,7 @@ class MainViewPagerAdapter(private val act: AppCompatActivity, private val vm: V
         @Suppress("UNUSED_VARIABLE")
         val recyclerView = layout.findViewById<RecyclerView>(R.id.nestedRecyclerView).apply {
             layoutManager = ScrollingLinearLayoutManager(act, LinearLayoutManager.VERTICAL, false, 700)
-            mAdapter = MainAdapter().apply {
+            mAdapter = MainAdapter(act).apply {
                 setClickListener(this@MainViewPagerAdapter)
             }
             adapter = mAdapter
@@ -47,14 +46,13 @@ class MainViewPagerAdapter(private val act: AppCompatActivity, private val vm: V
             //setWillNotDraw(false)
             tag = "rv$position"
 
+
         }
 
         row = all[position]
         vm.getVerses(row.bookId!!, row.chapterId!!).observe(act, Observer<PagedList<Bible>?> { pagedList ->
             if (pagedList != null) {
-                mAdapter?.redIdx = redLetters.indexOfFirst { (row.bookId!! == it.bookId && row.chapterId!! == it.chapterId) }
                 mAdapter?.submitList(pagedList)
-                // mAdapter?.notifyDataSetChanged()
             }
         })
 

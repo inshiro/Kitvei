@@ -1,5 +1,6 @@
 package na.kephas.kitvei.adapter
 
+import android.content.Context
 import android.graphics.Color
 import android.text.Spannable
 import android.text.SpannableStringBuilder
@@ -13,13 +14,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.content.ContextCompat
-import androidx.core.text.TextUtilsCompat
-import androidx.core.view.ViewCompat
 import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.withContext
 import na.kephas.kitvei.R
@@ -27,12 +25,17 @@ import na.kephas.kitvei.data.Bible
 import na.kephas.kitvei.prefs
 import na.kephas.kitvei.util.*
 
-class MainAdapter : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBACK) {
+class MainAdapter(context: Context) : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBACK) {
 
-    //private lateinit var text: String
-    //private lateinit var sText: SpannableStringBuilder
-    //private lateinit var nums: SpannableStringBuilder
     private var bible: Bible? = null
+    private val redLetterDatabase by lazy { RedLetterDatabase }
+    private val redLetters: MutableSet<RedLetter> by lazy { redLetterDatabase.getRedLetters(context) }
+    private val foundRedIdx by lazy { redLetterDatabase.getRedLetters(context).indexOfFirst { (bible?.bookId == it.bookId && bible?.chapterId == it.chapterId) } }
+    private val TextColor by lazy { ContextCompat.getColor(context, R.color.textColor) }
+    private val NumColor by lazy { Color.parseColor("#877f66") }
+    private val RedLetterColor by lazy { ContextCompat.getColor(context, R.color.redletter_color_dark) }
+    private val HighLightColor by lazy { ContextCompat.getColor(context, R.color.highlight_color_dark) }
+    private val HighlightFocusColor by lazy { ContextCompat.getColor(context, R.color.highlight_focus_color) }
 
     init {
         setHasStableIds(true)
@@ -70,20 +73,6 @@ class MainAdapter : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBAC
         findInPageQuery = query
     }
 
-    fun getCurrentListSize(): Int {
-        var count = 0
-        matchesList.count {
-            if (it != 0)
-                count += it
-            it != 0
-        }
-        return count
-    }
-
-    fun getMatchesList(): IntArray {
-        return matchesList
-    }
-
     fun fixMatchesListSize(size: Int) {
         matchesList = IntArray(size)
     }
@@ -95,21 +84,15 @@ class MainAdapter : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBAC
 
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView), View.OnClickListener {
-        private val isRTL: Boolean by lazy { TextUtilsCompat.getLayoutDirectionFromLocale(java.util.Locale.getDefault()) != ViewCompat.LAYOUT_DIRECTION_LTR }
+        // private val isRTL: Boolean by lazy { TextUtilsCompat.getLayoutDirectionFromLocale(java.util.Locale.getDefault()) != ViewCompat.LAYOUT_DIRECTION_LTR }
         private val textView: TextView = itemView.findViewById(R.id.mainTextView)
-        private val redLetters: MutableSet<RedLetter> by lazy { RedLetterDatabase.getRedLetters(itemView.context) }
-        private val TextColor by lazy { ContextCompat.getColor(itemView.context, R.color.textColor) }
-        private val NumColor by lazy { Color.parseColor("#877f66") }
-        private val RedLetterColor by lazy { ContextCompat.getColor(itemView.context, R.color.redletter_color_dark) }
-        private val HighLightColor by lazy { ContextCompat.getColor(itemView.context, R.color.highlight_color_dark) }
-        private val HighlightFocusColor by lazy { ContextCompat.getColor(itemView.context, R.color.highlight_focus_color) }
 
         init {
             textView.setOnClickListener(this)
             textView.typeface = Fonts.GentiumPlus_R
 
-            if (isRTL && textView.rotationY != 180f)
-                textView.rotationY = 180f
+            //if (isRTL && textView.rotationY != 180f)
+            //     textView.rotationY = 180f
         }
 
         override fun onClick(view: View) {
@@ -133,22 +116,21 @@ class MainAdapter : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBAC
 
                     // Trim << [TEXT] >>
                     if (text.indexOf('<') == 0) {
-                        text = text.substring(text.lastIndexOf('>') + 1, text.length).trim()
+                        text = text.substring(text.lastIndexOf('>') + 2)
                     } else if (text.contains('<')) {
-                        text = text.substring(0, text.indexOf('<')).trim()
+                        text = text.substring(0, text.indexOf('<') - 1)
                     }
 
                     val sText = SpannableStringBuilder(text)
 
                     // Apply italics
                     val count = text.count("[")
-                    (1..count).forEach {
+                    for (c in 1..count) {
                         sText.indexOf('[').let {
                             if (it >= 0) {
                                 val start = it
                                 val end = sText.indexOf(']', it + 1)
-                                //sText.setSpan(CharacterStyle.wrap(StyleSpan(Typeface.ITALIC) as CharacterStyle), start, end, 0)
-                                sText.setSpan(CharacterStyle.wrap(CustomTypefaceSpan(Fonts.GentiumPlus_I)) as CharacterStyle, start, end ,0)
+                                sText.setSpan(CharacterStyle.wrap(CustomTypefaceSpan(Fonts.GentiumPlus_I)) as CharacterStyle, start, end, 0)
                                 sText.delete(it, it + 1)
                                 sText.delete(end - 1, end)
                             }
@@ -160,32 +142,30 @@ class MainAdapter : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBAC
                     sText.setSpan(RelativeSizeSpan(fontSize), 0, sText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
 
                     if (findInPageQuery != null)
-                        sText.toString().occurrences(findInPageQuery!!) { matches, start, end ->
+                        matchesList[adapterPosition] = sText.count(findInPageQuery!!) { start, end, countSoFar ->
                             sText.setSpan(CharacterStyle.wrap(BackgroundColorSpan(
-                                    if (currentHighlightElementIndex != null && currentHighlightElementIndex == matches && currentHighlightIndex == adapterPosition)
+                                    if (currentHighlightElementIndex != null && currentHighlightElementIndex == countSoFar && currentHighlightIndex == adapterPosition)
                                         HighlightFocusColor
                                     else
                                         HighLightColor
                             ) as CharacterStyle), start, end, 0)
-                            matchesList[adapterPosition] = matches
                         }
 
-                    async(backgroundPool) {
-                        // Check if page has atleast one RedLetter
-                        if (redIdx >= 0) {
-                            // Get the indexes for all the verses
-                            val idx = redLetters.indexOfFirst { (bible.bookId == it.bookId && bible.chapterId == it.chapterId && bible.verseId == it.verseId) }
+                    // Check if current page has atleast one RedLetter
+                    if (foundRedIdx >= 0) {
 
-                            redLetters.elementAtOrNull(idx)?.let { r ->
-                                r.positions.forEach {
-                                    if (bible.bookId == r.bookId && bible.chapterId == r.chapterId && bible.verseId == r.verseId) {
-                                        //d { "${r.bookId} ${r.chapterId} ${r.verseId} ${it.first} ${it.second} | ${bible.bookId} ${bible.chapterId} ${bible.verseId} " }
-                                        sText.setSpan(CharacterStyle.wrap(ForegroundColorSpan(RedLetterColor) as CharacterStyle), it.first, if (it.second - 1 > sText.length) it.second - 2 else it.second - 1, 0)
-                                    }
-                                }
+                        // Get the index of correct RedLetter to style the current verse
+                        val idx = redLetters.each(foundRedIdx) { (bible.bookId == it.bookId && bible.chapterId == it.chapterId && bible.verseId == it.verseId) }
+                        if (idx >= 0) {
+                            //d { "redIdx: $foundRedIdx pos: $adapterPosition b: ${bible.bookId}|${bible.bookAbbr} c: ${bible.chapterId} v: ${bible.verseId}" }
+
+                            redLetters.elementAtOrNull(idx)?.run {
+                                for (it in this.positions)
+                                    sText.setSpan(CharacterStyle.wrap(ForegroundColorSpan(RedLetterColor) as CharacterStyle), it.first, if (it.second - 1 > sText.length) it.second - 2 else it.second - 1, 0)
                             }
                         }
-                    }.await()
+
+                    }
 
                     withContext(UI) {
                         textView.setText(TextUtils.concat("\t\t", nums, sText), TextView.BufferType.SPANNABLE)
@@ -196,19 +176,13 @@ class MainAdapter : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBAC
         }
     }
 
-/*
-    fun setRedIdx(i: Int?) {
-        redIdx = i
-    }*/
-
-    var redIdx: Int = -1
-
     companion object {
         private var fontSize = prefs.fontSize
         private var findInPageQuery: String? = null
         private var matchesList = IntArray(1)
         private var currentHighlightIndex: Int? = null
         private var currentHighlightElementIndex: Int? = null
+
         private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<Bible>() {
             override fun areItemsTheSame(oldItem: Bible, newItem: Bible): Boolean = oldItem.id == newItem.id
             override fun areContentsTheSame(oldItem: Bible, newItem: Bible): Boolean = oldItem == newItem

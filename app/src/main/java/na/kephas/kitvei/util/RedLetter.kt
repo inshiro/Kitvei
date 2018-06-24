@@ -16,9 +16,7 @@ object RedLetterDatabase {
         var reader: BufferedReader? = null
         var l: List<String>? = null
         try {
-            reader = BufferedReader(
-                    InputStreamReader(context.assets.open(PATH), "UTF-8"))
-
+            reader = BufferedReader(InputStreamReader(context.assets.open(PATH), "UTF-8"))
             l = reader.readLines()
         } catch (e: Exception) {
             e.printStackTrace()
@@ -71,39 +69,12 @@ object RedLetterDatabase {
                 }
                         ?: redLetters.add(RedLetter(b.toInt(), c.toInt(), v.toInt(), mutableSetOf(Pair(s, e))))
             }
-            // p { "${count}|b: \"$b\" c: \"$c\" v: \"$v\" t: \"$text\"" }
-            // p { "verse\t$b\t$c\t$v\t$text" }
-
 
         }
 
         return redLetters
     }
 
-}
-
-inline fun <T : RedLetter, M : MutableSet<T>, R> M.forEachPosition(startPos: Int = 0, action: (b: Int, c: Int, v: Int, start: Int, end: Int) -> R) {
-    for (idx in startPos until this.size) {
-        this.elementAtOrNull(idx)?.let { m ->
-            m.positions.forEach {
-                action(m.bookId, m.chapterId, m.verseId, it.first, it.second).also { if (it is Boolean && it) return }
-            }
-        }
-    }
-}
-
-
-/**
- * Count Occurrences of a String in a String
- */
-
-fun String.count(sub: String): Int {
-    var count = 0
-    var startIdx = 0
-    while ({ indexOf(sub, startIdx).also { startIdx = it + 1 } }() >= 0) {
-        count++
-    }
-    return count
 }
 
 

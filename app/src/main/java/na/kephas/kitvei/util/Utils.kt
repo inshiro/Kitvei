@@ -4,9 +4,11 @@ import android.content.Context
 import android.content.res.Resources
 import android.os.Build
 import android.text.Html
+import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.util.Log
 import android.view.View
+import android.view.ViewTreeObserver
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
@@ -15,6 +17,10 @@ import java.util.regex.Pattern
 
 inline fun d(tag: String = "TAG", msg: () -> String) {
     Log.d(tag, msg())
+}
+
+infix fun <T> T.ld(msg: String) {
+    Log.d("TAG", msg)
 }
 
 fun calculateNoOfColumns(context: Context): Int {
@@ -28,6 +34,35 @@ fun View.snackbar(str: String, duration: Int = Snackbar.LENGTH_SHORT) {
         //config()
         show()
     }
+}
+
+/**
+ * Returns a SpannableStringBuilder to a String as a variable instead of method
+ */
+val SpannableStringBuilder.toString: String
+    get() = this.toString()
+
+/**
+ * Count Occurrences of a String in a String
+ */
+fun String.count(sub: String, action: (start: Int, end: Int, countSoFar: Int) -> Unit = { _, _, _ -> }): Int {
+    var count = 0
+    var startIdx = 0
+    while ({ indexOf(sub, startIdx).also { startIdx = it + 1 } }() >= 0) {
+        count++
+        action(startIdx - 1, startIdx - 1 + sub.length, count)
+    }
+    return count
+}
+
+fun SpannableStringBuilder.count(sub: String, action: (start: Int, end: Int, countSoFar: Int) -> Unit = { _, _, _ -> }): Int {
+    var count = 0
+    var startIdx = 0
+    while ({ indexOf(sub, startIdx).also { startIdx = it + 1 } }() >= 0) {
+        count++
+        action(startIdx - 1, startIdx - 1 + sub.length, count)
+    }
+    return count
 }
 
 // Returns number of occurrences of substring in String, or additional does something with values.
@@ -84,6 +119,50 @@ inline fun benchmark(range: IntRange, block: () -> Unit): Double {
     return (range).map {
         measureTimeMillis { block() }
     }.average()
+}
+
+// Custom index of first
+inline fun <T> Iterable<T>.each(startIndex: Int? = null, block: (T) -> Boolean): Int {
+    var index = 0
+    if (startIndex != null) {
+        for (element in this) {
+            if (index >= startIndex) {
+                if (block(element)) return index
+            }
+            index++
+        }
+    } else {
+        for (element in this) {
+            if (block(element)) return index
+            index++
+        }
+    }
+    return -1
+}
+
+var recyclerViewReadyCallback: RecyclerViewReadyCallBack? = null
+
+interface RecyclerViewReadyCallBack {
+    fun onLayoutReady()
+}
+
+fun RecyclerView.onLayoutReady(action: () -> Unit) {
+    recyclerViewReadyCallback = object : RecyclerViewReadyCallBack {
+        override fun onLayoutReady() {
+            action()
+        }
+    }
+    viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+        override fun onGlobalLayout() {
+            recyclerViewReadyCallback?.onLayoutReady()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                viewTreeObserver.removeOnGlobalLayoutListener(this)
+            } else {
+                @Suppress("DEPRECATION")
+                viewTreeObserver.removeGlobalOnLayoutListener(this)
+            }
+        }
+    })
 }
 
 // Custom scrolling that waits for layout change
