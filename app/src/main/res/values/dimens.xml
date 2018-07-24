@@ -9,4 +9,26 @@
     <dimen name="second_keyline">72dp</dimen>
     <!-- Toolbar horizontal padding -->
     <dimen name="toolbar_h_padding">4dp</dimen>
+
+
+    <!-- Default maximum width of bottom sheets. -->
+    <dimen name="bottomSheetMaxWidth">480dp</dimen>
+    <!-- Default height with which bottom sheets peek out from the bottom -->
+    <dimen name="bottomSheetPeekHeight">320dp</dimen>
+
+    <!-- Default font size for WebView text based on system settings -->
+    <dimen name="textSize">16sp</dimen>
+    <integer name="minTextSizeMultiplier">-5</integer>
+    <integer name="maxTextSizeMultiplier">8</integer>
+    <item type="dimen" format="float" name="textSizeMultiplierFactor">0.1</item>
+
+    <dimen name="margin">8dp</dimen>
+
+    <dimen name="corner_radius">4dp</dimen>
+    <dimen name="corner_radius_smaller">2dp</dimen>
+    <!-- Dialog -->
+    <dimen name="dialog_line_spacing_extra">5sp</dimen>
+
+
+
 </resources>

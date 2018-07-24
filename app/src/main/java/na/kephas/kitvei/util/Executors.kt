@@ -2,18 +2,21 @@ package na.kephas.kitvei.util
 
 import android.os.Handler
 import android.os.Looper
+import androidx.appcompat.app.AppCompatActivity
 import kotlinx.coroutines.experimental.*
 import java.io.Closeable
-import java.util.concurrent.Executor
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
+import java.util.concurrent.*
 import kotlin.coroutines.experimental.CoroutineContext
 
-private val IO_EXECUTOR = Executors.newSingleThreadExecutor()
 
 /**
  * Utility method to run blocks on a dedicated background thread, used for io/database work.
  */
+val IO = ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L,
+        TimeUnit.SECONDS, SynchronousQueue<Runnable>()
+).asCoroutineDispatcher()
+
+val IO_EXECUTOR by lazy { Executors.newSingleThreadExecutor() }
 fun ioThread(f: () -> Unit) {
     IO_EXECUTOR.execute(f)
 }
@@ -41,7 +44,15 @@ val fixedThreadPool: CoroutineDispatcher by lazy(LazyThreadSafetyMode.PUBLICATIO
     }
 
 }
+fun <T> AppCompatActivity.waitFor(block: () -> T): T {
+    val job = async(backgroundPool) {
+        block()
+    }
+    return runBlocking {
+        job.await()
+    }
 
+}
 class BackgroundThreadExecutor : Executor {
     //val threadPool = Executors.newCachedThreadPool().asCoroutineDispatcher()
     //private val executorService = Executors.newFixedThreadPool(3)

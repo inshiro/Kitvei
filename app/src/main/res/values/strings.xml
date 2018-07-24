@@ -15,11 +15,22 @@
     <string name="find_in_page">Find in page</string>
     <string name="font_and_theme">Font and theme</string>
     <string name="settings">Settings</string>
+    <!-- /Menu -->
 
-    <string name="translators_text">
-        STRING_TOO_LARGE
-    </string>
-
+    <!-- Theme -->
+    <string name="color_theme_select">Theme</string>
+    <string name="color_theme_light">Light</string>
+    <string name="color_theme_dark">Dark</string>
+    <string name="color_theme_black">Black</string>
+    <string name="color_theme_test_title">Sample text</string>
+    <string name="color_theme_test_text">Drag the slider to change the size of the text that is used when reading articles. To set the text size throughout the rest of the app, change your system text size.</string>
+    <string name="preference_title_app_theme">App theme</string>
+    <string name="preference_summary_color_theme">Switch to using the app\'s dark color theme</string>
+    <string name="text_size_increase">Increase text size</string>
+    <string name="text_size_decrease">Decrease text size</string>
+    <string name="text_size_percent_default">%s (Default)</string>
+    <string name="text_size_select">Font size</string>
+    <!-- /Theme -->
 
     <string name="dedicatory_text">
         <![CDATA[
@@ -54,4 +65,12 @@ through <i>JESUS CHRIST</i> our Lord.</h2><br></br>
 
     <string name="howto_header">HOW TO KNOW THE PURE CAMBRIDGE EDITION OF THE KING JAMES BIBLE\n</string>
     <string name="howto_text">It is important to have the correct, perfect and final text of the King James Bible, since there are correctors (e.g. publishers) who have changed some aspects of King James Bible texts. The final form of the King James Bible is the Pure Cambridge Edition (circa 1900), which conforms to the following:\n</string>
+
+    <!-- Miscellaneous -->
+    <string name="text_size_percent">%d%%</string>
+    <string name="onboarding_option_string">%s.\t\t%s</string>
+    <string name="language_data">multilingual</string>
+    <string name="empty" />
+    <string name="theme_chooser_dialog_image_dimming_switch_label">Image dimming (in Dark theme)</string>
+
 </resources>

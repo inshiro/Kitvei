@@ -1,4 +1,4 @@
-<resources>
+<resources  xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Base application theme.
     Theme.AppCompat.Light.DarkActionBar -->
@@ -94,4 +94,75 @@
         <item name="android:minWidth">48dp</item>
     </style>
 
+    <!-- Wiki App -->
+
+    <style name="AlertDialogButtonStyle">
+        <item name="android:textAlignment">center</item>
+    </style>
+
+    <style name="AppBottomSheetModalStyle" parent="Widget.Design.BottomSheet.Modal">
+        <item name="behavior_peekHeight">@dimen/bottomSheetPeekHeight</item>
+    </style>
+    <style name="App.Button" parent="@style/Widget.AppCompat.Button.Colored">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">4dp</item>
+        <item name="android:layout_marginBottom">4dp</item>
+        <item name="android:layout_marginLeft">4dp</item>
+        <item name="android:layout_marginRight">4dp</item>
+        <item name="android:paddingTop">8dp</item>
+        <item name="android:paddingBottom">8dp</item>
+        <item name="android:paddingLeft">16dp</item>
+        <item name="android:paddingRight">16dp</item>
+        <item name="backgroundTint">@color/color_state_green</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textAlignment">center</item>
+    </style>
+
+    <style name="App.Button.Blue">
+        <item name="backgroundTint">@color/color_state_blue</item>
+    </style>
+
+    <style name="App.Button.Gray">
+        <item name="backgroundTint">@color/color_state_gray</item>
+    </style>
+
+    <style name="App.Button.Black">
+        <item name="backgroundTint">@color/color_state_black</item>
+    </style>
+
+    <style name="App.Button.White">
+        <item name="backgroundTint">@color/color_state_white</item>
+        <item name="android:textColor">@color/base30</item>
+    </style>
+
+    <style name="App.Button.TransparentBlue">
+        <item name="android:background">@drawable/button_shape_bordered_transparent</item>
+        <item name="backgroundTint">@color/color_state_blue</item>
+        <item name="android:textColor">@color/color_state_blue</item>
+        <item name="android:minHeight">36dp</item>
+    </style>
+
+    <style name="TransparentButton" parent="@style/Widget.AppCompat.Button.Borderless">
+        <item name="android:textAlignment">center</item>
+    </style>
+
+    <style name="DialogTextAppearance">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">?attr/material_theme_secondary_color</item>
+        <item name="android:lineSpacingExtra">@dimen/dialog_line_spacing_extra</item>
+    </style>
+
+    <style name="DialogTitleAppearance" parent="@style/RtlOverlay.DialogWindowTitle.AppCompat">
+        <item name="android:textColor">?attr/material_theme_primary_color</item>
+        <item name="android:layout_marginBottom">5dp</item>
+    </style>
+
+    <style name="DialogTitleTextAppearance" parent="TextAppearance.AppCompat.Title">
+        <item name="android:textSize">20sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+<!--
+ <item name="dropCapFontPath">fonts/SANS-SERIF_Cabin-Regular.otf</item>
+ -->
 </resources>

@@ -19,19 +19,25 @@
     tools:context=".activity.MainActivity"
     tools:showIn="@layout/activity_main_content">
 -->
-
-<androidx.recyclerview.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/nestedRecyclerView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:clipToPadding="false"
-    android:paddingLeft="16dp"
-    android:paddingTop="24dp"
-    android:paddingRight="16dp"
-    android:paddingBottom="400dp"
     android:scrollbarStyle="outsideInset"
     android:scrollbars="vertical"
-    tools:context=".activity.MainActivity"
-    tools:showIn="@layout/activity_main_content" />
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    android:fillViewport="true">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/MainRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingLeft="16dp"
+        android:paddingTop="24dp"
+        android:paddingRight="16dp"
+        android:paddingBottom="400dp"
+        tools:context=".activity.MainActivity"
+        tools:showIn="@layout/activity_main_content" />
+</androidx.core.widget.NestedScrollView>

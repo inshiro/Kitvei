@@ -35,7 +35,7 @@
                 tools:ignore="UnusedAttribute">
 
 
-                <TextView
+                <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/toolbarTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -45,7 +45,7 @@
                     android:textSize="20sp"
                     tools:text="TITLE" />
 
-                <androidx.constraintlayout.ConstraintLayout
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent">
 
@@ -56,7 +56,9 @@
                         android:imeOptions="flagNoExtractUi"
                         android:visibility="gone"
                         app:actionViewClass="androidx.appcompat.widget.SearchView"
-                        app:layout_constraintStart_toStartOf="parent" />
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        />
 
                     <LinearLayout
                         android:id="@+id/findInSearchContainer"
@@ -64,9 +66,10 @@
                         android:layout_height="match_parent"
                         android:orientation="horizontal"
                         android:visibility="gone"
-                        app:layout_constraintRight_toRightOf="parent">
+                        app:layout_constraintRight_toRightOf="parent"
+                        app:layout_constraintTop_toTopOf="parent">
 
-                        <TextView
+                        <androidx.appcompat.widget.AppCompatTextView
                             android:id="@+id/fipCountText"
                             android:layout_width="wrap_content"
                             android:layout_height="match_parent"
@@ -79,7 +82,7 @@
                             android:id="@+id/fipUpButton"
                             android:layout_width="48dp"
                             android:layout_height="match_parent"
-                            android:background="?selectableItemBackground"
+                            android:background="?actionBarItemBackground"
                             android:contentDescription="Find next above"
                             android:src="@drawable/ic_keyboard_arrow_up_white_24dp"
                             tools:ignore="HardcodedText" />
@@ -88,7 +91,7 @@
                             android:id="@+id/fipDownButton"
                             android:layout_width="48dp"
                             android:layout_height="match_parent"
-                            android:background="?selectableItemBackground"
+                            android:background="?actionBarItemBackground"
                             android:contentDescription="Find next below"
                             android:src="@drawable/ic_keyboard_arrow_down_white_24dp"
                             tools:ignore="HardcodedText" />
@@ -97,12 +100,12 @@
                             android:id="@+id/fipCloseButton"
                             android:layout_width="48dp"
                             android:layout_height="match_parent"
-                            android:background="?selectableItemBackground"
+                            android:background="?actionBarItemBackground"
                             android:contentDescription="Close find in page"
                             android:src="@drawable/ic_close_white_24dp"
                             tools:ignore="HardcodedText" />
                     </LinearLayout>
-                </androidx.constraintlayout.ConstraintLayout>
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
             </androidx.appcompat.widget.Toolbar>
 
@@ -164,7 +167,7 @@
     <androidx.viewpager.widget.ViewPager
         android:id="@+id/mainViewPager"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
     <androidx.cardview.widget.CardView xmlns:card_view="http://schemas.android.com/apk/res-auto"
@@ -204,7 +207,7 @@
             <androidx.viewpager.widget.ViewPager
                 android:id="@+id/viewpager"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" />
+                android:layout_height="wrap_content" />
             <!-- android:background="?android:attr/colorBackground" -->
         </LinearLayout>
 

@@ -13,6 +13,8 @@ import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.withContext
 import na.kephas.kitvei.util.Fonts
+import na.kephas.kitvei.util.fixedThreadPool
+import na.kephas.kitvei.util.futureSet
 import na.kephas.kitvei.util.toSpanned
 
 class DedicatoryActivity : AppCompatActivity() {
@@ -53,7 +55,7 @@ class DedicatoryActivity : AppCompatActivity() {
         val kenBurnsView = findViewById(R.id.base_content_image) as KenBurnsView
         kenBurnsView.setImageDrawable(tempImage)*/
         //val context = this
-        async(CommonPool) {
+        async(fixedThreadPool) {
             val span = getString(cText).toSpanned()
             val kenBurnsView = findViewById<KenBurnsView>(R.id.base_content_image)
             //val image = ContextCompat.getDrawable(context, cDrawable)

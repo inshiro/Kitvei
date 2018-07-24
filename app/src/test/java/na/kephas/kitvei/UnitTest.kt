@@ -1,16 +1,17 @@
 package na.kephas.kitvei
 
+import android.text.SpannableStringBuilder
+import android.util.Log
+import androidx.core.text.toSpannable
 import androidx.lifecycle.ViewModelProviders
 import na.kephas.kitvei.activity.MainActivity
 import na.kephas.kitvei.data.AppDatabase
 import na.kephas.kitvei.util.InjectorUtils
+import na.kephas.kitvei.util.properSubstring
 import na.kephas.kitvei.viewmodels.VerseListViewModel
-import org.junit.After
+import org.junit.*
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
-import org.junit.Before
-import org.junit.FixMethodOrder
-import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.MethodSorters
 import org.robolectric.Robolectric
@@ -40,17 +41,45 @@ class UnitTest {
                 .get(VerseListViewModel::class.java)
     }
 
-    @Test
-    @Throws(Exception::class)
-    fun shouldNotBeNull() {
-        assertNotNull(ma)
+    /*
+        @Test
+        @Throws(Exception::class)
+        fun shouldNotBeNull() {
+            assertNotNull(ma)
+        }
+
+        @Test
+        fun listSize_is1189() {
+            assertEquals(1189, vm.getPages().size)
+        }*/
+
+   // @Test
+    @Ignore
+    fun textTest() {
+        val sText = SpannableStringBuilder("1  <<A Song of degrees.>> I will lift up mine eyes unto the hills, from whence cometh my help.")
+        val exp = SpannableStringBuilder("I will lift up mine eyes unto the hills, from whence cometh my help.")
+
+
+        sText.indexOf('<').let {
+            if (it == 3)
+                sText.properSubstring(sText.lastIndexOf('>') + 2)
+            else if (sText.contains('<'))
+                sText.properSubstring(0, it - 1)
+        }
+
+        println(sText)
+        assertEquals(exp, sText)
+
     }
 
     @Test
-    fun listSize_is1189() {
-        assertEquals(1189, vm.getPages().size)
-    }
+    fun tTest(){
 
+        val sText = SpannableStringBuilder("csdfewtxre4dfgsc4ter545tr")
+        val s = sText.insert(0, "77")
+        assertEquals("77csdfewtxre4dfgsc4ter545tr", sText.toString())
+        println(s)
+    }
     @After
     fun tearDown() {
         AppDatabase.destroyInstance()

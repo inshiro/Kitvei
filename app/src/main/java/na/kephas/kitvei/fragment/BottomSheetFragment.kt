@@ -5,26 +5,30 @@ import android.content.DialogInterface
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.widget.SeekBar
 import android.widget.TextView
+import androidx.appcompat.widget.AppCompatTextView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import na.kephas.kitvei.Prefs
 import na.kephas.kitvei.R
 import na.kephas.kitvei.activity.MainActivity
-import na.kephas.kitvei.adapter.MainAdapter
-import na.kephas.kitvei.prefs
+import na.kephas.kitvei.adapter.MainViewPagerAdapter
+import na.kephas.kitvei.util.d
+import na.kephas.kitvei.util.futureSet
 
 
 class BottomSheetFragment : BottomSheetDialogFragment() {
 
     val vp by lazy { (activity as MainActivity).mainViewPager }
-    var fontSize = prefs.fontSize
+    var fontSize = Prefs.mainFontSize
 
     companion object {
         const val PORTRAIT = 0
@@ -41,11 +45,22 @@ class BottomSheetFragment : BottomSheetDialogFragment() {
         }
     }
 
+    private fun getTextView(page: Int = -1): TextView? {
+        return when (page) {
+            0 -> vp.findViewWithTag("tv${vp.currentItem - 1}")
+            1 -> vp.findViewWithTag("tv${vp.currentItem + 1}")
+            else -> vp.findViewWithTag("tv${vp.currentItem}")
+        }
+    }
+
     private fun saveFontChanges() {
-        if (prefs.fontSize != fontSize) {
-            prefs.fontSize = fontSize
-            getRecyclerView(0)?.adapter?.notifyDataSetChanged()
-            getRecyclerView(1)?.adapter?.notifyDataSetChanged()
+        if (Prefs.mainFontSize != fontSize) {
+            Prefs.mainFontSize = fontSize
+            //getRecyclerView(0)?.adapter?.notifyDataSetChanged()
+            //getRecyclerView(1)?.adapter?.notifyDataSetChanged()
+            getTextView(0)?.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize)
+            getTextView(1)?.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize)
+            d {"fontSize: $fontSize"}
         }
 
         (activity as MainActivity).apply {
@@ -71,6 +86,7 @@ class BottomSheetFragment : BottomSheetDialogFragment() {
 
         }
     }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         dialog.setOnShowListener {
@@ -80,8 +96,8 @@ class BottomSheetFragment : BottomSheetDialogFragment() {
             val params = (getView()?.parent as View).layoutParams as CoordinatorLayout.LayoutParams
             val behavior = params.behavior
 
-            val rv = getRecyclerView()
-
+            // val rv = getRecyclerView()
+            val vpAdapter = vp.adapter as MainViewPagerAdapter
             if (behavior != null && behavior is BottomSheetBehavior<*>) {
 
 
@@ -119,28 +135,34 @@ class BottomSheetFragment : BottomSheetDialogFragment() {
                             getView()?.viewTreeObserver?.removeGlobalOnLayoutListener(this)
                         }
                         behavior.peekHeight = getView()!!.measuredHeight
-                        (activity as MainActivity).apply {
+                        /*(activity as MainActivity).apply {
                             if (isTranslucentNavBar())
                                 cancelTranslucentNavBar()
-                        }
+                        }*/
                     }
                 })
 
             }
 
+            val tv = getTextView()
             val seekBar = view.findViewById<SeekBar>(R.id.seekBar)
-            val fontSizeTextView = view.findViewById<TextView>(R.id.fontSizeTextView)
+            val fontSizeTextView = view.findViewById<AppCompatTextView>(R.id.fontSizeTextView)
             seekBar.max = 20
-            seekBar.progress = (fontSize * 10f).toInt()
-            fontSizeTextView.text = ("${(fontSize * 100f).toInt()}%")
+            seekBar.progress = fontSize.toInt() // (fontSize * 10f).toInt() //@ 100
+            fontSizeTextView.text = ("${(fontSize * 10f).toInt()}%")
             seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-                override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
-                    fontSize = p1 / 10f
-                    fontSizeTextView.text = ("${(fontSize * 100f).toInt()}%")
-                    (rv?.adapter as MainAdapter).apply {
+                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                    fontSize = progress.toFloat()
+                    vpAdapter.setFontSize(fontSize)
+                    tv?.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize)
+                    fontSizeTextView.futureSet("${( progress  * 10f).toInt()}%")
+                    /*(rv?.adapter as MainAdapter).apply {
                         setFontSize(fontSize)
                         notifyDataSetChanged()
-                    }
+                    }*/
+                    //(tv?.text as SpannableString).setSpan(RelativeSizeSpan(fontSize), 0, tv.text.length, 0)
+
+
                 }
 
                 override fun onStartTrackingTouch(p0: SeekBar?) {
@@ -159,6 +181,7 @@ class BottomSheetFragment : BottomSheetDialogFragment() {
         retainInstance = true
         currentOrientation = if (activity!!.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) PORTRAIT else LANDSCAPE
     }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_bottom_sheet, container, false)
     }

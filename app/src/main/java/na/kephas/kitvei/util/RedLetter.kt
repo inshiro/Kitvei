@@ -1,23 +1,45 @@
 package na.kephas.kitvei.util
 
-import android.content.Context
+import na.kephas.kitvei.App
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
 
 data class RedLetter(val bookId: Int, val chapterId: Int, val verseId: Int, var positions: MutableSet<Pair<Int, Int>>)
 
-object RedLetterDatabase {
+private fun StringBuilder.clear() {
+    setLength(0)
+}
+
+object RedLetters {
     private const val PATH = "databases/RedLetters.txt"
-    private val list: MutableSet<RedLetter>? = null
-    fun getRedLetters(context: Context): MutableSet<RedLetter> {
-        if (list != null) return list
+    private var list: List<CharSequence>? = null
+
+    fun getPositions(index: Int, block: (start:Int, end:Int) -> Unit) {
+        if (list == null)
+            get()
+        val it = list!![index]
+        val text = it.substring(it.lastIndexOf('\t') + 1)
+
+        var e = 0
+        text.count("{") { s, _, _ ->
+            e = s
+            e = text.indexOf('}', e + 1)-1
+            if (e >= 0)
+                block(s,e)//p.add(Pair(s, e))//if (block(b, c, v, s, e)) return count
+
+        }
+    }
+
+    fun get(): List<CharSequence> {
+        if (list != null) return list!!
 
         var reader: BufferedReader? = null
-        var l: List<String>? = null
+        var l: List<CharSequence>? = null
         try {
-            reader = BufferedReader(InputStreamReader(context.assets.open(PATH), "UTF-8"))
+            reader = BufferedReader(InputStreamReader(App.instance.baseContext.assets.open(PATH), "UTF-8"))
             l = reader.readLines()
+
         } catch (e: Exception) {
             e.printStackTrace()
         } finally {
@@ -30,49 +52,8 @@ object RedLetterDatabase {
             }
         }
 
-        val redLetters = mutableSetOf<RedLetter>()
-
-        var count = 0
-
-        var tabPos1: Int
-        var tabPos2: Int
-        var tabPos3: Int
-
-        var b: String
-        var c: String
-        var v: String
-
-        var text: String
-
-        l?.forEach {
-            count++
-
-            tabPos1 = it.indexOf('\t')
-            tabPos2 = it.indexOf('\t', tabPos1 + 1)
-            tabPos3 = it.indexOf('\t', tabPos2 + 1)
-
-            b = it.substring(0, tabPos1)
-            c = it.substring(tabPos1 + 1, tabPos2)
-            v = it.substring(tabPos2 + 1, tabPos3)
-
-            text = it.substring(tabPos3 + 1)
-
-
-            text = text.styleBetween("{", "", "}", "") { s, e ->
-                // If same Triple, add pair else add set
-                redLetters.elementAtOrNull(count - 1)?.run {
-                    if (bookId == b.toInt() && chapterId == c.toInt() && verseId == v.toInt())
-                        redLetters.add(RedLetter(
-                                b.toInt(), c.toInt(), v.toInt()
-                                , { this.positions.add(Pair(s, e)); this.positions }()
-                        )).also { redLetters.remove(this) } // Remove duplicates
-                }
-                        ?: redLetters.add(RedLetter(b.toInt(), c.toInt(), v.toInt(), mutableSetOf(Pair(s, e))))
-            }
-
-        }
-
-        return redLetters
+        list = l
+        return list!!
     }
 
 }

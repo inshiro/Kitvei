@@ -1,18 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/mainTextView"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/MainScrollView"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:gravity="start"
-    android:textAlignment="viewStart"
-    android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-    android:textSize="24sp"
-    android:soundEffectsEnabled="false"
-    android:lineSpacingMultiplier="1.17"
-    android:textIsSelectable="false"
-    android:layout_weight="1"
-    tools:text="In the beginning" />
+    android:clipToPadding="false"
+    android:fillViewport="true"
+    android:isScrollContainer="true"
+    android:paddingLeft="16dp"
+    android:paddingTop="24dp"
+    android:paddingRight="16dp"
+    android:paddingBottom="400dp"
+    android:scrollbarStyle="outsideInset"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/MainTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:bufferType="spannable"
+        android:gravity="start"
+        android:lineSpacingMultiplier="1.17"
+        android:soundEffectsEnabled="false"
+        android:textAlignment="viewStart"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+        android:textColor="@color/textColorPrimary"
+        android:textIsSelectable="false"
+        android:textSize="24sp"
+        tools:text="In the beginning" />
+    <!--
+            android:clipToPadding="false"
+            android:paddingTop="24dp"
+            -->
+</ScrollView>

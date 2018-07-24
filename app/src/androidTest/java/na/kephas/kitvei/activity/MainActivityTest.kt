@@ -9,7 +9,7 @@ import androidx.test.rule.ActivityTestRule
 import androidx.test.runner.AndroidJUnit4
 import na.kephas.kitvei.R
 import na.kephas.kitvei.data.AppDatabase
-import na.kephas.kitvei.prefs
+import na.kephas.kitvei.Prefs
 import na.kephas.kitvei.util.InjectorUtils
 import na.kephas.kitvei.viewmodels.VerseListViewModel
 import org.hamcrest.CoreMatchers.allOf
@@ -35,7 +35,7 @@ class MainActivityTest {
 
     @Test
     fun swipeUntilEnd() {
-        for (a in prefs.VP_Position..vm.getPages().size)
+        for (a in Prefs.VP_Position..vm.getPages().size)
             onView(allOf(withId(R.id.mainViewPager), isCompletelyDisplayed())).perform(swipeLeft())
     }
 

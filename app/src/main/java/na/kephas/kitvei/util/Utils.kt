@@ -4,15 +4,21 @@ import android.content.Context
 import android.content.res.Resources
 import android.os.Build
 import android.text.Html
+import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.util.Log
 import android.view.View
 import android.view.ViewTreeObserver
 import android.view.WindowManager
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.AppCompatTextView
+import androidx.core.text.PrecomputedTextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.experimental.async
+import java.lang.ref.WeakReference
 import java.util.regex.Pattern
 
 inline fun d(tag: String = "TAG", msg: () -> String) {
@@ -36,6 +42,19 @@ fun View.snackbar(str: String, duration: Int = Snackbar.LENGTH_SHORT) {
     }
 }
 
+fun AppCompatTextView.futureSet(charSequence: CharSequence){
+    val future = PrecomputedTextCompat.getTextFuture(charSequence, this.textMetricsParamsCompat, IO_EXECUTOR)
+    this.setTextFuture(future!!)
+}
+fun SpannableStringBuilder.properSubstring(start: Int, end: Int = this.length) {
+    apply {
+        if (end>0)
+        delete(end, length)
+        if (start>0)
+
+        delete(0, start)
+    }
+}
 /**
  * Returns a SpannableStringBuilder to a String as a variable instead of method
  */
@@ -45,7 +64,16 @@ val SpannableStringBuilder.toString: String
 /**
  * Count Occurrences of a String in a String
  */
-fun String.count(sub: String, action: (start: Int, end: Int, countSoFar: Int) -> Unit = { _, _, _ -> }): Int {
+inline fun CharSequence.count(sub: String, ignoreCase :Boolean= false, action: (start: Int, end: Int, countSoFar: Int) -> Unit = { _, _, _ -> }): Int {
+    var count = 0
+    var startIdx = 0
+    while ({ indexOf(sub, startIdx, ignoreCase = ignoreCase).also { startIdx = it + 1 } }() >= 0) {
+        count++
+        action(startIdx - 1, startIdx - 1 + sub.length, count)
+    }
+    return count
+}
+inline fun String.count(sub: String, action: (start: Int, end: Int, countSoFar: Int) -> Unit = { _, _, _ -> }): Int {
     var count = 0
     var startIdx = 0
     while ({ indexOf(sub, startIdx).also { startIdx = it + 1 } }() >= 0) {
@@ -55,7 +83,7 @@ fun String.count(sub: String, action: (start: Int, end: Int, countSoFar: Int) ->
     return count
 }
 
-fun SpannableStringBuilder.count(sub: String, action: (start: Int, end: Int, countSoFar: Int) -> Unit = { _, _, _ -> }): Int {
+inline fun SpannableStringBuilder.count(sub: String, action: (start: Int, end: Int, countSoFar: Int) -> Unit = { _, _, _ -> }): Int {
     var count = 0
     var startIdx = 0
     while ({ indexOf(sub, startIdx).also { startIdx = it + 1 } }() >= 0) {
@@ -66,7 +94,7 @@ fun SpannableStringBuilder.count(sub: String, action: (start: Int, end: Int, cou
 }
 
 // Returns number of occurrences of substring in String, or additional does something with values.
-fun String.occurrences(sub: String, flags: Int = Pattern.LITERAL or Pattern.CASE_INSENSITIVE, removeDelimiter: Boolean = false, additional: (matches: Int, start: Int, end: Int) -> Unit = { _, _, _ -> }): Int {
+inline fun String.occurrences(sub: String, flags: Int = Pattern.LITERAL or Pattern.CASE_INSENSITIVE, removeDelimiter: Boolean = false, additional: (matches: Int, start: Int, end: Int) -> Unit = { _, _, _ -> }): Int {
     val pattern = Pattern.compile(sub, flags) ?: return 0
     val matcher = pattern.matcher(this)
     var matches = 0
@@ -108,6 +136,13 @@ fun String.formatText(): String {
 
     return text
 }
+fun Double.format(digits: Int) = java.lang.String.format("%.${digits}f", this)
+inline fun measureTime(block: () -> Unit): Double {
+    val startTime = System.currentTimeMillis()
+    block.invoke()
+    return (System.currentTimeMillis() - startTime) / 1000.0
+}
+
 
 inline fun measureTimeMillis(block: () -> Unit): Long {
     val startTime = System.currentTimeMillis()
@@ -140,6 +175,21 @@ inline fun <T> Iterable<T>.each(startIndex: Int? = null, block: (T) -> Boolean):
     return -1
 }
 
+inline fun TextView.precomputeAndSet(crossinline block: (TextView) -> Any) {
+    // UI thread
+    val params: PrecomputedTextCompat.Params = (this as AppCompatTextView).textMetricsParamsCompat
+    val ref = WeakReference(this)
+    @Suppress("DeferredResultUnused")
+    async(fixedThreadPool) {
+        // background thread
+        val text = PrecomputedTextCompat.create(block(this@precomputeAndSet) as CharSequence, params)
+        ref.get()?.post {
+            // UI thread
+            val textViewRef = ref.get()
+            textViewRef?.setText(text, TextView.BufferType.SPANNABLE)
+        }
+    }
+}
 var recyclerViewReadyCallback: RecyclerViewReadyCallBack? = null
 
 interface RecyclerViewReadyCallBack {

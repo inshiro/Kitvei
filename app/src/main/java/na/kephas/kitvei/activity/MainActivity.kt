@@ -9,6 +9,9 @@ import android.os.Build
 import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.text.SpannableString
+import android.text.style.BackgroundColorSpan
+import android.text.style.CharacterStyle
 import android.util.Log
 import android.util.TypedValue
 import android.view.Menu
@@ -18,12 +21,14 @@ import android.view.WindowManager
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.view.inputmethod.InputMethodManager
-import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.ScrollView
 import androidx.annotation.ColorRes
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.AppCompatTextView
 import androidx.appcompat.widget.SearchView
+import androidx.core.app.ActivityCompat.invalidateOptionsMenu
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.DrawableCompat
@@ -31,7 +36,6 @@ import androidx.core.text.TextUtilsCompat
 import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
 import androidx.lifecycle.ViewModelProviders
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager.widget.ViewPager
 import com.flaviofaria.kenburnsview.KenBurnsView
@@ -43,7 +47,7 @@ import kotlinx.android.synthetic.main.activity_main_content.*
 import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.android.UI
 import na.kephas.kitvei.*
-import na.kephas.kitvei.adapter.MainAdapter
+import na.kephas.kitvei.R.id.*
 import na.kephas.kitvei.adapter.MainViewPagerAdapter
 import na.kephas.kitvei.adapter.MiniSearchViewPagerAdapter
 import na.kephas.kitvei.data.AppDatabase
@@ -52,7 +56,10 @@ import na.kephas.kitvei.fragment.BottomSheetFragment
 import na.kephas.kitvei.fragment.FragmentBook
 import na.kephas.kitvei.fragment.FragmentChapter
 import na.kephas.kitvei.fragment.FragmentVerse
+import na.kephas.kitvei.theme.ThemeChooserDialog
 import na.kephas.kitvei.util.*
+import na.kephas.kitvei.util.AdapterStyle.HighLightColor
+import na.kephas.kitvei.util.AdapterStyle.HighlightFocusColor
 import na.kephas.kitvei.viewmodels.VerseListViewModel
 import java.lang.reflect.Field
 
@@ -70,11 +77,33 @@ class MainActivity : AppCompatActivity(),
     private lateinit var bookFragment: FragmentBook
     private lateinit var chapterFragment: FragmentChapter
     private lateinit var verseFragment: FragmentVerse
+    //private val bookFragment by lazy { FragmentBook() }
+    //private val chapterFragment by lazy { FragmentChapter() }
+    //private val verseFragment by lazy { FragmentVerse() }
+
     private val imm by lazy(LazyThreadSafetyMode.NONE) { getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager }
     private val isRTL by lazy(LazyThreadSafetyMode.NONE) { TextUtilsCompat.getLayoutDirectionFromLocale(java.util.Locale.getDefault()) != ViewCompat.LAYOUT_DIRECTION_LTR }
     //private val typeface by lazy(LazyThreadSafetyMode.NONE) { Typeface.create("sans-serif", Typeface.NORMAL) }
-    private val viewModel by lazy(LazyThreadSafetyMode.NONE) {
 
+    private val activityManager by lazy(LazyThreadSafetyMode.NONE) { baseContext.getSystemService<ActivityManager>() }
+    private val bottomSheetFragment by lazy { BottomSheetFragment() }
+
+    companion object {
+        private var row: Bible? = null
+        private var hideSearch = false
+        private var viewPagerPosition = 0
+        private var tBook = 1
+        private var tChapter = 1
+        //private var pos = 0
+        private var queryFinished = false
+        private lateinit var currentPageView: RecyclerView
+    }
+
+    // Using ListView rather than RecyclerView fixes scroll issue
+    // See: https://meta.stackexchange.com/questions/239711/latest-update-has-jumpy-scrolling
+    // TODO https://guides.codepath.com/android/Using-an-ArrayAdapter-with-ListView
+    // TODO https://www.bignerdranch.com/blog/customizing-android-listview-rows-subclassing/
+    private val viewModel by lazy(LazyThreadSafetyMode.NONE) {
         val factory = InjectorUtils.provideVerseListViewModelFactory(this)
         ViewModelProviders.of(this, factory)
                 .get(VerseListViewModel::class.java)
@@ -88,18 +117,6 @@ class MainActivity : AppCompatActivity(),
                 viewModel.getPages()
             }
         }
-    }
-    private val activityManager by lazy(LazyThreadSafetyMode.NONE) { baseContext.getSystemService<ActivityManager>() }
-    private lateinit var bottomSheetFragment: BottomSheetFragment
-
-    companion object {
-        private var row: Bible? = null
-        private var hideSearch = false
-        private var viewPagerPosition = 0
-        private var tBook = 1
-        private var tChapter = 1
-        private var pos = 0
-        private var queryFinished = false
     }
 
     fun isTranslucentNavBar(): Boolean {
@@ -124,9 +141,6 @@ class MainActivity : AppCompatActivity(),
     override fun onConfigurationChanged(newConfig: Configuration?) {
         super.onConfigurationChanged(newConfig)
 
-        if (!this::bottomSheetFragment.isInitialized)
-            bottomSheetFragment = BottomSheetFragment()
-
         // Do not touch NavBar if BottomSheet is shown
         if (bottomSheetFragment.isAdded)
             (bottomSheetFragment != null && bottomSheetFragment.dialog != null
@@ -146,9 +160,6 @@ class MainActivity : AppCompatActivity(),
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
-
-        if (savedInstanceState == null)
-            bottomSheetFragment = BottomSheetFragment()
 
         launch(backgroundPool, parent = rootParent) {
 
@@ -183,19 +194,12 @@ class MainActivity : AppCompatActivity(),
         }
         blink(toolbarTitle, 4, 1000)
 
-        if (prefs.VP_Position == 0) setMainTitle() // Init
+        if (Prefs.VP_Position == 0) setMainTitle() // Init
         //toolbarTitle.typeface = Fonts.Merriweather_Black
 
         mainViewPager = findViewById(R.id.mainViewPager)
-        mainViewPager.tag = "MainVP"
 
-        // Prefer higher quality images unless we're on a low RAM device
-        //mainViewPager.offscreenPageLimit = if (ActivityManagerCompat.isLowRamDevice(activityManager)) 1 else 2
         mainViewPager.adapter = MainViewPagerAdapter(this, viewModel, bible)
-        /*if (isRTL) {
-            mainViewPager.rotationY = 180f
-            (mainViewPager.adapter as? MainViewPagerAdapter)?.notifyDataSetChanged()
-        }*/
 
         val onPageListener = object : ViewPager.OnPageChangeListener {
             override fun onPageScrollStateChanged(state: Int) {}
@@ -205,6 +209,17 @@ class MainActivity : AppCompatActivity(),
             override fun onPageSelected(position: Int) {
                 viewPagerPosition = position
                 row = bible[viewPagerPosition]
+                /*launch(backgroundPool) {
+                    while(mainViewPager.findViewWithTag<RecyclerView>("rv$viewPagerPosition") == null){
+                    delay(1000)
+                        if (mainViewPager.findViewWithTag<RecyclerView>("rv$viewPagerPosition") != null)
+                            mainViewPager.findViewWithTag<RecyclerView>("rv$viewPagerPosition").post {
+                                currentPageView = mainViewPager.findViewWithTag<RecyclerView>("rv$viewPagerPosition")
+
+                            }
+                    }
+
+                }*/
                 setMainTitle(row?.bookName, row?.chapterId)
                 if (toolbarSearchView.visibility == View.VISIBLE)
                     if (findInPageMenu)
@@ -214,7 +229,7 @@ class MainActivity : AppCompatActivity(),
 
         }
         mainViewPager.addOnPageChangeListener(onPageListener)
-        mainViewPager.currentItem = prefs.VP_Position
+        mainViewPager.currentItem = Prefs.VP_Position
 
         // Fragment height
         val linearParams = stuffLinearLayout.layoutParams
@@ -315,12 +330,11 @@ class MainActivity : AppCompatActivity(),
         toolbarSearchView.setQuery("", false)
         hideSearch = false
         invalidateOptionsMenu()
-        val rv = mainViewPager.findViewWithTag<RecyclerView>(0)
-        (rv.adapter as MainAdapter).apply {
+        /*(currentPageView.adapter as MainAdapter).apply {
             findInPage(null)
             setCurrentlyHighlighted(null, null)
             notifyDataSetChanged()
-        }
+        }*/
         toolbarSearchView.setOnQueryTextListener(null)
         toolbarSearchView.setOnQueryTextListener(miniSearchListener)
         findInPageMenu = false
@@ -338,102 +352,104 @@ class MainActivity : AppCompatActivity(),
 
     }
 
-    private fun setClickListener(button: ImageButton, recyclerView: RecyclerView) {
+    /*
+        private fun setClickListener(button: ImageButton, recyclerView: RecyclerView) {
 
 
-        button.setOnClickListener {
-            if (!findInPageMenu)
-                return@setOnClickListener
-            val sum = matchesList.sum()
-            if (sum < 1)
-                return@setOnClickListener
-            run loop@{
+            button.setOnClickListener {
+                if (!findInPageMenu)
+                    return@setOnClickListener
+                val sum = matchesList.sum()
+                if (sum < 1)
+                    return@setOnClickListener
+                run loop@{
 
-                if (button == fipUpButton) {
-                    //if (findInPageMatch == 1) findInPageMatch = count
-                    //findInPageMatch--
-                    if (findInPageMatch == 1) {
-                        findInPageMatch = sum
-                        val index = matchesList.indexOfLast { it != 0 }
-                        val value = matchesList[index]
-                        recyclerView.fling(0, 0)
-                        recyclerView.scrollToPosition(index)
-                        (recyclerView.adapter as MainAdapter).apply {
-                            setCurrentlyHighlighted(index, value)
-                            notifyDataSetChanged()
+                    if (button == fipUpButton) {
+                        //if (findInPageMatch == 1) findInPageMatch = count
+                        //findInPageMatch--
+                        if (findInPageMatch == 1) {
+                            findInPageMatch = sum
+                            val index = matchesList.indexOfLast { it != 0 }
+                            val value = matchesList[index]
+                            recyclerView.fling(0, 0)
+                            recyclerView.scrollToPosition(index)
+                            (recyclerView.adapter as MainAdapter).apply {
+                                setCurrentlyHighlighted(index, value)
+                                notifyDataSetChanged()
+                            }
+                            //d(TAG) { "Called scrolled down index: $index fipValue: $value findInPageMatch: $findInPageMatch" }
+
+                            //resetFIPS()
+                            return@loop
+
+                        } else {
+                            var count = 1
+                            --findInPageMatch // Does most of the work
+                            matchesList.next { index, value ->
+                                if (count == findInPageMatch) {
+                                    recyclerView.post {
+                                        recyclerView.fling(0, 0)
+                                        recyclerView.smoothScrollToPosition(index)
+                                        d(TAG) { "Called scrolled up index: $index fipValue: $value findInPageMatch: $findInPageMatch" }
+
+                                        (recyclerView.adapter as MainAdapter).apply {
+                                            setCurrentlyHighlighted(index, value)
+                                            notifyDataSetChanged()
+                                        }
+                                    }
+                                    return@loop
+                                }
+                                ++count
+                            }
                         }
-                        //d(TAG) { "Called scrolled down index: $index fipValue: $value findInPageMatch: $findInPageMatch" }
-
-                        //resetFIPS()
-                        return@loop
-
-                    } else {
-                        var count = 1
-                        --findInPageMatch // Does most of the work
-                        matchesList.next { index, value ->
-                            if (count == findInPageMatch) {
-                                recyclerView.post {
+                    } else if (button == fipDownButton) {
+                        if (findInPageMatch == sum) {
+                            matchesList.next(true) { index, value ->
+                                if (value == 1) {
                                     recyclerView.fling(0, 0)
-                                    recyclerView.smoothScrollToPosition(index)
-                                    d(TAG) { "Called scrolled up index: $index fipValue: $value findInPageMatch: $findInPageMatch" }
-
+                                    recyclerView.scrollToPosition(index)
                                     (recyclerView.adapter as MainAdapter).apply {
-                                        setCurrentlyHighlighted(index, value)
+                                        setCurrentlyHighlighted(index, 1)
                                         notifyDataSetChanged()
                                     }
-                                }
-                                return@loop
-                            }
-                            ++count
-                        }
-                    }
-                } else if (button == fipDownButton) {
-                    if (findInPageMatch == sum) {
-                        matchesList.next(true) { index, value ->
-                            if (value == 1) {
-                                recyclerView.fling(0, 0)
-                                recyclerView.scrollToPosition(index)
-                                (recyclerView.adapter as MainAdapter).apply {
-                                    setCurrentlyHighlighted(index, 1)
-                                    notifyDataSetChanged()
-                                }
-                                //d(TAG) { "Called scrolled down index: $index fipValue: $value findInPageMatch: $findInPageMatch" }
-
-                                //resetFIPS()
-                                findInPageMatch = 1
-                                return@loop
-                            }
-                        }
-                    } else {
-                        var count = 1
-                        ++findInPageMatch // Does most of the work
-                        matchesList.next { index, value ->
-                            if (count == findInPageMatch) {
-                                recyclerView.post {
-                                    recyclerView.fling(0, 0)
-                                    recyclerView.smoothScrollToPosition(index)
                                     //d(TAG) { "Called scrolled down index: $index fipValue: $value findInPageMatch: $findInPageMatch" }
 
-                                    (recyclerView.adapter as MainAdapter).apply {
-                                        setCurrentlyHighlighted(index, value)
-                                        notifyDataSetChanged()
-                                    }
+                                    //resetFIPS()
+                                    findInPageMatch = 1
+                                    return@loop
                                 }
-                                return@loop
                             }
-                            ++count
+                        } else {
+                            var count = 1
+                            ++findInPageMatch // Does most of the work
+                            matchesList.next { index, value ->
+                                if (count == findInPageMatch) {
+                                    recyclerView.post {
+                                        recyclerView.fling(0, 0)
+                                        recyclerView.smoothScrollToPosition(index)
+                                        //d(TAG) { "Called scrolled down index: $index fipValue: $value findInPageMatch: $findInPageMatch" }
+
+                                        (recyclerView.adapter as MainAdapter).apply {
+                                            setCurrentlyHighlighted(index, value)
+                                            notifyDataSetChanged()
+                                        }
+                                    }
+                                    return@loop
+                                }
+                                ++count
+                            }
                         }
                     }
                 }
+
+                fipCountText.text = ("$findInPageMatch/$sum")
+
             }
 
-            fipCountText.text = ("$findInPageMatch/$sum")
-
         }
-
-    }
-
+    */
     private val vbs by lazy { getSystemService(VIBRATOR_SERVICE) as Vibrator }
+
     private fun vibrate(duration: Long) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             vbs.vibrate(VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE));
@@ -443,17 +459,105 @@ class MainActivity : AppCompatActivity(),
         }
     }
 
+    fun spToPx(sp: Float): Int {
+        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sp, this.resources.displayMetrics).toInt()
+    }
+
+    var matchesCount = 0
     private fun showFindInPageSearch() {
         val regex = Regex("""([a-zA-Z,.;:()'? ]+)""")
         val versesRaw = viewModel.getVersesRaw(row!!.bookId!!, row!!.chapterId!!)
-        val rv = mainViewPager.findViewWithTag<RecyclerView>("rv${mainViewPager.currentItem}")
         findInPageMenu = true
         matchesList.reset(versesRaw.size)
 
         // Find in page views
         showSearch()
-        setClickListener(fipUpButton, rv)
-        setClickListener(fipDownButton, rv)
+        //setClickListener(fipUpButton, currentPageView)
+        //setClickListener(fipDownButton, currentPageView)
+        val sv = mainViewPager.findViewWithTag<ScrollView>("sv${mainViewPager.currentItem}")
+        val tv = mainViewPager.findViewWithTag<AppCompatTextView>("tv${mainViewPager.currentItem}")
+        var sc = 0
+        var idx = 0
+        // val fm = tv.paint.fontMetrics
+
+        var currentText = ""
+        val ignCase = true
+
+        var pressed = 0
+        val ss = (tv.text as SpannableString)
+
+        //val textBounds = Rect()
+        //tv.paint.getTextBounds(ss.toString(), 0, 5, textBounds)
+        //lineHeight = textBounds.height()//tv.paint.measureText(ss, 0, 5).toInt()//spToPx(tv.textSize)//(lineHeight * 0.35f).toInt()
+
+        //https://is.gd/oJLdB1
+        fipUpButton.setOnClickListener {
+            sv.post {
+                //sc += tv.lineHeight
+
+                if (idx <= 0) {
+                    // No match
+                    //sv.smoothScrollTo(0, 0)
+                    //sv.fullScroll(View.FOCUS_UP)
+
+                    //sv.smoothScrollTo(0, sv.top - sv.paddingTop)
+                } else {
+                    if (findInPageMatch == 1) findInPageMatch = matchesCount
+                    else findInPageMatch--
+                    if (pressed != 0) {
+                        ss.setSpan(CharacterStyle.wrap(BackgroundColorSpan(HighLightColor)), idx, idx + currentText.length, 0)
+                        idx = tv.text.lastIndexOf(currentText, idx - 1, ignoreCase = ignCase).let {
+                            if (it < 0) {
+                                pressed = 0
+                                tv.text.lastIndexOf(currentText, ignoreCase = ignCase)
+                            } else
+                                it
+                        }
+                        sc = tv.layout.getLineForOffset(idx)
+                    }
+                    sv.smoothScrollTo(0, tv.layout.getLineTop(sc))
+                    ss.setSpan(CharacterStyle.wrap(BackgroundColorSpan(HighlightFocusColor)), idx, idx + currentText.length, 0)
+                    ++pressed
+                    //fipCountText.text = ("$findInPageMatch/$matchesCount")
+                    fipCountText.futureSet("$findInPageMatch/$matchesCount")
+
+                }
+                //d { "[UP] sc: $sc id: $idx " }
+
+            }
+        }
+        fipDownButton.setOnClickListener {
+            sv.post {
+                //sc += tv.lineHeight
+                if (idx < 0) {
+                    // No match
+                    //sv.smoothScrollTo(0, 0)
+                    //sv.fullScroll(View.FOCUS_UP)
+                    //sv.smoothScrollTo(0, sv.top - sv.paddingTop)
+                } else {
+                    if (findInPageMatch == matchesCount) findInPageMatch = 1
+                    else findInPageMatch++
+                    if (pressed != 0) {
+                        ss.setSpan(CharacterStyle.wrap(BackgroundColorSpan(HighLightColor)), idx, idx + currentText.length, 0)
+                        idx = tv.text.indexOf(currentText, idx + 1, ignoreCase = ignCase).let {
+                            if (it < 0) {
+                                pressed = 0
+                                tv.text.indexOf(currentText, ignoreCase = ignCase)
+                            } else
+                                it
+                        }
+                        sc = tv.layout.getLineForOffset(idx)
+                    }
+                    sv.smoothScrollTo(0, tv.layout.getLineTop(sc))
+                    ss.setSpan(CharacterStyle.wrap(BackgroundColorSpan(HighlightFocusColor)), idx, idx + currentText.length, 0)
+                    ++pressed
+                    //d { "[DOWN] sc: $sc id: $idx lineHeight: $lineHeight y: $y" }
+                    //fipCountText.text = ("$findInPageMatch/$matchesCount")
+                    fipCountText.futureSet("$findInPageMatch/$matchesCount")
+
+                }
+            }
+        }
         toggleSearchViewCloseButton(true)
         actionBarDrawerToggle.isDrawerIndicatorEnabled = false
         findInSearchContainer.visibility = View.VISIBLE
@@ -464,16 +568,64 @@ class MainActivity : AppCompatActivity(),
 
         var tempString = ""
 
+        val spanRemover = StyleSpanRemover()
         toolbarSearchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String): Boolean {
                 return false
             }
 
             override fun onQueryTextChange(newText: String): Boolean {
-                matchesList.reset()
-                if (tempString.isEmpty()) tempString = newText
-                rv.post {
-                    (rv.adapter as MainAdapter).let {
+                //matchesList.reset()
+                if (tempString.isBlank()) tempString = newText
+                currentText = newText
+                findInPageMatch = 0
+                pressed = 0
+                idx = 0
+                sc = 0
+                idx = tv.text.indexOf(newText, ignoreCase = ignCase)
+                sc = tv.layout.getLineForOffset(idx)
+                if (newText.isBlank()) {
+                    fipCountText.text = null
+                    spanRemover.RemoveOne(ss, 0, ss.length, BackgroundColorSpan::class.java)
+                } else if (!regex.matches(newText)) {
+                    fipCountText.futureSet("0/0")
+                    ContextCompat.getColor(fipCountText.context, R.color.search_not_found).let {
+                        if (fipCountText.currentTextColor != it)
+                            fipCountText.setTextColor(it)
+                    }
+
+                    if (newText != tempString.dropLast(1)) // Don't vibrate on backspace
+                        vibrate(60)
+                    tempString = newText
+                } else {
+
+                    spanRemover.RemoveOne(ss, 0, ss.length, BackgroundColorSpan::class.java)
+
+
+                    matchesCount = tv.text.count(newText, ignoreCase = ignCase) { s, e, c ->
+                        ss.setSpan(CharacterStyle.wrap(BackgroundColorSpan(HighLightColor)), s, e, 0)
+                    }
+                    if (matchesCount > 0) {
+                        AdapterStyle.WhiteColor.let {
+                            if (fipCountText.currentTextColor != it)
+                                fipCountText.setTextColor(it)
+                        }
+                        fipDownButton.performClick()
+                    } else {
+                        fipCountText.futureSet("0/0")
+                        AdapterStyle.SearchNotFoundColor.let {
+                            if (fipCountText.currentTextColor != it)
+                                fipCountText.setTextColor(it)
+                        }
+                        if (newText != tempString.dropLast(1)) // Don't vibrate on backspace
+                            vibrate(60)
+                        tempString = newText
+                    }
+                    //fipCountText.text = ("$findInPageMatch/$matchesCount")
+                }
+
+                /*currentPageView.post {
+                    (currentPageView.adapter as MainAdapter).let {
                         if (newText == "") {
                             fipCountText.text = null
                             it.findInPage(null)
@@ -519,7 +671,7 @@ class MainActivity : AppCompatActivity(),
 
                             matchesList.next(true) { index, value ->
                                 if (value == 1) {
-                                    rv.scrollToPosition(index)
+                                    currentPageView.scrollToPosition(index)
                                     it.setCurrentlyHighlighted(index, 1)
                                 }
                             }
@@ -533,7 +685,7 @@ class MainActivity : AppCompatActivity(),
                         it.notifyDataSetChanged()
                     }
 
-                }
+                }*/
                 return true
             }
         })
@@ -551,7 +703,7 @@ class MainActivity : AppCompatActivity(),
 
     override fun onStop() {
         super.onStop()
-        prefs.VP_Position = viewPagerPosition
+        Prefs.VP_Position = viewPagerPosition
     }
 
     override fun onPause() {
@@ -572,7 +724,7 @@ class MainActivity : AppCompatActivity(),
             //setSpan(Fonts.Merriweather_BoldItalic, 0, titleSpan.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
         toolbarTitle.setText(titleSpan, TextView.BufferType.SPANNABLE)*/
-        toolbarTitle.text = ("$bookName $chapterId")
+        toolbarTitle.futureSet("$bookName $chapterId")
     }
 
 
@@ -583,8 +735,10 @@ class MainActivity : AppCompatActivity(),
             }
 
             override fun onQueryTextChange(newText: String): Boolean {
-                if (bookFragment.isAdded)
-                    bookFragment.filter(newText)
+                @Suppress("SENSELESS_COMPARISON")
+                if (!bookFragment.isAdded || bookFragment == null)
+                    bookFragment = FragmentBook()
+                bookFragment.filter(newText)
                 return true
             }
         }
@@ -609,6 +763,7 @@ class MainActivity : AppCompatActivity(),
         searchViewPager.currentItem++
         updateHintTemp(tBook, tChapter)
 
+        hideSoftInput(toolbarSearchView)
     }
 
     override fun onItemSelectedFC(position: Int) {
@@ -620,29 +775,31 @@ class MainActivity : AppCompatActivity(),
     }
 
     override fun onItemSelectedFV(position: Int) {
-        var delay = false
         getPosition(tBook, tChapter).let {
-            if (mainViewPager.currentItem != it) delay = true
-            mainViewPager.setCurrentItem(it, true)
-        }
+            if (mainViewPager.currentItem != it)
+                mainViewPager.setCurrentItem(it, true)
 
+        }
+        //val ma = (mainViewPager.adapter as MainViewPagerAdapter)
         queryFinished = true
         finishSearch()
-
         tryy {
-            mainViewPager.findViewWithTag<RecyclerView>("rv${mainViewPager.currentItem}").run {
-                fling(0, 0)
-                if (delay) {
-                    launch {
-                        while ((layoutManager as LinearLayoutManager).findFirstCompletelyVisibleItemPosition() < 0 && (layoutManager as LinearLayoutManager).findLastVisibleItemPosition() < 0) {
-                            delay(20)
+            launch(UI) {
+                val sv = mainViewPager.findViewWithTag<ScrollView>("sv${mainViewPager.currentItem}")
+                sv?.findViewWithTag<AppCompatTextView>("tv${mainViewPager.currentItem}")?.run {
+                    while (text.isEmpty())
+                        delay(10)
+                    this.post {
+                        if (position == 0) {
+                            sv.smoothScrollTo(0, sv.top - sv.paddingTop)
+                        } else {
+                            var i = text.indexOf("\u200B\n\t\t${position + 1}_")
+                            if (i < 0) i = text.indexOf("\u200B ${position + 1}_")
+                            if (i >= 0)
+                                sv.smoothScrollTo(0, layout.getLineTop(layout.getLineForOffset(i)))
                         }
-                        delay(80)
-                        smoothScrollToPosition(position)
-                    }
 
-                } else {
-                    smoothScrollToPosition(position)
+                    }
                 }
             }
         }
@@ -753,7 +910,6 @@ class MainActivity : AppCompatActivity(),
         return retValue
     }
 
-    private var fontSize = 1f
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
 
         R.id.search_menu -> {
@@ -767,40 +923,25 @@ class MainActivity : AppCompatActivity(),
             true
         }
         R.id.font_and_theme_menu -> {
+            if (isTranslucentNavBar())
+                cancelTranslucentNavBar()
             bottomSheetFragment.show(supportFragmentManager, "TAG")
-            /*
-            try {
-                fontSize = if (fontSize == 1f) 1.2f else 1f
-                (mainViewPager.findViewWithTag<RecyclerView>("rv${mainViewPager.currentItem}").adapter as MainAdapter).apply {
-                    setFontSize(fontSize)
-                }
-                mainViewPager.adapter?.notifyDataSetChanged()
-                /*
-                if (viewPagerPosition != 0)
-                    (mainViewPager.findViewWithTag<RecyclerView>("rv${mainViewPager.currentItem - 1}").adapter as MainAdapter).apply {
-                        setFontSize(fontSize)
-                        notifyDataSetChanged()
-                    }
-                (mainViewPager.findViewWithTag<RecyclerView>("rv${mainViewPager.currentItem}").adapter as MainAdapter).apply {
-                    setFontSize(fontSize)
-                    notifyDataSetChanged()
-                }
-                (mainViewPager.findViewWithTag<RecyclerView>("rv${mainViewPager.currentItem + 1}").adapter as MainAdapter).apply {
-                    setFontSize(fontSize)
-                    notifyDataSetChanged()
-                }*/
-            } catch (e: Exception) {
-                Log.e(TAG, e.message)
-            }*/
             true
         }
 
         R.id.settings_menu -> {
             true
         }
+        R.id.font2 -> {
+            if (isTranslucentNavBar())
+                cancelTranslucentNavBar()
+            themeChooserDialog.show(supportFragmentManager, "tcd")
+            true
+        }
         else -> super.onOptionsItemSelected(item)
     }
 
+    private val themeChooserDialog by lazy { ThemeChooserDialog() }
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         var intent: Intent? = null
         when (item.itemId) {

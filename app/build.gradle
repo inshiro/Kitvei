@@ -11,8 +11,8 @@ android {
         applicationId "na.kephas.kitvei"
         minSdkVersion 14
         targetSdkVersion 28
-        versionCode 2
-        versionName "0.1.4"
+        versionCode 3
+        versionName "2.2.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         resConfigs "en"
 
@@ -59,17 +59,17 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 }
 
 dependencies {
-
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     // Android support library
-    def androidx_verison = "1.0.0-alpha3"
+    def androidx_verison = "1.0.0-beta01"
     implementation "com.google.android.material:material:$androidx_verison"
     implementation "androidx.appcompat:appcompat:$androidx_verison"
     implementation "androidx.recyclerview:recyclerview:$androidx_verison"
     implementation "androidx.core:core-ktx:$androidx_verison"
-    implementation "androidx.constraintlayout:constraintlayout:1.1.1"
+    implementation "androidx.constraintlayout:constraintlayout:1.1.2"
 
     // ViewModel-LiveData
-    def lifecycle_version  = "2.0.0-alpha1"
+    def lifecycle_version  = "2.0.0-beta01"
     implementation "androidx.lifecycle:lifecycle-extensions:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
     kapt "androidx.lifecycle:lifecycle-compiler:$lifecycle_version"
@@ -81,12 +81,12 @@ dependencies {
     androidTestImplementation "android.arch.navigation:navigation-testing-ktx:$nav_version"*/
 
     // Room
-    def room_version  = "2.0.0-alpha1"
+    def room_version  = "2.0.0-beta01"
     implementation "androidx.room:room-runtime:$room_version"
     kapt "androidx.room:room-compiler:$room_version"
 
     // Paging
-    def paging_version = "2.0.0-alpha1"
+    def paging_version = "2.0.0-beta01"
     implementation "androidx.paging:paging-runtime:$paging_version"
 
     // Image library
@@ -94,14 +94,13 @@ dependencies {
     implementation "com.squareup.picasso:picasso:$picasso_version"
     implementation 'com.flaviofaria:kenburnsview:1.0.7'
 
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
     def coroutines_version = '0.23.1'
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version"
 
     // Leak Canary
-    debugImplementation 'com.squareup.leakcanary:leakcanary-android:1.5.4'
-    releaseImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.5.4'
+    //debugImplementation 'com.squareup.leakcanary:leakcanary-android:1.5.4'
+    //releaseImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.5.4'
 
     // Tests
     testImplementation 'junit:junit:4.12'
