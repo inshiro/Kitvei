@@ -2,16 +2,15 @@ package na.kephas.kitvei.util
 
 import android.content.Context
 import android.content.res.Resources
+import android.drm.DrmStore.Action.OUTPUT
 import android.os.Build
-import android.text.Html
-import android.text.SpannableString
-import android.text.SpannableStringBuilder
-import android.text.Spanned
+import android.text.*
 import android.util.Log
 import android.view.View
 import android.view.ViewTreeObserver
 import android.view.WindowManager
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.text.PrecomputedTextCompat
@@ -41,20 +40,25 @@ fun View.snackbar(str: String, duration: Int = Snackbar.LENGTH_SHORT) {
         show()
     }
 }
+fun View.toast(str: String, duration: Int = Toast.LENGTH_SHORT) {
+    Toast.makeText(this.context,str,duration).show()
+}
 
-fun AppCompatTextView.futureSet(charSequence: CharSequence){
+fun AppCompatTextView.futureSet(charSequence: CharSequence) {
     val future = PrecomputedTextCompat.getTextFuture(charSequence, this.textMetricsParamsCompat, IO_EXECUTOR)
     this.setTextFuture(future!!)
 }
+
 fun SpannableStringBuilder.properSubstring(start: Int, end: Int = this.length) {
     apply {
-        if (end>0)
-        delete(end, length)
-        if (start>0)
+        if (end > 0)
+            delete(end, length)
+        if (start > 0)
 
-        delete(0, start)
+            delete(0, start)
     }
 }
+
 /**
  * Returns a SpannableStringBuilder to a String as a variable instead of method
  */
@@ -64,7 +68,7 @@ val SpannableStringBuilder.toString: String
 /**
  * Count Occurrences of a String in a String
  */
-inline fun CharSequence.count(sub: String, ignoreCase :Boolean= false, action: (start: Int, end: Int, countSoFar: Int) -> Unit = { _, _, _ -> }): Int {
+inline fun CharSequence.count(sub: String, ignoreCase: Boolean = false, action: (start: Int, end: Int, countSoFar: Int) -> Unit = { _, _, _ -> }): Int {
     var count = 0
     var startIdx = 0
     while ({ indexOf(sub, startIdx, ignoreCase = ignoreCase).also { startIdx = it + 1 } }() >= 0) {
@@ -73,25 +77,33 @@ inline fun CharSequence.count(sub: String, ignoreCase :Boolean= false, action: (
     }
     return count
 }
-inline fun String.count(sub: String, action: (start: Int, end: Int, countSoFar: Int) -> Unit = { _, _, _ -> }): Int {
+
+inline fun CharSequence.count(sub: Char, action: (start: Int, end: Int, countSoFar: Int) -> Unit = { _, _, _ -> }): Int {
     var count = 0
     var startIdx = 0
     while ({ indexOf(sub, startIdx).also { startIdx = it + 1 } }() >= 0) {
         count++
-        action(startIdx - 1, startIdx - 1 + sub.length, count)
+        action(startIdx - 1, startIdx, count)
     }
     return count
 }
 
-inline fun SpannableStringBuilder.count(sub: String, action: (start: Int, end: Int, countSoFar: Int) -> Unit = { _, _, _ -> }): Int {
-    var count = 0
-    var startIdx = 0
-    while ({ indexOf(sub, startIdx).also { startIdx = it + 1 } }() >= 0) {
-        count++
-        action(startIdx - 1, startIdx - 1 + sub.length, count)
+/**
+ * Removes all spans given a class
+ */
+ fun <T> Spannable.removeSpans(start:Int,end:Int, aClass: Class<T>){
+    val spans = getSpans(start, end, aClass)
+    if (spans.isNotEmpty()) {
+        for (span in spans) {
+            removeSpan(span)
+        }
     }
-    return count
 }
+val AppCompatTextView.getWidth
+    get() = {
+        this.measure(0, 0)
+        this.measuredWidth
+    }()
 
 // Returns number of occurrences of substring in String, or additional does something with values.
 inline fun String.occurrences(sub: String, flags: Int = Pattern.LITERAL or Pattern.CASE_INSENSITIVE, removeDelimiter: Boolean = false, additional: (matches: Int, start: Int, end: Int) -> Unit = { _, _, _ -> }): Int {
@@ -136,6 +148,7 @@ fun String.formatText(): String {
 
     return text
 }
+
 fun Double.format(digits: Int) = java.lang.String.format("%.${digits}f", this)
 inline fun measureTime(block: () -> Unit): Double {
     val startTime = System.currentTimeMillis()
@@ -190,6 +203,7 @@ inline fun TextView.precomputeAndSet(crossinline block: (TextView) -> Any) {
         }
     }
 }
+
 var recyclerViewReadyCallback: RecyclerViewReadyCallBack? = null
 
 interface RecyclerViewReadyCallBack {
@@ -273,11 +287,19 @@ val AppCompatActivity.isTranslucentNavBar: () -> Boolean
         false
     }
 
+inline fun <T> silentTry(block: () -> T) {
+    try {
+        block()
+    } catch (e: Exception) {
+    }
+}
+
 inline fun <T> tryy(block: () -> T) {
     try {
         block()
     } catch (e: Exception) {
-        e.printStackTrace()
+        Log.wtf("TAG", e)
+        //throw RuntimeException(e)//Log.d("TAG", e.message)//e.printStackTrace()
     }
 }
 

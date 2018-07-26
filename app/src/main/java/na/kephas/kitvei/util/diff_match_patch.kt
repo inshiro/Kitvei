@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package name.fraser.neil.plaintext
+package na.kephas.kitvei.util
 
 import java.io.UnsupportedEncodingException
 import java.net.URLDecoder

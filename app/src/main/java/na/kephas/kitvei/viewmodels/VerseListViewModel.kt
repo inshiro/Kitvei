@@ -8,7 +8,7 @@ import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.runBlocking
 import na.kephas.kitvei.data.Bible
 import na.kephas.kitvei.data.VerseRepository
-import na.kephas.kitvei.util.backgroundPool
+import na.kephas.kitvei.util.*
 
 /**
  * The ViewModel for [VerseListFragment].
@@ -17,20 +17,23 @@ class VerseListViewModel internal constructor(
         private val verseRepository: VerseRepository
 ) : ViewModel() {
 
-    fun getPages(): List<Bible> = runBlocking {
-        async(backgroundPool) {
-            verseRepository.getPages()
-        }.await()
+    fun getRow(position: Int) = runBlocking(IO) {
+        verseRepository.getRow(position)
     }
 
-    fun getVersesRaw(book: Int, chapter: Int): List<Bible> = runBlocking {
-        async(backgroundPool) {
-            verseRepository.getVersesRaw(book, chapter)
-        }.await()
+    fun getPagePosition(book: Int, chapter: Int) = runBlocking(IO) {
+        verseRepository.getPagePosition(book, chapter)
     }
 
-    fun getVerses(book: Int, chapter: Int): LiveData<PagedList<Bible>> = runBlocking {
-        async(backgroundPool) {
+    fun getPages(): List<Bible> = runBlocking(IO) {
+        verseRepository.getPages()
+    }
+
+    fun getVersesRaw(book: Int, chapter: Int) = runBlocking(IO) {
+        verseRepository.getVersesRaw(book, chapter)
+    }
+
+    fun getVerses(book: Int, chapter: Int): LiveData<PagedList<Bible>> = runBlocking(IO) {
             LivePagedListBuilder(verseRepository.getVerses(book, chapter),
                     PagedList.Config.Builder()
                             .setPageSize(PAGE_SIZE)
@@ -38,7 +41,6 @@ class VerseListViewModel internal constructor(
                             .setEnablePlaceholders(ENABLE_PLACEHOLDERS)
                             .build())
                     .build()
-        }.await()
     }
 
     companion object {

@@ -21,8 +21,11 @@ import na.kephas.kitvei.Prefs
 import na.kephas.kitvei.R
 import na.kephas.kitvei.activity.MainActivity
 import na.kephas.kitvei.adapter.MainViewPagerAdapter
+import na.kephas.kitvei.page.Page
 import na.kephas.kitvei.util.d
 import na.kephas.kitvei.util.futureSet
+import na.kephas.kitvei.util.isTranslucentNavBar
+import na.kephas.kitvei.util.setTranslucentNavBar
 
 
 class BottomSheetFragment : BottomSheetDialogFragment() {
@@ -153,7 +156,7 @@ class BottomSheetFragment : BottomSheetDialogFragment() {
             seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                     fontSize = progress.toFloat()
-                    vpAdapter.setFontSize(fontSize)
+                    Page.setFontSize(fontSize)
                     tv?.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize)
                     fontSizeTextView.futureSet("${( progress  * 10f).toInt()}%")
                     /*(rv?.adapter as MainAdapter).apply {

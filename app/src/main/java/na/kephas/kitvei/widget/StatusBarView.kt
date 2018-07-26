@@ -2,7 +2,6 @@ package na.kephas.kitvei.widget
 
 import android.animation.ObjectAnimator
 import android.content.Context
-import android.content.res.TypedArray
 import android.graphics.Canvas
 import android.graphics.Color
 import android.os.Build
@@ -13,6 +12,7 @@ import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.annotation.FloatRange
 import androidx.annotation.RequiresApi
 import na.kephas.kitvei.R
+import na.kephas.kitvei.theme.ThemeManager
 
 import na.kephas.kitvei.util.getStatusBarHeight
 

@@ -16,12 +16,7 @@
         android:title="@string/find_in_page"
         app:showAsAction="never"
         appname:ignore="AppCompatResource" />
-    <item
-        android:id="@+id/font_and_theme_menu"
-        android:orderInCategory="30"
-        android:title="@string/font_and_theme"
-        app:showAsAction="never"
-        appname:ignore="AppCompatResource" />
+
     <item
         android:id="@+id/settings_menu"
         android:orderInCategory="40"
@@ -30,9 +25,24 @@
         appname:ignore="AppCompatResource" />
     <item
         android:id="@+id/font2"
-        android:orderInCategory="50"
-        android:title="Font and Theme 2"
+        android:orderInCategory="30"
+        android:title="Font and Theme"
         app:showAsAction="never"
         appname:ignore="AppCompatResource" />
+    <item
+        android:id="@+id/kjvformatting"
+        android:orderInCategory="60"
+        android:title="KJV Formatting"
+        app:showAsAction="never"
+        android:checkable="true"
+        android:checked="true"
+        appname:ignore="AppCompatResource" />
 
-</menu><!--  app:backgroundTint="@color/white" -->
+</menu><!--
+<item
+        android:id="@+id/font_and_theme_menu"
+        android:orderInCategory="30"
+        android:title="@string/font_and_theme"
+        app:showAsAction="never"
+        appname:ignore="AppCompatResource" />
+app:backgroundTint="@color/white" -->

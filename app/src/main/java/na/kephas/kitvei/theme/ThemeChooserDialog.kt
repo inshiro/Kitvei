@@ -4,6 +4,8 @@ import android.content.DialogInterface
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
+import android.text.Spannable
+import android.text.style.BackgroundColorSpan
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
@@ -20,17 +22,17 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import na.kephas.kitvei.App
 import na.kephas.kitvei.Prefs
 import na.kephas.kitvei.R
+import na.kephas.kitvei.R.id.buttonDecreaseTextSize
+import na.kephas.kitvei.R.id.buttonIncreaseTextSize
 import na.kephas.kitvei.activity.FragmentUtil
 import na.kephas.kitvei.activity.MainActivity
 import na.kephas.kitvei.adapter.MainViewPagerAdapter
-import na.kephas.kitvei.fragment.BottomSheetFragment.Companion.PORTRAIT
-import na.kephas.kitvei.fragment.BottomSheetFragment.Companion.currentOrientation
 import na.kephas.kitvei.page.ExtendedBottomSheetDialogFragment
-import na.kephas.kitvei.util.DimenUtil
-import na.kephas.kitvei.util.ResourceUtil
-import na.kephas.kitvei.util.d
-import na.kephas.kitvei.util.futureSet
+import na.kephas.kitvei.page.Page
+import na.kephas.kitvei.theme.ThemeChooserDialog.Companion.fontSize
+import na.kephas.kitvei.util.*
 import na.kephas.kitvei.views.DiscreteSeekBar
+import java.security.AccessController.getContext
 
 /*
 import com.squareup.otto.Subscribe
@@ -94,6 +96,7 @@ class ThemeChooserDialog : ExtendedBottomSheetDialogFragment() {
         var currentOrientation = PORTRAIT
         var fontSize = Prefs.mainFontSize
     }
+
     val vp by lazy { (activity as MainActivity).mainViewPager }
 
     private fun getTextView(page: Int = -1): TextView? {
@@ -104,13 +107,39 @@ class ThemeChooserDialog : ExtendedBottomSheetDialogFragment() {
         }
     }
 
+    private fun getDropCapView(page: Int = -1): TextControl? {
+        return when (page) {
+            0 -> vp.findViewWithTag("dcv${vp.currentItem - 1}")
+            1 -> vp.findViewWithTag("dcv${vp.currentItem + 1}")
+            else -> vp.findViewWithTag("dcv${vp.currentItem}")
+        }
+    }
+
     private fun saveFontChanges() {
         if (Prefs.mainFontSize != fontSize) {
             Prefs.mainFontSize = fontSize
             //getRecyclerView(0)?.adapter?.notifyDataSetChanged()
             //getRecyclerView(1)?.adapter?.notifyDataSetChanged()
-            getTextView(0)?.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize)
-            getTextView(1)?.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize)
+            val dcv0 = getDropCapView(0)?.apply { setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize * 4.85f) }
+            val dcv1 = getDropCapView(1)?.apply { setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize * 4.85f) }
+            getTextView(0)?.apply {
+                setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize)
+                dcv0?.let {
+                    val ss = text as Spannable
+                    ss.removeSpans(0, ss.length, LettrineLeadingMarginSpan2::class.java)
+                    ss.setSpan(LettrineLeadingMarginSpan2(2, dcv0.getWidth), 0, if (Page.showLineNumbers) ss.indexOf("2") - 2 else ss.indexOf("\u200B") - 2, 0)
+                }
+            }
+            getTextView(1)?.apply {
+                setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize)
+                dcv1?.let {
+                    val ss = text as Spannable
+                    ss.removeSpans(0, ss.length, LettrineLeadingMarginSpan2::class.java)
+                    ss.setSpan(LettrineLeadingMarginSpan2(2, dcv1.getWidth), 0, if (Page.showLineNumbers) ss.indexOf("2") - 2 else ss.indexOf("\u200B") - 2, 0)
+                }
+            }
+
+
         }
 
         (activity as MainActivity).apply {
@@ -119,6 +148,7 @@ class ThemeChooserDialog : ExtendedBottomSheetDialogFragment() {
                     setTranslucentNavBar()
         }
     }
+
     override fun onConfigurationChanged(newConfig: Configuration?) {
         super.onConfigurationChanged(newConfig)
 
@@ -129,6 +159,7 @@ class ThemeChooserDialog : ExtendedBottomSheetDialogFragment() {
 
         }
     }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val rootView = inflater.inflate(R.layout.dialog_theme_chooser, container, false)
         //unbinder = ButterKnife.bind(this, rootView)
@@ -155,10 +186,11 @@ class ThemeChooserDialog : ExtendedBottomSheetDialogFragment() {
         // TODO progress has something to do with the preset Discrete Seekbar, thats why its starting at 180%
         val vpAdapter = vp.adapter as MainViewPagerAdapter
         val tv = getTextView()
+        val dcv = getDropCapView()
         textSizeSeekBar.max = 20
         textSizeSeekBar.progress = fontSize.toInt() // (fontSize * 10f).toInt() //@ 100
         textSizePercent.futureSet(
-                "${( fontSize  * 10f).toInt()}%".let {
+                "${(fontSize * 10f).toInt()}%".let {
                     if (it == "100%")
                         "100% (Default)"
                     else
@@ -169,12 +201,16 @@ class ThemeChooserDialog : ExtendedBottomSheetDialogFragment() {
             override fun onProgressChanged(seekBar: SeekBar, value: Int, fromUser: Boolean) {
                 if (!fromUser) return
                 //val currentMultiplier = Prefs.mainFontSize
-
                 fontSize = value.toFloat()
-                vpAdapter.setFontSize(fontSize)
-                tv?.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize)
+                Page.setFontSize(fontSize)
+                dcv?.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize * 4.85f)
+                val ss = tv?.text as Spannable
+                ss.removeSpans(0, ss.length, LettrineLeadingMarginSpan2::class.java)
+                ss.setSpan(LettrineLeadingMarginSpan2(2, dcv!!.getWidth), 0, if (Page.showLineNumbers) ss.indexOf("2") - 2 else ss.indexOf("\u200B") - 2, 0)
+                tv.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize)
+
                 textSizePercent.futureSet(
-                        "${( value  * 10f).toInt()}%".let {
+                        "${(value * 10f).toInt()}%".let {
                             if (it == "100%")
                                 "100% (Default)"
                             else
@@ -204,6 +240,7 @@ class ThemeChooserDialog : ExtendedBottomSheetDialogFragment() {
         super.onDismiss(dialog)
         saveFontChanges()
     }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -229,6 +266,7 @@ class ThemeChooserDialog : ExtendedBottomSheetDialogFragment() {
         }
 
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         //app.getBus().register(this)
@@ -286,7 +324,10 @@ class ThemeChooserDialog : ExtendedBottomSheetDialogFragment() {
     }
 
     private inner class ThemeButtonListener constructor(private val theme: Theme) : View.OnClickListener {
-        override fun onClick(v: View) {
+        override fun onClick(v: View?) {
+            v?.toast("This feature is still in development.")
+            return
+            @Suppress("UNREACHABLE_CODE")
             if (app.getCurrentTheme() !== theme) {
                 //funnel.logThemeChange(app.getCurrentTheme(), theme)
                 app.setCurrentTheme(theme)
@@ -295,7 +336,10 @@ class ThemeChooserDialog : ExtendedBottomSheetDialogFragment() {
     }
 
     private inner class FontSizeButtonListener constructor(private val action: FontSizeAction) : View.OnClickListener {
-        override fun onClick(view: View) {
+        @Suppress("UNREACHABLE_CODE")
+        override fun onClick(v: View?) {
+            v?.toast("This feature is still in development.")
+            return
             val changed: Boolean = when (action) {
                 FontSizeAction.INCREASE -> app.setFontSizeMultiplier(Prefs.textSizeMultiplier.toInt() + 1)
                 FontSizeAction.DECREASE -> app.setFontSizeMultiplier(Prefs.textSizeMultiplier.toInt() - 1)

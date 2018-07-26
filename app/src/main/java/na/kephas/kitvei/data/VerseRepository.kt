@@ -1,17 +1,21 @@
 package na.kephas.kitvei.data
 
 import androidx.sqlite.db.SimpleSQLiteQuery
+import java.text.FieldPosition
 
 /**
  * Repository module for handling data operations.
  */
 class VerseRepository private constructor(private val verseDao: VerseDao) {
 
+    fun getRow(position: Int) = verseDao.getRow(position)
+    fun getPagePosition(book: Int, chapter: Int) = verseDao.getPagePosition(book,chapter)
+
     fun getPages() = verseDao.getPages()
 
     fun getVersesRaw(book: Int, chapter: Int) = verseDao.getVersesRaw(SimpleSQLiteQuery("SELECT * FROM Bible WHERE book_id=? AND chapter_id=?", arrayOf<Any>(book, chapter)))
 
-
+//book_id=? AND chapter_id=?
     fun getVerses(book: Int, chapter: Int) =
             verseDao.getVerses(SimpleSQLiteQuery("SELECT * FROM Bible WHERE book_id=? AND chapter_id=?", arrayOf<Any>(book, chapter)))
 

@@ -35,7 +35,7 @@ class MainActivityTest {
 
     @Test
     fun swipeUntilEnd() {
-        for (a in Prefs.VP_Position..vm.getPages().size)
+        for (a in Prefs.VP_Position..1189)
             onView(allOf(withId(R.id.mainViewPager), isCompletelyDisplayed())).perform(swipeLeft())
     }
 

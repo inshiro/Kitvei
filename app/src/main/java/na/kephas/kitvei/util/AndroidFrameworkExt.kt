@@ -3,9 +3,28 @@ package na.kephas.kitvei.util
 import android.annotation.TargetApi
 import android.content.Context
 import android.os.Build
+import android.view.WindowManager
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.getSystemService
 import androidx.core.content.systemService
+fun AppCompatActivity.isTranslucentNavBar(): Boolean {
+    val flags = window.attributes.flags
+    if ((flags and WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION) == WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
+        return true
+    return false
+}
 
+fun AppCompatActivity.setTranslucentNavBar() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+        window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
+    }
+}
+
+fun AppCompatActivity.cancelTranslucentNavBar() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
+    }
+}
 @TargetApi(Build.VERSION_CODES.M)
 inline fun <reified T> Context.getSystemService(): T {
     if (isM()) {

@@ -12,7 +12,7 @@ android {
         minSdkVersion 14
         targetSdkVersion 28
         versionCode 3
-        versionName "2.2.0"
+        versionName "2.2.3"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         resConfigs "en"
 
@@ -109,8 +109,8 @@ dependencies {
 
     def robolectric_version = '3.4.2'
     testImplementation "org.robolectric:robolectric:$robolectric_version"
-    androidTestImplementation 'androidx.test:rules:1.1.0-alpha3'
-    androidTestImplementation 'androidx.test:runner:1.1.0-alpha3'
+    androidTestImplementation 'androidx.test:rules:1.1.0-alpha4'
+    androidTestImplementation 'androidx.test:runner:1.1.0-alpha4'
     androidTestImplementation ('androidx.test.espresso:espresso-core:3.1.0-alpha3', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })

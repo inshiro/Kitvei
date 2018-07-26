@@ -22,26 +22,11 @@ import kotlinx.coroutines.experimental.withContext
 import na.kephas.kitvei.Prefs
 import na.kephas.kitvei.R
 import na.kephas.kitvei.data.Bible
+import na.kephas.kitvei.page.Formatting
 import na.kephas.kitvei.util.*
 
 
 class MainAdapter(context: Context) : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBACK) {
-
-    private val redLetters by lazy { RedLetters.get() }
-    private val TextColor by lazy { AdapterStyle.TextColor }
-    private val NumColor by lazy { AdapterStyle.NumColor }
-    private val RedLetterColor by lazy { AdapterStyle.RedLetterColor }
-    private val HighLightColor by lazy { AdapterStyle.HighLightColor }
-    private val HighlightFocusColor by lazy { AdapterStyle.HighlightFocusColor }
-
-    val animationStates: BooleanArray by lazy {
-        BooleanArray(currentList!!.size).let {
-            if (currentList!!.size < 0) BooleanArray(1) else
-            //it[10] = true
-                it
-
-        }
-    }
 
     init {
         setHasStableIds(true)
@@ -110,23 +95,11 @@ class MainAdapter(context: Context) : PagedListAdapter<Bible, MainAdapter.ViewHo
                 @Suppress("DeferredResultUnused")
                 async(fixedThreadPool) {
 
-
-                    /*
-                if (adapterPosition <= 7) {
-                if (!animationStates[adapterPosition]) {
-                    //Log.d("TAG", "Animating item no: $position")
-                    animationStates[adapterPosition] = true
-                    val animation = AnimationUtils.loadAnimation(textView.context, R.anim.slide_in_right) //android.R.anim.slide_in_left
-                    animation.startOffset = (adapterPosition * 50).toLong()
-                    textView.startAnimation(animation)
-
-                }
-                }*/
                     //textView.precomputeAndSet {
                     val sText = SpannableStringBuilder(row.verseId.toString())
 
                     sText.apply {
-                        setSpan(ForegroundColorSpan(NumColor), 0, sText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        setSpan(ForegroundColorSpan(Formatting.NumColor), 0, sText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
                         append("  ")
                         setSpan(RelativeSizeSpan(fontSize / 2f), 0, sText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
                     }
@@ -168,7 +141,7 @@ class MainAdapter(context: Context) : PagedListAdapter<Bible, MainAdapter.ViewHo
                         }
                     }
 
-                    sText.setSpan(ForegroundColorSpan(TextColor), numsLen, sText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    sText.setSpan(ForegroundColorSpan(Formatting.TextColor), numsLen, sText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
 
                     sText.setSpan(RelativeSizeSpan(fontSize), numsLen, sText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
 
@@ -176,9 +149,9 @@ class MainAdapter(context: Context) : PagedListAdapter<Bible, MainAdapter.ViewHo
                         matchesList[adapterPosition] = sText.count(findInPageQuery!!) { start, end, countSoFar ->
                             sText.setSpan(CharacterStyle.wrap(BackgroundColorSpan(
                                     if (currentHighlightElementIndex != null && currentHighlightElementIndex == countSoFar && currentHighlightIndex == adapterPosition)
-                                        HighlightFocusColor
+                                        Formatting.HighlightFocusColor
                                     else
-                                        HighLightColor
+                                        Formatting.HighLightColor
                             ) as CharacterStyle), start, end, 0)
                         }
 

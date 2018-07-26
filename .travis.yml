@@ -17,7 +17,7 @@ before_install:
   - chmod +x .travis/build.sh
   - chmod +x gradlew
   - yes | sdkmanager "platforms;android-27" # workaround for accepting the license
-  - yes | sdkmanager "platforms;android-P"
+  - yes | sdkmanager "platforms;android-28"
   - if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
       openssl aes-256-cbc -k $STORE_PASS -in "$PWD/.travis/secrets.tar.enc" -out secrets.tar -d;
       tar xf secrets.tar;
