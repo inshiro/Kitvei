@@ -2,9 +2,11 @@ package na.kephas.kitvei.util
 
 import android.content.Context
 import android.content.res.Resources
-import android.drm.DrmStore.Action.OUTPUT
 import android.os.Build
-import android.text.*
+import android.text.Html
+import android.text.Spannable
+import android.text.SpannableStringBuilder
+import android.text.Spanned
 import android.util.Log
 import android.view.View
 import android.view.ViewTreeObserver
@@ -40,8 +42,9 @@ fun View.snackbar(str: String, duration: Int = Snackbar.LENGTH_SHORT) {
         show()
     }
 }
+
 fun View.toast(str: String, duration: Int = Toast.LENGTH_SHORT) {
-    Toast.makeText(this.context,str,duration).show()
+    Toast.makeText(this.context, str, duration).show()
 }
 
 fun AppCompatTextView.futureSet(charSequence: CharSequence) {
@@ -91,7 +94,7 @@ inline fun CharSequence.count(sub: Char, action: (start: Int, end: Int, countSoF
 /**
  * Removes all spans given a class
  */
- fun <T> Spannable.removeSpans(start:Int,end:Int, aClass: Class<T>){
+fun <T> Spannable.removeSpans(start: Int, end: Int, aClass: Class<T>) {
     val spans = getSpans(start, end, aClass)
     if (spans.isNotEmpty()) {
         for (span in spans) {
@@ -99,6 +102,7 @@ inline fun CharSequence.count(sub: Char, action: (start: Int, end: Int, countSoF
         }
     }
 }
+
 val AppCompatTextView.getWidth
     get() = {
         this.measure(0, 0)

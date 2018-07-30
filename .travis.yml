@@ -54,7 +54,7 @@ deploy:
   on:
     tags: true
     repo: inshiro/Kitvei
-    branch: master
+    all_branches: true
 
 env:
   global:

@@ -1,6 +1,10 @@
 package na.kephas.kitvei.page
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.graphics.Typeface
+import android.text.*
 import android.text.style.*
 import android.view.View
 import android.widget.TextView
@@ -9,18 +13,11 @@ import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.withContext
+import na.kephas.kitvei.App
 import na.kephas.kitvei.Prefs
 import na.kephas.kitvei.data.Bible
 import na.kephas.kitvei.util.*
 import na.kephas.kitvei.viewmodels.VerseListViewModel
-import android.R.attr.label
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
-import android.content.Context.CLIPBOARD_SERVICE
-import android.text.*
-import androidx.core.content.ContextCompat.getSystemService
-import na.kephas.kitvei.App
 
 
 object Page {
@@ -30,13 +27,13 @@ object Page {
     private var newLineEachVerse = true
     private var capitalizeFirstWord = true
     var showDropCap = true
-     var showLineNumbers = true
+    var showLineNumbers = true
     var kjvPunctuation = true
     fun setFontSize(size: Float) {
         fontSize = size
     }
 
-    private val clipboard by lazy {  App.instance.applicationContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager?  }
+    private val clipboard by lazy { App.instance.applicationContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager? }
 
     fun display(vm: VerseListViewModel, row: Bible, textView: AppCompatTextView, dropCapView: TextControl?) {
         @Suppress("DeferredResultUnused")
@@ -51,6 +48,7 @@ object Page {
 
                     list.forEach {
                         numStart = sText.length
+
                         verse = if (kjvPunctuation) {
                             val kjv = Formatting.kjvList[it.id - 1]
                             Formatting.diffText(it.verseText!!, kjv)
@@ -172,16 +170,15 @@ object Page {
                                             Snackbar.make(v, "Selected verse ${it.verseId}", Snackbar.LENGTH_LONG).apply {
                                                 setActionTextColor(Formatting.ColorAccent)
                                                 setAction("Copy") { _ ->
-                                                    var str = ss.substring(i0,i1).replace("\u200B","").replace("\n","").replace("\t","")
-                                                            .replace("^[0-9]*".toRegex(),"").replace("_","")
-                                                    val firstLetter = if (i0==0 && showDropCap) {
+                                                    var str = ss.substring(i0, i1).replace("\u200B", "").replace("\n", "").replace("\t", "")
+                                                            .replace("^[0-9]*".toRegex(), "").replace("_", "")
+                                                    val firstLetter = if (i0 == 0 && showDropCap) {
                                                         val onSpace = str.indexOf(" ", i0)
-                                                        str = TextUtils.concat(str.substring(i0,onSpace).toLowerCase(), str.substring(onSpace)).toString()
+                                                        str = TextUtils.concat(str.substring(i0, onSpace).toLowerCase(), str.substring(onSpace)).toString()
                                                         dropCapView?.text
-                                                    }
-                                                    else ""
+                                                    } else ""
                                                     //it.verseText!!.replace("[", "").replace("]", "").replace("<", "").replace(">", "")
-                                                    val clip = ClipData.newPlainText("verse text", TextUtils.concat("${it.bookName} ${it.chapterId}:${it.verseId}\n$firstLetter", str) )
+                                                    val clip = ClipData.newPlainText("verse text", TextUtils.concat("${it.bookName} ${it.chapterId}:${it.verseId}\n$firstLetter", str))
                                                     clipboard?.primaryClip = clip
                                                     v.playSoundEffect(android.view.SoundEffectConstants.CLICK)
                                                 }
