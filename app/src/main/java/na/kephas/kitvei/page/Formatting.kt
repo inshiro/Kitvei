@@ -11,7 +11,7 @@ import na.kephas.kitvei.util.diff_match_patch
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
-import java.util.*
+import java.util.LinkedList
 import java.util.regex.Pattern
 
 object Formatting {
@@ -66,42 +66,64 @@ object Formatting {
         val diffList = LinkedList<diff_match_patch.Diff>()
 
         var cappedWord = false
+        var andWord = false
         var doublePunct = false
         list.forEachIndexed { idx, diff ->
 
             // Skip the pair of two words
-            if (cappedWord || doublePunct) {
-                if (doublePunct) {
-                    doublePunct = false
-                    diffList.add(diff_match_patch.Diff(diff.operation, diff.text!!.replace(lettersOnly, "")))
-                } else {
-                    cappedWord = false
-                    diffList.add(diff)
+            if (cappedWord || doublePunct || andWord) {
+                when {
+                    doublePunct -> {
+                        doublePunct = false
+                        diffList.add(diff_match_patch.Diff(diff.operation, diff.text!!.replace(lettersOnly, "")))
+                    }
+                    andWord -> {
+                        andWord = false
+                        diffList.add(diff)
+                    }
+                    else -> {
+                        cappedWord = false
+                        diffList.add(diff)
+                    }
                 }
                 return@forEachIndexed // Add new text, then skip
             }
 
-            // Capitalisations diffs  e.g KING; / King, | "and, &" diffs | punctuation diffs e.g fair; / faire,
-            if (idx + 1 < list.size) {
-                if (diff.text!!.replace(punct, "").trim().equals(list[idx + 1].text!!.replace(punct, "").trim(), ignoreCase = true)
-                        || (diff.text!!.contains(andPattern) && list[idx + 1].text!!.contains(andPattern))
-                ) {
-                    cappedWord = true
+            // Capitalisations diffs  e.g KING; / King, | and / & diffs | punctuation diffs e.g fair; / faire,
+            if (idx + 1 < list.size && diff.operation != diff_match_patch.Operation.EQUAL && list[idx + 1].operation != diff_match_patch.Operation.EQUAL) {
+                if (diff.text!!.contains(andPattern) && list[idx + 1].text!!.contains(andPattern)) {
+                    andWord = true
                     return@forEachIndexed // Skip
                 } else if (diff.text!!.contains(punct) && list[idx + 1].text!!.contains(punct)) {
                     doublePunct = true
                     return@forEachIndexed // Skip
+                } else if (
+                        {
+                            val s0 = diff.text!!.replace(punct, "").trim()
+                            val s1 = list[idx + 1].text!!.replace(punct, "").trim()
+                            s0.isNotBlank() && s1.isNotBlank() && s0.equals(s1, ignoreCase = true)
+                        }()
+
+                ) {
+                    cappedWord = true
+                    return@forEachIndexed // Skip
                 }
             }
+
 
             // Swap delete with insert to keep original text
             if (diff.operation == diff_match_patch.Operation.DELETE)
                 diffList.add(diff_match_patch.Diff(diff_match_patch.Operation.INSERT, diff.text))
 
             // Filter to only get original text and new punctuation
-            else if (diff.operation == diff_match_patch.Operation.EQUAL || diff.text!!.contains(punct))
-                diffList.add(diff)
+            else if (diff.operation == diff_match_patch.Operation.EQUAL || diff.text!!.contains(punct)) {
+                if (diff.operation == diff_match_patch.Operation.INSERT)
+                    diffList.add(diff_match_patch.Diff(diff.operation, diff.text!!.replace(lettersOnly, "")))
+                else
+                    diffList.add(diff)
+            }
         }
+
         return dmp.diff_text2(diffList)
     }
 
