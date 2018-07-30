@@ -4,11 +4,14 @@ import android.graphics.Color
 import androidx.core.content.ContextCompat
 import na.kephas.kitvei.App
 import na.kephas.kitvei.R
-import na.kephas.kitvei.util.*
+import na.kephas.kitvei.util.CustomTypefaceSpan
+import na.kephas.kitvei.util.Fonts
+import na.kephas.kitvei.util.count
+import na.kephas.kitvei.util.diff_match_patch
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
-import java.util.LinkedList
+import java.util.*
 import java.util.regex.Pattern
 
 object Formatting {
@@ -54,7 +57,7 @@ object Formatting {
     val redLetterList: List<CharSequence> by lazy { getList(RED_LETTER_PATH) }
     private val dmp by lazy { diff_match_patch() }
     private val punct by lazy { "[.,;:?]".toRegex() }
-    //private val excludePunct by lazy { "[^\\p{P}]".toRegex() }
+    private val lettersOnly by lazy { "[^\\p{P}]".toRegex() }
     private val andPattern by lazy { Pattern.compile("(?:&|and)", Pattern.CASE_INSENSITIVE).toRegex() }
 
     fun diffText(pce: String, kjv: CharSequence): String {
@@ -63,22 +66,30 @@ object Formatting {
         val diffList = LinkedList<diff_match_patch.Diff>()
 
         var cappedWord = false
+        var doublePunct = false
         list.forEachIndexed { idx, diff ->
 
             // Skip the pair of two words
-            if (cappedWord) {
-                cappedWord = false
-                diffList.add(diff)
+            if (cappedWord || doublePunct) {
+                if (doublePunct) {
+                    doublePunct = false
+                    diffList.add(diff_match_patch.Diff(diff.operation, diff.text!!.replace(lettersOnly, "")))
+                } else {
+                    cappedWord = false
+                    diffList.add(diff)
+                }
                 return@forEachIndexed // Add new text, then skip
             }
 
             // Capitalisations diffs  e.g KING; / King, | "and, &" diffs | punctuation diffs e.g fair; / faire,
             if (idx + 1 < list.size) {
                 if (diff.text!!.replace(punct, "").trim().equals(list[idx + 1].text!!.replace(punct, "").trim(), ignoreCase = true)
-                        || diff.text!!.contains(andPattern) && list[idx + 1].text!!.contains(andPattern)
-                        || diff.text!!.contains(punct) && list[idx + 1].text!!.contains(punct)
+                        || (diff.text!!.contains(andPattern) && list[idx + 1].text!!.contains(andPattern))
                 ) {
                     cappedWord = true
+                    return@forEachIndexed // Skip
+                } else if (diff.text!!.contains(punct) && list[idx + 1].text!!.contains(punct)) {
+                    doublePunct = true
                     return@forEachIndexed // Skip
                 }
             }
