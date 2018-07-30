@@ -4,10 +4,7 @@ import android.graphics.Color
 import androidx.core.content.ContextCompat
 import na.kephas.kitvei.App
 import na.kephas.kitvei.R
-import na.kephas.kitvei.util.CustomTypefaceSpan
-import na.kephas.kitvei.util.Fonts
-import na.kephas.kitvei.util.count
-import na.kephas.kitvei.util.diff_match_patch
+import na.kephas.kitvei.util.*
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
@@ -67,18 +64,23 @@ object Formatting {
 
         var cappedWord = false
         list.forEachIndexed { idx, diff ->
-            // Skip the pair of two words that are same in text, case insensitive, e.g KING; | King,
+
+            // Skip the pair of two words
             if (cappedWord) {
                 cappedWord = false
                 diffList.add(diff)
                 return@forEachIndexed // Add new text, then skip
             }
-            // Account for capitalisations and "and, &" diffs
-            if (idx + 1 < list.size && (list[idx].text!!.replace(punct, "").trim().equals(list[idx + 1].text!!.replace(punct, "").trim(), ignoreCase = true)
-                            || (list[idx].text!!.contains(andPattern) && list[idx + 1].text!!.contains(andPattern))
-                            )) {
-                cappedWord = true
-                return@forEachIndexed // Skip
+
+            // Capitalisations diffs  e.g KING; / King, | "and, &" diffs | punctuation diffs e.g fair; / faire,
+            if (idx + 1 < list.size) {
+                if (diff.text!!.replace(punct, "").trim().equals(list[idx + 1].text!!.replace(punct, "").trim(), ignoreCase = true)
+                        || diff.text!!.contains(andPattern) && list[idx + 1].text!!.contains(andPattern)
+                        || diff.text!!.contains(punct) && list[idx + 1].text!!.contains(punct)
+                ) {
+                    cappedWord = true
+                    return@forEachIndexed // Skip
+                }
             }
 
             // Swap delete with insert to keep original text
