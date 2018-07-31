@@ -75,7 +75,8 @@ object Formatting {
                 when {
                     doublePunct -> {
                         doublePunct = false
-                        diffList.add(diff_match_patch.Diff(diff.operation, diff.text!!.replace(lettersOnly, "")))
+                        val s = list[idx - 1].text!!.replace(punct, "") + diff.text!!.replace(lettersOnly, "")
+                        diffList.add(diff_match_patch.Diff(diff.operation, s))
                     }
                     andWord -> {
                         andWord = false
@@ -95,7 +96,11 @@ object Formatting {
                     andWord = true
                     return@forEachIndexed // Skip
                 } else if (diff.text!!.contains(punct) && list[idx + 1].text!!.contains(punct)) {
-                    doublePunct = true
+                    if (
+                            (diff.operation == diff_match_patch.Operation.DELETE && list[idx + 1].operation == diff_match_patch.Operation.INSERT)
+                            || (diff.operation == diff_match_patch.Operation.INSERT && list[idx + 1].operation == diff_match_patch.Operation.DELETE)
+                    )
+                        doublePunct = true
                     return@forEachIndexed // Skip
                 } else if (
                         {
@@ -110,13 +115,14 @@ object Formatting {
                 }
             }
 
-
             // Swap delete with insert to keep original text
             if (diff.operation == diff_match_patch.Operation.DELETE)
                 diffList.add(diff_match_patch.Diff(diff_match_patch.Operation.INSERT, diff.text))
 
             // Filter to only get original text and new punctuation
-            else if (diff.operation == diff_match_patch.Operation.EQUAL || diff.text!!.contains(punct)) {
+            else if (diff.operation == diff_match_patch.Operation.EQUAL) {
+                diffList.add(diff)
+            } else if (diff.text!!.contains(punct)) {
                 if (diff.operation == diff_match_patch.Operation.INSERT)
                     diffList.add(diff_match_patch.Diff(diff.operation, diff.text!!.replace(lettersOnly, "")))
                 else
