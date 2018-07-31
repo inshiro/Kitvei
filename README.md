@@ -34,7 +34,7 @@ Aimed towards providing the best English version.<br>Translations are from the P
 
 
 ## Motivation
-I wanted a pure English Bible which was not tampered by men who added or removed parts of scripture, mainly because they used alternate manuscripts that deviated from the original. I stumbled upon the PCE and this translation did well in preserving the original into our lexicon. I'm convinced The Word is perfect but translations can have mistakes. As for English, this is currently the best translation we have, but do make sure to confirm with the original Greek and Hebrew.
+I wanted a pure English Bible which was not tampered by men who added or removed parts of scripture, mainly because they used alternate manuscripts that deviated from the original. I stumbled upon the [PCE](http://www.bibleprotector.com/) and this translation did well in preserving the original into our lexicon. I'm convinced The Word is perfect but translations can have mistakes. As for English, this is currently the best translation we have, but do make sure to confirm with the original Greek and Hebrew.
 
 
 ## Download
@@ -62,6 +62,7 @@ If you are a developer and wish to contribute to the app please fork the project
 and submit a pull request.
 
 If you have any questions, feel free to [send me an email](<mailto:iitsbalance@gamil.com>)
+
 If enough people are interested a discord chat will be made.  
 
 
