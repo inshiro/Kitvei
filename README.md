@@ -8,7 +8,9 @@ src="https://travis-ci.org/inshiro/Kitvei.svg?branch=master"></a> <a
 href="./LICENSE"><img
 src="https://img.shields.io/hexpm/l/plug.svg"></a> <a
 href="https://github.com/inshiro/Kitvei/releases"><img
-src="https://img.shields.io/github/release/inshiro/Kitvei.svg"></a></p>
+src="https://img.shields.io/github/release/inshiro/Kitvei.svg"></a> <a
+href="https://android-arsenal.com/api?level=14#l14"><img
+src="https://img.shields.io/badge/API-14%2B-brightgreen.svg?style=flat"></a></p>
 
 <img src="./.github/readme-images/screens.png" alt="pxltrm" align="top" >
 <p align="center">
@@ -17,7 +19,6 @@ Aimed towards providing the best English version.<br>Translations are from the P
 ## Features
 - Fast (*Loads instantly for optimal reading pleasure*).
 - Lightweight (*Low on CPU/Memory usage*).
-- Supports devices all the way back to Ice Cream Sandwich.
 - No unnecessary permissions.
 - Swipe the next chapter like a book.
 - Completely offline.
@@ -25,14 +26,14 @@ Aimed towards providing the best English version.<br>Translations are from the P
 - Find in page.
 - Search verses.
 - Copy single verses.
+- Adjust text size.
 - Toggle paragraphs, line numbers, red letters, and more. (*Soon*)
 - Toggle 1611 KJV punctuation and capitalisation.
-- Adjust text size.
 
 **Note:** This is a personal project of mine that I've released publicly. Therefore it is a work in-progress. If you break it, let me know!
 
 
-## Motivations
+## Motivation
 I wanted a pure English Bible which was not tampered by men who added or removed parts of scripture, mainly because they used alternate manuscripts that deviated from the original. I stumbled upon the PCE and this translation did well in preserving the original into our lexicon. I'm convinced The Word is perfect but translations can have mistakes. As for English, this is currently the best translation we have, but do make sure to confirm with the original Greek and Hebrew.
 
 
