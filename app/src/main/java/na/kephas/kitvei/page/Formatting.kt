@@ -120,9 +120,7 @@ object Formatting {
                 diffList.add(diff_match_patch.Diff(diff_match_patch.Operation.INSERT, diff.text))
 
             // Filter to only get original text and new punctuation
-            else if (diff.operation == diff_match_patch.Operation.EQUAL) {
-                diffList.add(diff)
-            } else if (diff.text!!.contains(punct)) {
+            else if (diff.operation == diff_match_patch.Operation.EQUAL || diff.text!!.contains(punct)) {
                 if (diff.operation == diff_match_patch.Operation.INSERT)
                     diffList.add(diff_match_patch.Diff(diff.operation, diff.text!!.replace(lettersOnly, "")))
                 else
