@@ -29,6 +29,7 @@ object Page {
     private var showParagraphs = false
     private var newLineEachVerse = true
     private var capitalizeFirstWord = true
+    var showRedLetters = true
     var showDropCap = true
     var showLineNumbers = true
     var kjvPunctuation = true
@@ -61,13 +62,14 @@ object Page {
                         } else it.verseText!!
 
                         // Apply Periscope (Headers)
+                        //sText.append(verse.replace("<","").replace(">",""))
                         tryy {
                             if (it.verseId!! == 1 && verse[0] == '<') {
                                 val endBoldPosition = verse.replace("<", "").indexOf('>')
                                 sText.append(verse.replace("<", "").replace(">", ""))
                                 sText.setSpan(CharacterStyle.wrap(StyleSpan(android.graphics.Typeface.BOLD)), 0, endBoldPosition, 0)
                                 sText.insert(endBoldPosition + 1, "\n")
-                            } else if (it.id == 31102) { // Last verse in the Bible
+                            } else if (it.verseId!! == list.size && it.verseText!!.contains("<")) {//(it.id == 31102) { // Last verse in the Bible
                                 val idx = sText.lastIndex
                                 sText.append(verse)
                                 val startBoldPosition = sText.indexOf('<', idx)
@@ -102,43 +104,45 @@ object Page {
                         }
 
                         // Red Letters
-                        tryy {
-                            val rIdx = Formatting.redLetterList.indexOfFirst { r -> r.startsWith("${it.bookId}\t${it.chapterId}\t${it.verseId}\t") }//RedLetters.getIndexOfFirst { b, c, v, _, _ -> (it.bookId == b && it.chapterId == c && it.verseId == v) }
-                            if (rIdx >= 0) {
-                                Formatting.redLetterPositions(rIdx) { s, e ->
-                                    //RedLetters.getPositions(rIdx).forEach { pair ->
-                                    val actualLength = sText.length - numStart
-                                    val extraLetters = if (e > actualLength) e - actualLength else 0
-                                    //val e = if (pair.second in sText.length-numStart-5..sText.length-numStart) sText.length else pair.second
-                                    var start = s - extraLetters + numStart
-                                    var end = e - extraLetters + numStart
-                                    if (end in actualLength - 2..actualLength) end = sText.length
-                                    //d { "${row.bookName} ${it.chapterId}:${it.verseId} $pair-$start-$end" }
-                                    if (start <= 0 && it.verseId == 1 && showDropCap) {
-                                        dropCapView?.post {
-                                            dropCapView.setTextColor(Formatting.RedLetterColor)
-                                        }
-                                    }
-
-                                    if (kjvPunctuation) {
-                                        if (verse.length - it.verseText!!.length > 0)
-                                            end += verse.length - it.verseText!!.length
-                                        else
-                                            end += it.verseText!!.length - verse.length
-                                        if (showDropCap && it.verseId == 1)
-                                            end--
-
-                                        // Rev 3:1
-                                        if (showDropCap && it.id == 30748) {
-                                            start = 0
-                                            end--
+                        if (showRedLetters)
+                            tryy {
+                                val rIdx = Formatting.redLetterList.indexOfFirst { r -> r.startsWith("${it.bookId}\t${it.chapterId}\t${it.verseId}\t") }//RedLetters.getIndexOfFirst { b, c, v, _, _ -> (it.bookId == b && it.chapterId == c && it.verseId == v) }
+                                if (rIdx >= 0) {
+                                    Formatting.redLetterPositions(rIdx) { s, e ->
+                                        //RedLetters.getPositions(rIdx).forEach { pair ->
+                                        val actualLength = sText.length - numStart
+                                        val extraLetters = if (e > actualLength) e - actualLength else 0
+                                        //val e = if (pair.second in sText.length-numStart-5..sText.length-numStart) sText.length else pair.second
+                                        var start = s - extraLetters + numStart
+                                        var end = e - extraLetters + numStart
+                                        if (end in actualLength - 2..actualLength) end = sText.length
+                                        //d { "${row.bookName} ${it.chapterId}:${it.verseId} $pair-$start-$end" }
+                                        if (start <= 0 && it.verseId == 1 && showDropCap) {
+                                            dropCapView?.post {
+                                                dropCapView.setTextColor(Formatting.RedLetterColor)
+                                            }
                                         }
 
+                                        if (kjvPunctuation) {
+                                            if (verse.length - it.verseText!!.length > 0)
+                                                end += verse.length - it.verseText!!.length
+                                            else
+                                                end += it.verseText!!.length - verse.length
+                                            if (showDropCap && it.verseId == 1)
+                                                end--
+
+                                            // Rev 3:1
+                                            if (showDropCap && it.id == 30748) {
+                                                start = 0
+                                                end--
+                                            }
+
+                                        }
+                                        if (end > sText.lastIndex) end = sText.length
+                                        sText.setSpan(ForegroundColorSpan(Formatting.RedLetterColor), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
                                     }
-                                    sText.setSpan(ForegroundColorSpan(Formatting.RedLetterColor), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
                                 }
                             }
-                        }
 
 
                         // Apply Line Numbers
@@ -322,14 +326,21 @@ object Page {
                                                 }
                                                 // Title
                                                 // Post processing for periscopes
-                                                //text.insert(0,"${it.bookName} ${it.chapterId}:$groupedVerses\n")
                                                 var newText = text.replace("\u200B".toRegex(), "").replace("\t", "").replace("_", " ")
-                                                if (list[0].verseText!!.contains('<')) {
+                                                if (selectedList.contains(1) && list[0].verseText!!.contains('<')) {
                                                     newText = newText.removeRange(2..newText.indexOf("\n"))
 
-                                                } else if (list[list.lastIndex].id == 31102) {
-                                                    newText = newText.removeRange(newText.indexOf("\n", newText.indexOf("21"))..newText.lastIndex)
+                                                } else if (selectedList.contains(list.size) && it.verseText!!.contains("<")) { //(list[list.lastIndex].id == 31102) {
+                                                    newText = newText.removeRange(newText.indexOf("\n", newText.indexOf("${list.size}"))..newText.lastIndex)
                                                 }
+
+                                                // If selected only one verse, no need to copy verse number
+                                                if (selectedList.size == 1) newText = newText.removeRange(0, newText.indexOf(" ") + 1)
+
+                                                // Remove newline
+                                                if (newText.last() == '\n') newText = newText.removeRange(newText.lastIndex-1, newText.lastIndex)
+
+                                                //text.insert(0,"${it.bookName} ${it.chapterId}:$groupedVerses\n")
                                                 newText = "${it.bookName} ${it.chapterId}:$groupedVerses\n" + newText
                                                 val clip = ClipData.newPlainText("Verse text", newText)
                                                 clipboard?.primaryClip = clip
@@ -352,7 +363,7 @@ object Page {
                     }
 
                     //sText.append("\u200B\n\n\n")
-                    sText.indexOf('<').let {
+                    /*sText.indexOf('<').let {
                         if (it >= 0) {
                             val p0First = it
                             val p0Last = it + 1
@@ -366,7 +377,7 @@ object Page {
                             else if (it in sText.length - 20..sText.length)
                                 sText.insert(p0First, "\n")
                         }
-                    }
+                    }*/
                     sText.setSpan(RelativeSizeSpan(1f), 0, sText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
 
                     withContext(UI) {
