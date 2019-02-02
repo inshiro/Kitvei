@@ -325,15 +325,25 @@ class MainActivity : AppCompatActivity(),
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.main, menu)
         val searchItem = menu.findItem(R.id.search_menu)
+        val settingsMenu = menu.findItem(R.id.settings_menu)
         val kjvStyleItem = menu.findItem(R.id.kjv_styling_menu)
         searchItem?.let {
             tintMenuIcon(searchItem, android.R.color.background_light)
             searchItem.isVisible = !hideSearch // Called when invalidate
 
         }
-        kjvStyleItem?.let {
-            it.isChecked = Page.kjvStyling
+        settingsMenu?.let {
+            it.subMenu.run {
+                findItem(R.id.drop_cap_menu).isChecked = Page.showDropCap
+                findItem(R.id.pbreak_menu).isChecked = Page.showParagraphs
+                findItem(R.id.red_letter_menu).isChecked = Page.showRedLetters
+                findItem(R.id.verse_numbers_menu).isChecked = Page.showVerseNumbers
+                findItem(R.id.seperate_verses_menu).isChecked = Page.newLineEachVerse
+                findItem(R.id.subject_headings_menu).isChecked = Page.showHeadings
+                findItem(R.id.subject_footings_menu).isChecked = Page.showFootings
+            }
         }
+        kjvStyleItem?.let { it.isChecked = Page.kjvStyling }
         return retValue
     }
 
@@ -347,13 +357,13 @@ class MainActivity : AppCompatActivity(),
             R.id.find_in_page_menu -> {
                 showFindInPageSearch()
             }
-        /*R.id.font_and_theme_menu -> {
-            if (isTranslucentNavBar())
-                cancelTranslucentNavBar()
-            bottomSheetFragment.show(supportFragmentManager, "TAG")
-        }
-            R.id.settings_menu -> {
-            }*/
+            /*R.id.font_and_theme_menu -> {
+                if (isTranslucentNavBar())
+                    cancelTranslucentNavBar()
+                bottomSheetFragment.show(supportFragmentManager, "TAG")
+            }
+                R.id.settings_menu -> {
+                }*/
             R.id.font2 -> {
                 if (isTranslucentNavBar())
                     cancelTranslucentNavBar()
@@ -364,6 +374,29 @@ class MainActivity : AppCompatActivity(),
                 Page.kjvStyling = item.isChecked
                 mainViewPager.adapter?.notifyDataSetChanged()
             }
+            R.id.drop_cap_menu, R.id.pbreak_menu, R.id.red_letter_menu, R.id.verse_numbers_menu, R.id.seperate_verses_menu, R.id.subject_headings_menu, R.id.subject_footings_menu -> {
+                // Keep options menu open
+                item.isChecked = !item.isChecked
+                item.setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+                item.actionView = View(this);
+                item.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
+                    override fun onMenuItemActionExpand(item: MenuItem?): Boolean { return false }
+                    override fun onMenuItemActionCollapse(item: MenuItem?): Boolean { return false }
+                })
+                when (item.itemId) {
+                    R.id.drop_cap_menu -> Page.showDropCap = item.isChecked
+                    R.id.pbreak_menu -> Page.showParagraphs = item.isChecked
+                    R.id.red_letter_menu -> Page.showRedLetters = item.isChecked
+                    R.id.verse_numbers_menu -> Page.showVerseNumbers = item.isChecked
+                    R.id.seperate_verses_menu -> Page.newLineEachVerse = item.isChecked
+                    R.id.subject_headings_menu -> Page.showHeadings = item.isChecked
+                    R.id.subject_footings_menu -> Page.showFootings = item.isChecked
+                }
+                mainViewPager.adapter?.notifyDataSetChanged()
+                return false
+                //return false
+            }
+
             else -> super.onOptionsItemSelected(item)
         }
         return true
@@ -465,6 +498,7 @@ class MainActivity : AppCompatActivity(),
             vbs.vibrate(duration)
         }
     }
+
     private fun View.vibrate() {
         this.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
     }

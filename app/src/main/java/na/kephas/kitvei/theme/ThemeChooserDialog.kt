@@ -5,7 +5,6 @@ import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.text.Spannable
-import android.text.style.BackgroundColorSpan
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
@@ -22,17 +21,12 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import na.kephas.kitvei.App
 import na.kephas.kitvei.Prefs
 import na.kephas.kitvei.R
-import na.kephas.kitvei.R.id.buttonDecreaseTextSize
-import na.kephas.kitvei.R.id.buttonIncreaseTextSize
 import na.kephas.kitvei.activity.FragmentUtil
 import na.kephas.kitvei.activity.MainActivity
-import na.kephas.kitvei.adapter.MainViewPagerAdapter
 import na.kephas.kitvei.page.ExtendedBottomSheetDialogFragment
 import na.kephas.kitvei.page.Page
-import na.kephas.kitvei.theme.ThemeChooserDialog.Companion.fontSize
 import na.kephas.kitvei.util.*
 import na.kephas.kitvei.views.DiscreteSeekBar
-import java.security.AccessController.getContext
 
 /*
 import com.squareup.otto.Subscribe
@@ -334,13 +328,15 @@ class ThemeChooserDialog : ExtendedBottomSheetDialogFragment() {
         fontChangeProgressBar.visibility = View.VISIBLE
 
 
+        val ss = pTV?.text as Spannable
         Page.textSize = fontSize
-        pDCV?.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize * 4.85f)
 
         // Box area of Initial letter
-        val ss = pTV?.text as Spannable
-        ss.removeSpans(0, ss.length, LettrineLeadingMarginSpan2::class.java)
-        ss.setSpan(LettrineLeadingMarginSpan2(2, pDCV!!.getWidth), 0, if (Page.showVerseNumbers) ss.indexOf("2") - 2 else ss.indexOf("\u200B") - 2, 0)
+        if (Page.showDropCap) {
+            pDCV?.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize * 4.85f)
+            ss.removeSpans(0, ss.length, LettrineLeadingMarginSpan2::class.java)
+            ss.setSpan(LettrineLeadingMarginSpan2(2, pDCV!!.getWidth), 0, if (Page.showVerseNumbers) ss.indexOf("2") - 2 else ss.indexOf("\u200B") - 2, 0)
+        }
 
         pTV?.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize)
 

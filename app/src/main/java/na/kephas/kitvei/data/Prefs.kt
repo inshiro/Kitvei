@@ -15,6 +15,13 @@ class Prefs (context: Context) {
     private val FONT_SIZE = "FONT_SIZE"
     private val THEME_ID = "THEME_ID"
     private val KJVSTYLE_ID = "KJVSTYLE_ID"
+    private val DROP_CAP_ID = "DROP_CAP_ID"
+    private val PBREAK_ID = "PBREAK_ID"
+    private val RED_LETTER_ID = "RED_LETTER_ID"
+    private val VERSE_NUMBERS = "VERSE_NUMBERS"
+    private val NEW_LINE_EACH_VERSE_ID = "NEW_LINE_EACH_VERSE_ID"
+    private val HEADINGS_ID = "HEADINGS_ID"
+    private val FOOTINGS_ID = "FOOTINGS_ID"
     private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_FILENAME, 0)
 
     var Book: Int
@@ -47,6 +54,27 @@ class Prefs (context: Context) {
     var kjvStylingPref: Boolean
         get() = prefs.getBoolean(KJVSTYLE_ID, true)
         set(value) = prefs.edit().putBoolean(KJVSTYLE_ID, value).apply()
+    var dropCapPref: Boolean
+        get() = prefs.getBoolean(DROP_CAP_ID, true)
+        set(value) = prefs.edit().putBoolean(DROP_CAP_ID, value).apply()
+    var pBreakPref: Boolean
+        get() = prefs.getBoolean(PBREAK_ID, false)
+        set(value) = prefs.edit().putBoolean(PBREAK_ID, value).apply()
+    var redLetterPref: Boolean
+        get() = prefs.getBoolean(RED_LETTER_ID, true)
+        set(value) = prefs.edit().putBoolean(RED_LETTER_ID, value).apply()
+    var verseNumberPref: Boolean
+        get() = prefs.getBoolean(VERSE_NUMBERS, true)
+        set(value) = prefs.edit().putBoolean(VERSE_NUMBERS, value).apply()
+    var seperateVersePref: Boolean
+        get() = prefs.getBoolean(NEW_LINE_EACH_VERSE_ID, true)
+        set(value) = prefs.edit().putBoolean(NEW_LINE_EACH_VERSE_ID, value).apply()
+    var headingsPref: Boolean
+        get() = prefs.getBoolean(HEADINGS_ID, true)
+        set(value) = prefs.edit().putBoolean(HEADINGS_ID, value).apply()
+    var footingsPref: Boolean
+        get() = prefs.getBoolean(FOOTINGS_ID, true)
+        set(value) = prefs.edit().putBoolean(FOOTINGS_ID, value).apply()
     /*var shouldDimDarkModeImages: Boolean
         get() = prefs.getFloat(FONT_SIZE, 1f)
         set(value) = prefs.edit().putFloat(FONT_SIZE, value).apply()*/

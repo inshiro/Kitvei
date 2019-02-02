@@ -100,6 +100,7 @@ class TextControl : AppCompatTextView {
             height += paddingTop + paddingBottom
             heightMeasureSpec = View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY)
             if (text.contains("J")) heightMeasureSpec += additionalPadding else heightMeasureSpec += additionalPadding/3
+            if(text.contains("U")||text.contains("G")) heightMeasureSpec += 20
         }
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     }

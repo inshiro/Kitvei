@@ -16,14 +16,66 @@
         android:title="@string/find_in_page"
         app:showAsAction="never"
         appname:ignore="AppCompatResource" />
-<!--
+
     <item
         android:id="@+id/settings_menu"
         android:orderInCategory="40"
         android:title="@string/settings"
         app:showAsAction="never"
-        appname:ignore="AppCompatResource" />
-        -->
+        appname:ignore="AppCompatResource">
+        <menu>
+            <item
+                android:id="@+id/drop_cap_menu"
+                android:title="Drop Cap"
+                android:checkable="true"
+                android:checked="true"
+                app:showAsAction="never"
+                appname:ignore="AppCompatResource"/>
+            <item
+                android:id="@+id/pbreak_menu"
+                android:title="Paragraph breaks"
+                android:checkable="true"
+                android:checked="true"
+                app:showAsAction="never"
+                appname:ignore="AppCompatResource" />
+            <item
+                android:id="@+id/red_letter_menu"
+                android:title="Red Letter"
+                android:checkable="true"
+                android:checked="true"
+                app:showAsAction="never"
+                appname:ignore="AppCompatResource" />
+            <item
+                android:id="@+id/verse_numbers_menu"
+                android:title="Verse numbers"
+                android:checkable="true"
+                android:checked="true"
+                app:showAsAction="never"
+                appname:ignore="AppCompatResource" />
+            <item
+                android:id="@+id/seperate_verses_menu"
+                android:title="Separate verses"
+                android:checkable="true"
+                android:checked="true"
+                app:showAsAction="never"
+                appname:ignore="AppCompatResource" />
+            <item
+                android:id="@+id/subject_headings_menu"
+                android:title="Subject headings"
+                android:checkable="true"
+                android:checked="true"
+                app:showAsAction="never"
+                appname:ignore="AppCompatResource" />
+            <item
+                android:id="@+id/subject_footings_menu"
+                android:title="Subject footings"
+                android:checkable="true"
+                android:checked="true"
+                app:showAsAction="never"
+                appname:ignore="AppCompatResource" />
+        </menu>
+    </item>
+
     <item
         android:id="@+id/font2"
         android:orderInCategory="30"
@@ -32,11 +84,11 @@
         appname:ignore="AppCompatResource" />
     <item
         android:id="@+id/kjv_styling_menu"
+        android:checkable="true"
+        android:checked="true"
         android:orderInCategory="60"
         android:title="KJV Styling"
         app:showAsAction="never"
-        android:checkable="true"
-        android:checked="true"
         appname:ignore="AppCompatResource" />
 
 </menu><!--

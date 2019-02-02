@@ -24,22 +24,41 @@ import na.kephas.kitvei.viewmodels.VerseListViewModel
 
 
 object Page {
+    var showDropCap: Boolean
+        get() = Prefs.dropCapPref
+        set(value) { Prefs.dropCapPref = value }
 
-    private var showParagraphs = false
-    private var newLineEachVerse = true
-    var showRedLetters = true
-    var showDropCap = true
-    var showVerseNumbers = true
-    //var kjvStyling = true
+    var showParagraphs: Boolean
+        get() = Prefs.pBreakPref
+        set(value) { Prefs.pBreakPref = value }
+
+    var showRedLetters: Boolean
+        get() = Prefs.redLetterPref
+        set(value) { Prefs.redLetterPref = value }
+
+    var showVerseNumbers: Boolean
+        get() = Prefs.verseNumberPref
+        set(value) { Prefs.verseNumberPref = value }
+
+    var newLineEachVerse: Boolean
+        get() = Prefs.seperateVersePref
+        set(value) { Prefs.seperateVersePref = value }
+
+    var showHeadings: Boolean
+        get() = Prefs.headingsPref
+        set(value) { Prefs.headingsPref = value }
+
+    var showFootings: Boolean
+        get() = Prefs.footingsPref
+        set(value) { Prefs.footingsPref = value }
 
     var kjvStyling: Boolean
         get() = Prefs.kjvStylingPref
         set(value) { Prefs.kjvStylingPref = value }
+
     var textSize: Float
         get() = Prefs.mainFontSize
-        set(value) {
-            Prefs.mainFontSize = value
-        }
+        set(value) { Prefs.mainFontSize = value }
 
     private val clipboard by lazy { App.instance.applicationContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager? }
     private val audioManager by lazy { App.instance.applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager? }
@@ -142,6 +161,7 @@ object Page {
                                             }
 
                                         }
+                                        if (start < 0) start = 0
                                         if (end > sText.lastIndex) end = sText.length
                                         sText.setSpan(ForegroundColorSpan(Formatting.RedLetterColor), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
                                     }
