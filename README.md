@@ -25,9 +25,8 @@ Aimed towards providing the best English version.<br>Translations are from the P
 - Includes the 1611 KJV introductions.
 - Find in page.
 - Search verses.
-- Copy single verses.
+- Copy multiple verses.
 - Adjust text size.
-- Toggle paragraphs, line numbers, red letters, and more. (*Soon*)
 - Toggle 1611 KJV punctuation and capitalisation.
 
 **Note:** This is a personal project of mine that I've released publicly. Therefore it is a work in-progress. If you break it, let me know!
@@ -38,7 +37,7 @@ I wanted a pure English Bible which was not tampered by men who added or removed
 
 
 ## Download
-Get the app from the [releases page](https://github.com/inshiro/Kitvei/releases).
+Get the app from the [releases page](https://github.com/inshiro/Kitvei/releases) or [Google Play Store](https://play.google.com/store/apps/details?id=na.kephas.kitvei).
 
 ## Contributing
 
@@ -61,18 +60,11 @@ by attaching a link (to Imgur, for example), whichever is easier for you.
 If you are a developer and wish to contribute to the app please fork the project
 and submit a pull request.
 
-If you have any questions, feel free to [send me an email](<mailto:iitsbalance@gamil.com>)
+If you have any questions, feel free to [send me an email](<mailto:inshirodev@gamil.com>)
 
 If enough people are interested a discord chat will be made.  
 
 
-## TODO
-
-- [ ] Themes
-- [ ] Settings option
-- [ ] Notes and Highlights
-
-  
 ## License
 
     Copyright 2018 inshiro

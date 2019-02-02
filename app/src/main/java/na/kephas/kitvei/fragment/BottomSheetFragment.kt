@@ -1,6 +1,7 @@
 package na.kephas.kitvei.fragment
 
 
+import android.annotation.SuppressLint
 import android.content.DialogInterface
 import android.content.res.Configuration
 import android.os.Build
@@ -93,18 +94,19 @@ class BottomSheetFragment : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         dialog.setOnShowListener {
-            dialog.window.setDimAmount(0f)
+            dialog.window?.setDimAmount(0f)
 
 
             val params = (getView()?.parent as View).layoutParams as CoordinatorLayout.LayoutParams
             val behavior = params.behavior
 
             // val rv = getRecyclerView()
-            val vpAdapter = vp.adapter as MainViewPagerAdapter
+            // val vpAdapter = vp.adapter as MainViewPagerAdapter
             if (behavior != null && behavior is BottomSheetBehavior<*>) {
 
 
                 behavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
+                    @SuppressLint("SwitchIntDef")
                     override fun onStateChanged(bottomSheet: View, newState: Int) {
 
                         when (newState) {

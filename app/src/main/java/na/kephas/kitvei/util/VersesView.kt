@@ -160,13 +160,14 @@ class VersesView : RecyclerView, AbsListView.OnScrollListener {
                     verticalFadingEdgeLength * 2
         }
         if (heightMode == View.MeasureSpec.AT_MOST) {
-            // TODO: after first layout we should maybe start at the first visible position, not 0
+            // Class not in use,to-do: after first layout we should maybe start at the first visible position, not 0
             heightSize = measureHeightOfChildren(widthMeasureSpec, 0, RecyclerView.NO_POSITION, heightSize, -1)
         }
         setMeasuredDimension(widthSize, heightSize)
         mWidthMeasureSpec = widthMeasureSpec
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun measureScrapChild(child: View, position: Int, widthMeasureSpec: Int, heightHint: Int) {
         var p = child.layoutParams
         if (p == null) {
@@ -192,9 +193,9 @@ class VersesView : RecyclerView, AbsListView.OnScrollListener {
         child.forceLayout()
     }
 
-    fun measureHeightOfChildren(widthMeasureSpec: Int, startPosition: Int, endPosition: Int,
+    fun measureHeightOfChildren(widthMeasureSpec: Int, startPosition: Int, endPositionn: Int,
                                 maxHeight: Int, disallowPartialChildPosition: Int): Int {
-        var endPosition = endPosition
+        var endPosition = endPositionn
         val adapter = adapter ?: return paddingTop + paddingBottom
 // Include the padding of the list
         var returnedHeight = paddingTop + paddingBottom

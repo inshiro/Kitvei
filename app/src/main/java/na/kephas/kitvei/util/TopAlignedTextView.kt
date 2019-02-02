@@ -8,6 +8,7 @@ import android.view.Gravity
 
 import androidx.appcompat.widget.AppCompatTextView
 
+@Suppress("UNUSED_PARAMETER")
 class TopAlignedTextView @JvmOverloads constructor(context: Context, defStyle: Int = 0) : AppCompatTextView(context) {
 
     init {

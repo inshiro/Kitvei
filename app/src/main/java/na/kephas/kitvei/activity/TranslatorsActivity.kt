@@ -10,14 +10,8 @@ import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.base_content_activity.toolbar
 import kotlinx.android.synthetic.main.base_content_activity.toolbar_layout
 import kotlinx.android.synthetic.main.base_content.baseTextView
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.withContext
-import na.kephas.kitvei.util.Fonts
-import na.kephas.kitvei.util.fixedThreadPool
-import na.kephas.kitvei.util.futureSet
-import na.kephas.kitvei.util.toSpanned
+import na.kephas.kitvei.util.*
+import kotlinx.coroutines.*
 
 class TranslatorsActivity : AppCompatActivity() {
     companion object {
@@ -49,7 +43,7 @@ class TranslatorsActivity : AppCompatActivity() {
         toolbar_layout.setCollapsedTitleTextAppearance(R.style.CollapsedAppBar)
 
         baseTextView.typeface = Fonts.GentiumPlus_R
-        async(fixedThreadPool) {
+        GlobalScope.async(fixedThreadPool) {
             val span = getText().toSpanned() //getString(cText).toSpanned()
             val kenBurnsView = findViewById<KenBurnsView>(R.id.base_content_image)
             withContext(UI) {

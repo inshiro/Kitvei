@@ -14,14 +14,13 @@ import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.card_row.view.*
-
-import kotlinx.coroutines.experimental.CoroutineStart
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.*
 
 import na.kephas.kitvei.R
 import na.kephas.kitvei.data.Bible
 import na.kephas.kitvei.util.Fonts
+import na.kephas.kitvei.util.UI
+import na.kephas.kitvei.util.launch
 import na.kephas.kitvei.util.rootParent
 import java.util.regex.Pattern
 
@@ -62,7 +61,7 @@ class SearchAdapter(val context: Context) : PagedListAdapter<Bible, SearchAdapte
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        launch(UI, CoroutineStart.DEFAULT, rootParent) {
+        launch(UI) {
             val bible: Bible? = getItem(position)
             holder.bind(bible)
         }

@@ -30,6 +30,7 @@ object Formatting {
     val HighlightFocusColor by lazy { ContextCompat.getColor(App.instance.applicationContext, R.color.highlight_focus_color) }
     val SearchNotFoundColor by lazy { ContextCompat.getColor(App.instance.applicationContext, R.color.search_not_found) }
     val ColorAccent by lazy { ContextCompat.getColor(App.instance.applicationContext, R.color.colorAccent) }
+    val DefaultSelectColor by lazy { ContextCompat.getColor(App.instance.baseContext, R.color.highlighted_text_material_light) }
     //val typeface by lazy(LazyThreadSafetyMode.NONE) { Typeface.create("sans-serif", Typeface.NORMAL) }
 
     private fun getList(path: String): List<CharSequence> {
@@ -75,7 +76,8 @@ object Formatting {
                 when {
                     doublePunct -> {
                         doublePunct = false
-                        val s = list[idx - 1].text!!.replace(punct, "") + diff.text!!.replace(lettersOnly, "")
+                        val punctOnly = diff.text!!.replace(lettersOnly, "")
+                        val s = list[idx - 1].text!!.replace(punct, punctOnly)
                         diffList.add(diff_match_patch.Diff(diff.operation, s))
                     }
                     andWord -> {
@@ -131,6 +133,7 @@ object Formatting {
         return dmp.diff_text2(diffList)
     }
 
+    @Suppress("VARIABLE_WITH_REDUNDANT_INITIALIZER")
     fun redLetterPositions(index: Int, block: (start: Int, end: Int) -> Unit) {
 
         val it = redLetterList[index]

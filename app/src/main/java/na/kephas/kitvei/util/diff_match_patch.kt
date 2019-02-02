@@ -136,10 +136,10 @@ class diff_match_patch {
      * internally for recursive calls.  Users should set DiffTimeout instead.
      * @return Linked List of Diff objects.
      */
-    private fun diff_main(text1: String?, text2: CharSequence?,
+    private fun diff_main(textt1: String?, textt2: CharSequence?,
                           checklines: Boolean, deadline: Long): LinkedList<Diff> {
-        var text1 = text1
-        var text2 = text2
+        var text1 = textt1
+        var text2 = textt2
         // Check for null inputs.
         if (text1 == null || text2 == null) {
             throw IllegalArgumentException("Null inputs. (diff_main)")
@@ -268,10 +268,10 @@ class diff_match_patch {
      * @param deadline Time when the diff should be complete by.
      * @return Linked List of Diff objects.
      */
-    private fun diff_lineMode(text1: String, text2: String,
+    private fun diff_lineMode(textt1: String, textt2: String,
                               deadline: Long): LinkedList<Diff> {
-        var text1 = text1
-        var text2 = text2
+        var text1 = textt1
+        var text2 = textt2
         // Scan the text on a line-by-line basis first.
         val a = diff_linesToChars(text1, text2)
         text1 = a.chars1
@@ -845,27 +845,27 @@ class diff_match_patch {
                 val deletion = prevDiff.text
                 val insertion = thisDiff.text
                 val overlap_length1 = this.diff_commonOverlap(deletion!!, insertion!!)
-                val overlap_length2 = this.diff_commonOverlap(insertion!!, deletion)
+                val overlap_length2 = this.diff_commonOverlap(insertion, deletion)
                 if (overlap_length1 >= overlap_length2) {
-                    if (overlap_length1 >= deletion!!.length / 2.0 || overlap_length1 >= insertion!!.length / 2.0) {
+                    if (overlap_length1 >= deletion.length / 2.0 || overlap_length1 >= insertion.length / 2.0) {
                         // Overlap found. Insert an equality and trim the surrounding edits.
                         pointer.previous()
                         pointer.add(Diff(Operation.EQUAL,
-                                insertion!!.substring(0, overlap_length1)))
+                                insertion.substring(0, overlap_length1)))
                         prevDiff.text = deletion.substring(0, deletion.length - overlap_length1)
                         thisDiff.text = insertion.substring(overlap_length1)
                         // pointer.add inserts the element before the cursor, so there is
                         // no need to step past the new element.
                     }
                 } else {
-                    if (overlap_length2 >= deletion!!.length / 2.0 || overlap_length2 >= insertion!!.length / 2.0) {
+                    if (overlap_length2 >= deletion.length / 2.0 || overlap_length2 >= insertion.length / 2.0) {
                         // Reverse overlap found.
                         // Insert an equality and swap and trim the surrounding edits.
                         pointer.previous()
                         pointer.add(Diff(Operation.EQUAL,
                                 deletion.substring(0, overlap_length2)))
                         prevDiff.operation = Operation.INSERT
-                        prevDiff.text = insertion!!.substring(0, insertion.length - overlap_length2)
+                        prevDiff.text = insertion.substring(0, insertion.length - overlap_length2)
                         thisDiff.operation = Operation.DELETE
                         thisDiff.text = deletion.substring(overlap_length2)
                         // pointer.add inserts the element before the cursor, so there is
@@ -1510,8 +1510,8 @@ class diff_match_patch {
      * @param loc The location to search around.
      * @return Best match index or -1.
      */
-    fun match_main(text: String?, pattern: String?, loc: Int): Int {
-        var loc = loc
+    fun match_main(text: String?, pattern: String?, locc: Int): Int {
+        var loc = locc
         // Check for null inputs.
         if (text == null || pattern == null) {
             throw IllegalArgumentException("Null inputs. (match_main)")
@@ -1618,6 +1618,7 @@ class diff_match_patch {
                         best_loc = j - 1
                         if (best_loc > loc) {
                             // When passing loc, don't exceed our current distance from loc.
+                            @Suppress("UNUSED_VALUE")
                             start = Math.max(1, 2 * loc - best_loc)
                         } else {
                             // Already passed loc, downhill from here on in.
@@ -1884,9 +1885,9 @@ class diff_match_patch {
      * @return Two element Object array, containing the new text and an array of
      * boolean values.
      */
-    fun patch_apply(patches: LinkedList<Patch>, text: String): Array<Any> {
-        var patches = patches
-        var text = text
+    fun patch_apply(patchess: LinkedList<Patch>, textt: String): Array<Any> {
+        var patches = patchess
+        var text = textt
         if (patches.isEmpty()) {
             return arrayOf(text, BooleanArray(0))
         }
@@ -2305,6 +2306,7 @@ class diff_match_patch {
          * @param obj Another Diff to compare against.
          * @return true or false.
          */
+        @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
         override fun equals(obj: Any?): Boolean {
             if (this === obj) {
                 return true

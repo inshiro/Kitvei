@@ -6,7 +6,6 @@ import android.os.Build
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.getSystemService
-import androidx.core.content.systemService
 fun AppCompatActivity.isTranslucentNavBar(): Boolean {
     val flags = window.attributes.flags
     if ((flags and WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION) == WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)

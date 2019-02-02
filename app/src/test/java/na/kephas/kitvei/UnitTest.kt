@@ -26,7 +26,7 @@ import org.robolectric.annotation.Config
  */
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = intArrayOf(21), constants = BuildConfig::class)
+//@Config(sdk = intArrayOf(21), constants = BuildConfig::class)
 @FixMethodOrder(MethodSorters.JVM)
 class UnitTest {
 

@@ -18,7 +18,6 @@ import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.text.PrecomputedTextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.coroutines.experimental.async
 import java.lang.ref.WeakReference
 import java.util.regex.Pattern
 
@@ -286,9 +285,11 @@ fun String.toSpanned(): Spanned {
 val AppCompatActivity.isTranslucentNavBar: () -> Boolean
     get() = {
         val flags = this.window.attributes.flags
-        if ((flags and WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION) == WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
-            true
-        false
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            (flags and WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION) == WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION
+        } else {
+            false
+        }
     }
 
 inline fun <T> silentTry(block: () -> T) {
@@ -362,6 +363,36 @@ inline fun <K : Comparable<K>, V, M : Map<out K, V>, T> M.onMin(action: (k: K, v
  */
 val MutableList<Int>.sum: Int
     get() = this.filter { it != 0 }.sumBy { it }
+
+fun MutableList<Int>.groupConsecutiveString(): String {
+    val listMain = this.groupConsecutive()
+    var str = ""
+    listMain.forEachIndexed { idx, it ->
+        if(it.size > 1) str += "${it.min()}-${it.max()}"
+        else
+            str += it.get(0)
+        if(str.isNotEmpty() && idx != listMain.size-1) str += ", "
+    }
+    return str
+}
+fun MutableList<Int>.groupConsecutive(): MutableList<List<Int>> {
+    this.sort()
+
+    val listMain = ArrayList<List<Int>>()
+    var temp: MutableList<Int> = ArrayList()
+
+    for (i in this.indices) {
+        if (i + 1 < this.size && this[i] + 1 == this[i + 1]) {
+            temp.add(this[i])
+        } else {
+            temp.add(this[i])
+            listMain.add(temp)
+            temp = ArrayList()
+        }
+
+    }
+    return listMain.toMutableList()
+}
 
 fun <T> MutableList<T>.count(predicate: () -> Boolean): Int {
     var count = 0

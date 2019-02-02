@@ -16,13 +16,14 @@
         android:title="@string/find_in_page"
         app:showAsAction="never"
         appname:ignore="AppCompatResource" />
-
+<!--
     <item
         android:id="@+id/settings_menu"
         android:orderInCategory="40"
         android:title="@string/settings"
         app:showAsAction="never"
         appname:ignore="AppCompatResource" />
+        -->
     <item
         android:id="@+id/font2"
         android:orderInCategory="30"
@@ -30,9 +31,9 @@
         app:showAsAction="never"
         appname:ignore="AppCompatResource" />
     <item
-        android:id="@+id/kjvformatting"
+        android:id="@+id/kjvstyling"
         android:orderInCategory="60"
-        android:title="KJV Formatting"
+        android:title="KJV Styling"
         app:showAsAction="never"
         android:checkable="true"
         android:checked="true"

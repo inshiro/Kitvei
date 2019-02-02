@@ -13,14 +13,15 @@ import androidx.paging.PagedList
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import kotlinx.android.synthetic.main.search_activity.*
-import kotlinx.coroutines.experimental.Job
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.delay
-import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import na.kephas.kitvei.R
 import na.kephas.kitvei.adapter.SearchAdapter
 import na.kephas.kitvei.data.Bible
 import na.kephas.kitvei.util.InjectorUtils
+import na.kephas.kitvei.util.UI
+import na.kephas.kitvei.util.launch
 import na.kephas.kitvei.util.snackbar
 import na.kephas.kitvei.viewmodels.SearchListViewModel
 
@@ -86,7 +87,7 @@ class SearchActivity : AppCompatActivity(), SearchAdapter.ItemClickListener {
 
         var queryTextChangedJob: Job? = null
         var validQuery = ""
-        val DEBOUNCE_MS = 300
+        val DEBOUNCE_MS = 300.toLong()
         val regex = Regex("""^([a-zA-Z,.;:()'? ]+)( [1-9]\d{0,2}+:[1-9]\d{0,2}+)*$""")
         searchView.queryHint = getString(R.string.search_verses) + "..."
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {

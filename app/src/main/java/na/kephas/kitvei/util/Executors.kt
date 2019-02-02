@@ -3,15 +3,16 @@ package na.kephas.kitvei.util
 import android.os.Handler
 import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
-import kotlinx.coroutines.experimental.*
+import kotlinx.coroutines.*
 import java.io.Closeable
 import java.util.concurrent.*
-import kotlin.coroutines.experimental.CoroutineContext
+import kotlin.coroutines.CoroutineContext
 
 
 /**
  * Utility method to run blocks on a dedicated background thread, used for io/database work.
  */
+@ExperimentalCoroutinesApi
 val IO = ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L,
         TimeUnit.SECONDS, SynchronousQueue<Runnable>()
 ).asCoroutineDispatcher()
@@ -21,6 +22,7 @@ fun ioThread(f: () -> Unit) {
     IO_EXECUTOR.execute(f)
 }
 
+val UI by lazy { Dispatchers.Main }
 
 class UiThreadExecutor : Executor {
     private val mHandler = Handler(Looper.getMainLooper())
@@ -31,19 +33,33 @@ class UiThreadExecutor : Executor {
 }
 
 val rootParent: Job by lazy { Job() }
+
+@ExperimentalCoroutinesApi
 val backgroundPool: CoroutineDispatcher by lazy(LazyThreadSafetyMode.PUBLICATION) {
     Executors.newCachedThreadPool().asCoroutineDispatcher()
 }
+@ExperimentalCoroutinesApi
 val fixedThreadPool: CoroutineDispatcher by lazy(LazyThreadSafetyMode.PUBLICATION) {
     // Fix for dual or single core devices
     val numProcessors = Runtime.getRuntime().availableProcessors()
     //val numProcessors = ForkJoinPool.commonPool().parallelism
     when {
-        numProcessors <= 2 -> newFixedThreadPoolContext(2, "background")
-        else -> CommonPool
+        numProcessors <= 2 -> Executors.newFixedThreadPool(2).asCoroutineDispatcher()
+        else -> Dispatchers.Default // CommonPool
     }
 
 }
+
+fun launch(dispatcher: CoroutineDispatcher, block: suspend CoroutineScope.() -> Unit): Job =
+        launchSilent(dispatcher) {
+            block()
+        }
+
+fun <T> async(dispatcher: CoroutineDispatcher, block: suspend CoroutineScope.() -> T): Deferred<T> =
+        GlobalScope.async(dispatcher) {
+            block()
+        }
+
 fun <T> AppCompatActivity.waitFor(block: () -> T): T {
     val job = async(backgroundPool) {
         block()
@@ -53,6 +69,7 @@ fun <T> AppCompatActivity.waitFor(block: () -> T): T {
     }
 
 }
+
 class BackgroundThreadExecutor : Executor {
     //val threadPool = Executors.newCachedThreadPool().asCoroutineDispatcher()
     //private val executorService = Executors.newFixedThreadPool(3)
@@ -69,6 +86,7 @@ class BackgroundThreadExecutor : Executor {
 
 abstract class CloseableCoroutineDispatcher : CoroutineDispatcher(), Closeable
 
+@ExperimentalCoroutinesApi
 fun ExecutorService.asCoroutineDispatcher(): CloseableCoroutineDispatcher =
         object : CloseableCoroutineDispatcher() {
             val delegate = (this@asCoroutineDispatcher as Executor).asCoroutineDispatcher()
@@ -91,12 +109,10 @@ fun ExecutorService.asCoroutineDispatcher(): CloseableCoroutineDispatcher =
 fun launchSilent(
         context: CoroutineContext = backgroundPool,
         start: CoroutineStart = CoroutineStart.DEFAULT,
-        parent: Job? = rootParent,
-        onCompletion: CompletionHandler? = null,
         block: suspend CoroutineScope.() -> Unit
-) {
-    launch(context, start, parent, onCompletion, block)
+): Job =
+    GlobalScope.launch(context, start, block)
     // ${Thread.currentThread().name}
-}
+
 
 

@@ -35,7 +35,7 @@ open class ExtendedBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
     private fun setWindowLayout() {
         if (dialog != null) {
-           dialog.window.setLayout(dialogWidthPx(), ViewGroup.LayoutParams.MATCH_PARENT)
+           dialog.window?.setLayout(dialogWidthPx(), ViewGroup.LayoutParams.MATCH_PARENT)
         }
     }
 

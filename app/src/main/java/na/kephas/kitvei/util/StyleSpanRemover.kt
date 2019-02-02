@@ -68,7 +68,7 @@ class StyleSpanRemover {
 
         val spans = spannable.getSpans(startSelection, endSelection, MetricAffectingSpan::class.java)
         for (span in spans) {
-            var stylesApplied = 0
+            var stylesApplied: Int
             val stylesToApply: Int
             val spanStart: Int
             val spanEnd: Int

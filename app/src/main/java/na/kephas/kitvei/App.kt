@@ -43,8 +43,8 @@ class App : Application() {
             //bus.post(ThemeChangeEvent())
         }
     }
-    fun setFontSizeMultiplier(multiplier: Int): Boolean {
-        var multiplier = multiplier
+    fun setFontSizeMultiplier(multiplierr: Int): Boolean {
+        var multiplier = multiplierr
         val minMultiplier = resources.getInteger(R.integer.minTextSizeMultiplier)
         val maxMultiplier = resources.getInteger(R.integer.maxTextSizeMultiplier)
         if (multiplier < minMultiplier) {

@@ -8,7 +8,9 @@ if [ -z "$TRAVIS_TAG" ]; then
     COMMIT_COUNT=$(git rev-list --count HEAD)
     export ARTIFACT="kitvei-r${COMMIT_COUNT}.apk"
 
-    mv app/build/outputs/apk/debug/app-debug.apk $ARTIFACT
+    if [ -f app/build/outputs/apk/debug/app-debug.apk ]; then
+        mv app/build/outputs/apk/debug/app-debug.apk $ARTIFACT
+    fi
 else
     ./gradlew clean assembleRelease
 

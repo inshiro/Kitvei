@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.BackgroundColorSpan
 import android.text.style.CharacterStyle
@@ -42,8 +43,7 @@ import com.google.android.material.tabs.TabLayout
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.activity_main_content.*
-import kotlinx.coroutines.experimental.*
-import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.*
 import na.kephas.kitvei.*
 import na.kephas.kitvei.adapter.MainViewPagerAdapter
 import na.kephas.kitvei.adapter.MiniSearchViewPagerAdapter
@@ -80,13 +80,12 @@ class MainActivity : AppCompatActivity(),
     private val activityManager by lazy(LazyThreadSafetyMode.NONE) { baseContext.getSystemService<ActivityManager>() }
     private val bottomSheetFragment by lazy { BottomSheetFragment() }
     private val themeChooserDialog by lazy { ThemeChooserDialog() }
-    private val vbs by lazy { getSystemService(VIBRATOR_SERVICE) as Vibrator }
     private val viewModel by lazy(LazyThreadSafetyMode.NONE) {
         val factory = InjectorUtils.provideVerseListViewModelFactory(this)
         ViewModelProviders.of(this, factory)
                 .get(VerseListViewModel::class.java)
         //ViewModelProviders.of(this).getInstance(MyViewModel::class.java)
-        // TODO requireContext() on a fragment
+        // use requireContext() on a fragment?
 
     }
     private val bible: List<Bible> by lazy(LazyThreadSafetyMode.NONE) {
@@ -143,7 +142,7 @@ class MainActivity : AppCompatActivity(),
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
-        launch(IO) {
+        GlobalScope.launch(IO) {
 
             val navHeaderView: View = nav_view.inflateHeaderView(R.layout.nav_header_main)
             val coverView: KenBurnsView = navHeaderView.findViewById(R.id.coverView)
@@ -348,15 +347,15 @@ class MainActivity : AppCompatActivity(),
             if (isTranslucentNavBar())
                 cancelTranslucentNavBar()
             bottomSheetFragment.show(supportFragmentManager, "TAG")
-        }*/
+        }
             R.id.settings_menu -> {
-            }
+            }*/
             R.id.font2 -> {
                 if (isTranslucentNavBar())
                     cancelTranslucentNavBar()
                 themeChooserDialog.show(supportFragmentManager, "tcd")
             }
-            R.id.kjvformatting -> {
+            R.id.kjvstyling -> {
                 item.isChecked = !item.isChecked
                 Page.kjvPunctuation = item.isChecked
                 mainViewPager.adapter?.notifyDataSetChanged()
@@ -453,13 +452,17 @@ class MainActivity : AppCompatActivity(),
         findInPageMenu = false
     }
 
+    private val vbs by lazy { getSystemService(VIBRATOR_SERVICE) as Vibrator }
     private fun vibrate(duration: Long) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vbs.vibrate(VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE));
+            vbs.vibrate(VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE))
         } else {
             @Suppress("DEPRECATION")
             vbs.vibrate(duration)
         }
+    }
+    private fun View.vibrate() {
+        this.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
     }
 
     private fun spToPx(sp: Float): Int {
@@ -486,7 +489,7 @@ class MainActivity : AppCompatActivity(),
         val ignCase = true
 
         var pressed = 0
-        val ss = (tv.text as SpannableString)
+        val ss = tv.text as Spannable
 
         //val textBounds = Rect()
         //tv.paint.getTextBounds(ss.toString(), 0, 5, textBounds)
@@ -597,14 +600,14 @@ class MainActivity : AppCompatActivity(),
                     }
 
                     if (newText != tempString.dropLast(1)) // Don't vibrate on backspace
-                        vibrate(60)
+                        toolbarSearchView.vibrate() //(60)
                     tempString = newText
                 } else {
 
                     spanRemover.RemoveOne(ss, 0, ss.length, BackgroundColorSpan::class.java)
 
 
-                    matchesCount = tv.text.count(newText, ignoreCase = ignCase) { s, e, c ->
+                    matchesCount = tv.text.count(newText, ignoreCase = ignCase) { s, e, _ ->
                         ss.setSpan(CharacterStyle.wrap(BackgroundColorSpan(Formatting.HighLightColor)), s, e, 0)
                     }
                     if (matchesCount > 0) {
@@ -623,7 +626,7 @@ class MainActivity : AppCompatActivity(),
                                 fipCountText.setTextColor(it)
                         }
                         if (newText != tempString.dropLast(1)) // Don't vibrate on backspace
-                            vibrate(60)
+                            toolbarSearchView.vibrate() //(60)
                         tempString = newText
                     }
                 }
@@ -680,7 +683,7 @@ class MainActivity : AppCompatActivity(),
 
     private fun blink(view: View, rep: Int, duration: Long) {
         if ((rep % 2) != 0) throw Exception("Blinking repetition must be EVEN for fade IN/OUT animation.")
-        val startBufffer = 500
+        val startBufffer = 500.toLong()
         @Suppress("DeferredResultUnused")
         async(IO) {
             delay(startBufffer)

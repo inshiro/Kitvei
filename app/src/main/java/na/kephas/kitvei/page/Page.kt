@@ -4,15 +4,18 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.Typeface
-import android.text.*
+import android.media.AudioManager
+import android.text.Spannable
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.TextPaint
 import android.text.style.*
 import android.view.View
 import android.widget.TextView
 import androidx.appcompat.widget.AppCompatTextView
+import androidx.core.text.bold
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.withContext
+import kotlinx.coroutines.withContext
 import na.kephas.kitvei.App
 import na.kephas.kitvei.Prefs
 import na.kephas.kitvei.data.Bible
@@ -34,7 +37,9 @@ object Page {
     }
 
     private val clipboard by lazy { App.instance.applicationContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager? }
+    private val audioManager by lazy { App.instance.applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager? }
 
+    @Suppress("VARIABLE_WITH_REDUNDANT_INITIALIZER")
     fun display(vm: VerseListViewModel, row: Bible, textView: AppCompatTextView, dropCapView: TextControl?) {
         @Suppress("DeferredResultUnused")
         async(IO) {
@@ -42,6 +47,7 @@ object Page {
                 measureTime {
                     val sText by lazy { SpannableStringBuilder() }
                     val list = vm.getVersesRaw(row.bookId!!, row.chapterId!!)
+                    val selectedList = mutableListOf<Int>()
 
                     var numStart = 0
                     var verse = ""
@@ -53,35 +59,34 @@ object Page {
                             val kjv = Formatting.kjvList[it.id - 1]
                             Formatting.diffText(it.verseText!!, kjv)
                         } else it.verseText!!
-                        sText.append(verse)
 
-                        /*
-                        // Apply Periscope
-                        var text = row.verseText!!
-                                 // Trim << [TEXT] >>
-                                 if (text.indexOf('<') == 0) {
-                                     text = text.substring(text.lastIndexOf('>') + 2)
-                                 } else if (text.contains('<')) {
-                                     text = text.substring(0, text.indexOf('<') - 1)
-                                 }
-                                 val sText = SpannableStringBuilder(text)
+                        // Apply Periscope (Headers)
+                        tryy {
+                            if (it.verseId!! == 1 && verse[0] == '<') {
+                                val endBoldPosition = verse.replace("<", "").indexOf('>')
+                                sText.append(verse.replace("<", "").replace(">", ""))
+                                sText.setSpan(CharacterStyle.wrap(StyleSpan(android.graphics.Typeface.BOLD)), 0, endBoldPosition, 0)
+                                sText.insert(endBoldPosition + 1, "\n")
+                            } else if (it.id == 31102) { // Last verse in the Bible
+                                val idx = sText.lastIndex
+                                sText.append(verse)
+                                val startBoldPosition = sText.indexOf('<', idx)
+                                sText.delete(startBoldPosition, startBoldPosition + 2)
+                                sText.delete(sText.indexOf('>', idx), sText.length)
+                                sText.setSpan(CharacterStyle.wrap(StyleSpan(android.graphics.Typeface.BOLD)), startBoldPosition, sText.lastIndex, 0)
+                                sText.insert(startBoldPosition - 1, "\n")
+                            } else
+                                sText.append(verse)
+                        }
 
-
-                        sText.indexOf('<').also {
-                            if (it == numsLen)
-                                sText.delete(numsLen, sText.lastIndexOf('>') + 2)
-                            else if (it > numsLen)
-                                sText.delete(it - 1, sText.length)
-                        }*/
 
                         // Apply First Word in Chapter Capitalization
-                        if (capitalizeFirstWord)
-                            if (it.verseId == 1) {
-                                val firstSpace = sText.indexOf(' ')
-                                val capitalized = sText.substring(0, firstSpace).toUpperCase()
-                                if (firstSpace >= 0)
-                                    sText.delete(0, firstSpace).insert(0, capitalized)
-                            }
+                        if (capitalizeFirstWord && it.verseId == 1) {
+                            val firstSpace = sText.indexOf(' ')
+                            val capitalized = sText.substring(0, firstSpace).toUpperCase()
+                            if (firstSpace >= 0)
+                                sText.delete(0, firstSpace).insert(0, capitalized)
+                        }
 
 
                         // Apply italics
@@ -105,7 +110,7 @@ object Page {
                                     val actualLength = sText.length - numStart
                                     val extraLetters = if (e > actualLength) e - actualLength else 0
                                     //val e = if (pair.second in sText.length-numStart-5..sText.length-numStart) sText.length else pair.second
-                                    val start = s - extraLetters + numStart
+                                    var start = s - extraLetters + numStart
                                     var end = e - extraLetters + numStart
                                     if (end in actualLength - 2..actualLength) end = sText.length
                                     //d { "${row.bookName} ${it.chapterId}:${it.verseId} $pair-$start-$end" }
@@ -113,6 +118,22 @@ object Page {
                                         dropCapView?.post {
                                             dropCapView.setTextColor(Formatting.RedLetterColor)
                                         }
+                                    }
+
+                                    if (kjvPunctuation) {
+                                        if (verse.length - it.verseText!!.length > 0)
+                                            end += verse.length - it.verseText!!.length
+                                        else
+                                            end += it.verseText!!.length - verse.length
+                                        if (showDropCap && it.verseId == 1)
+                                            end--
+
+                                        // Rev 3:1
+                                        if (showDropCap && it.id == 30748) {
+                                            start = 0
+                                            end--
+                                        }
+
                                     }
                                     sText.setSpan(ForegroundColorSpan(Formatting.RedLetterColor), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
                                 }
@@ -142,59 +163,6 @@ object Page {
                             }
                         }
 
-                        //d {"Genesis ${it.chapterId}:${it.verseId} Text: $sText"}
-                        if (showLineNumbers)
-                            sText.setSpan(object : ClickableSpan() {
-                                override fun updateDrawState(ds: TextPaint?) {
-                                    //ds?.color = AdapterStyle.TextColor
-                                    ds?.isUnderlineText = false
-                                }
-
-                                override fun onClick(v: View?) {
-                                    //This condition will satisfy only when it is not an autolinked text
-                                    //Fired only when you touch the part of the text that is not hyperlinked
-                                    val ss = textView.text as SpannableString
-                                    val i0 = ss.indexOf("${it.verseId}").let { i -> if (it.verseId == 1) 0 else i }
-                                    var i1 = ss.indexOf("${it.verseId!! + 1}").let { idx -> if (idx >= 0) idx else ss.indexOf("\u200B", i0) }
-                                    if (showParagraphs && !newLineEachVerse) i1--
-                                    val spans = ss.getSpans(i0, i1, UnderlineSpan::class.java)
-
-                                    if (spans.isNotEmpty()) {
-                                        for (span in spans) {
-                                            ss.removeSpan(span)
-                                        }
-                                    } else {
-                                        ss.setSpan(UnderlineSpan(), i0, i1, 0)
-                                        //v?.snackbar("Pressed verse ${it.verseId} numStart: $i0 len: ${i1}")
-                                        v?.let { _ ->
-                                            Snackbar.make(v, "Selected verse ${it.verseId}", Snackbar.LENGTH_LONG).apply {
-                                                setActionTextColor(Formatting.ColorAccent)
-                                                setAction("Copy") { _ ->
-                                                    var str = ss.substring(i0, i1).replace("\u200B", "").replace("\n", "").replace("\t", "")
-                                                            .replace("^[0-9]*".toRegex(), "").replace("_", "")
-                                                    val firstLetter = if (i0 == 0 && showDropCap) {
-                                                        val onSpace = str.indexOf(" ", i0)
-                                                        str = TextUtils.concat(str.substring(i0, onSpace).toLowerCase(), str.substring(onSpace)).toString()
-                                                        dropCapView?.text
-                                                    } else ""
-                                                    //it.verseText!!.replace("[", "").replace("]", "").replace("<", "").replace(">", "")
-                                                    val clip = ClipData.newPlainText("verse text", TextUtils.concat("${it.bookName} ${it.chapterId}:${it.verseId}\n$firstLetter", str))
-                                                    clipboard?.primaryClip = clip
-                                                    v.playSoundEffect(android.view.SoundEffectConstants.CLICK)
-                                                }
-                                                show()
-                                            }
-                                        }
-
-                                    }
-
-                                    //textView.futureSet(ss)
-                                    //ss.removeSpan(ss.getSpans(i0,i1,ForegroundColorSpan::class.java))
-                                    //Selection.setSelection((textView.text as SpannableString), 0);
-
-                                }
-
-                            }, numStart, sText.length, 0)
 
                         // Seperator
                         // We want space, but we don't want to detect space when finding in page, so we use zero width space character.
@@ -208,7 +176,7 @@ object Page {
                             // Apply paragraph breaks
                             val pIdx = Formatting.paragraphList.indexOfFirst { p -> p == "${it.bookAbbr} ${it.chapterId}:${it.verseId}" }//paragraphList.indexOfFirst { p -> (it.bookAbbr == p.bookAbbr && it.chapterId == p.chapterId && it.verseId == p.verseId) }
                             if (pIdx >= 0 && it.verseId != 1) {
-                                d { "${it.bookName} ${it.chapterId}:${it.verseId} $pIdx" }
+                                //d { "${it.bookName} ${it.chapterId}:${it.verseId} $pIdx" }
 
                                 if (numStart == 0)
                                     sText.insert(numStart, "\t\t\t")
@@ -216,6 +184,168 @@ object Page {
                                     sText.insert(numStart, "\n\t\t\t")
                             }
                         }
+
+
+                        var i0 = if (it.verseId!! == 1) 2 else numStart + verseId.length + if (newLineEachVerse) 3 else 2
+                        if (capitalizeFirstWord && showDropCap && newLineEachVerse && it.verseId!! == 1) i0 = 0
+                        // if(it.verseId!! == 0 ) 0 else if (it.verseId!! >10) 5 else 4
+                        var i1 = sText.length + if (newLineEachVerse) -1 else 0
+                        /*
+                        val i0 = sText.indexOf("${it.verseId}").let { i -> if (it.verseId == 1) 0 else i }
+                        var i1 = sText.indexOf("${it.verseId!! + 1}").let { idx ->
+                            if (idx >= 0)
+                            idx
+                        else
+                            sText.indexOf("\u200B", i0).let { end ->
+                                if (end >=0 ) end else sText.length-1
+                            }
+                        }*/
+
+                        //d {"Genesis ${it.chapterId}:${it.verseId} Text: $sText"}
+
+                        if (showLineNumbers)
+                            sText.setSpan(object : ClickableSpan() {
+
+                                override fun updateDrawState(ds: TextPaint) {
+                                    // When using a clickable span, like a link, the text changes to be colored and underlined.
+                                    //ds.color = Formatting.TextColor
+
+                                    // Initial state of text, underlined or not.
+                                    ds.isUnderlineText = false
+                                }
+
+                                override fun onClick(v: View) {
+                                    audioManager?.playSoundEffect(android.view.SoundEffectConstants.CLICK)
+
+                                    //This condition will satisfy only when it is not an autolinked text
+                                    //Fired only when you touch the part of the text that is not hyperlinked
+                                    //val ss = textView.text as SpannableString
+                                    val ss = textView.text as Spannable
+
+                                    if (showParagraphs && !newLineEachVerse) i1--
+                                    val spans = ss.getSpans(i0, i1, BackgroundColorSpan::class.java)
+
+                                    if (spans.isNotEmpty()) {
+                                        for (span in spans) {
+                                            ss.removeSpan(span)
+                                            selectedList.removeIf { e -> e == it.verseId!! }
+                                        }
+                                        if (showDropCap && it.verseId!! == 1)
+                                            (dropCapView?.text as Spannable).removeSpans(0, 1, BackgroundColorSpan::class.java)
+                                    } else {
+                                        selectedList.add(it.verseId!!)
+                                        //BackgroundColorSpan(Color.BLUE)
+
+                                        ss.setSpan(BackgroundColorSpan(Formatting.DefaultSelectColor), i0, i1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                                        //ss.setSpan(UnderlineSpan(), i0, i1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+
+
+                                        //v?.snackbar("Pressed verse ${it.verseId} numStart: $i0 len: ${i1}")
+
+
+                                        if (showDropCap && it.verseId!! == 1)
+                                            (dropCapView?.text as Spannable).setSpan(BackgroundColorSpan(Formatting.DefaultSelectColor), 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+
+                                        // Sort consecutive numbers of selected verses to cleanly display: 1, 4-5, 7
+                                        val groupedVersesList = selectedList.groupConsecutive()
+                                        var groupedVerses = ""
+                                        groupedVersesList.forEachIndexed { idx, it ->
+                                            if (it.size > 1)
+                                                groupedVerses += "${it.min()}-${it.max()}"
+                                            else
+                                                groupedVerses += it[0]
+                                            if (groupedVerses.isNotEmpty() && idx != groupedVersesList.size - 1)
+                                                groupedVerses += ", "
+                                        }
+
+
+                                        Snackbar.make(v,
+                                                if (selectedList.size > 1) "Selected ${it.bookName} ${it.chapterId!!}:$groupedVerses" else "Selected ${it.bookName} ${it.chapterId!!}:${it.verseId!!}"
+                                                , Snackbar.LENGTH_LONG).apply {
+                                            setActionTextColor(Formatting.ColorAccent)
+                                            setAction("Copy") { _ ->
+                                                val text = StringBuilder("")
+
+                                                /*var str = ss.substring(i0, i1).replace("\u200B", "").replace("\n", "").replace("\t", "")
+                                                        .replace("^[0-9]*".toRegex(), "").replace("_", "")
+                                                val firstLetter = if (i0 == 0 && showDropCap) {
+                                                    val onSpace = str.indexOf(" ", i0)
+                                                    str = TextUtils.concat(str.substring(i0, onSpace).toLowerCase(), str.substring(onSpace)).toString()
+                                                    dropCapView?.text
+                                                } else ""
+                                                //it.verseText!!.replace("[", "").replace("]", "").replace("<", "").replace(">", "")
+                                                val clip = ClipData.newPlainText("Verse text", TextUtils.concat("${it.bookName} ${it.chapterId}:$groupedVerses\n$firstLetter", str))
+                                                clipboard?.primaryClip = clip*/
+
+                                                // Get all verses (NOTE: This heavily depends on line-numbers)
+                                                groupedVersesList.forEachIndexed { idx, gList ->
+                                                    if (gList.size == 1) { // If there's only one verse in the list
+                                                        if (gList[0] == 1) { // If our verseID is the first verse in the chapter
+                                                            if (showDropCap) {
+                                                                text.append("1 ")
+                                                                text.append(dropCapView!!.text)
+                                                                text.append(ss.subSequence(0, ss.indexOf(" ")).toString().toLowerCase())
+                                                                text.append("${ss.subSequence(ss.indexOf(" "), ss.indexOf('2', 0))}")
+                                                            } else {
+                                                                text.append("${ss.subSequence(0, ss.indexOf('2', 0))}")
+                                                            }
+                                                        } else if (gList[0] == list.size) { // If our verseID is the last verse in the chapter
+                                                            text.append("${ss.subSequence(ss.indexOf("${gList[0]}", 0), ss.lastIndex)}")
+                                                        } else {
+                                                            val ii = ss.indexOf("${gList[0]}", 0)
+                                                            text.append("${ss.subSequence(ii,
+                                                                    ss.indexOf("${gList[0] + 1}", ii))}")
+                                                        }
+                                                    } else {
+                                                        var ig = if (gList.min() == 1) 0 else ss.indexOf("${gList.min()}", 0)
+
+                                                        if (showDropCap && gList.min() == 1) {
+                                                            text.append("1 ")
+                                                            text.append(dropCapView!!.text)
+                                                            text.append(ss.subSequence(0, ss.indexOf(" ")).toString().toLowerCase())
+                                                            ig = ss.indexOf(" ")
+                                                        }
+                                                        // If our verseID is the last verse in the chapter
+                                                        text.append("${ss.subSequence(ig,
+                                                                if (gList.max() == list.size)
+                                                                    ss.lastIndex
+                                                                else
+                                                                    ss.indexOf("${gList.max()!! + 1}", ig)
+
+                                                        )}")
+                                                    }
+                                                    // Add a newline except at the end of foreach loop
+                                                    //if (idx != gList.lastIndex) text.append("\n")
+                                                }
+                                                // Title
+                                                // Post processing for periscopes
+                                                //text.insert(0,"${it.bookName} ${it.chapterId}:$groupedVerses\n")
+                                                var newText = text.replace("\u200B".toRegex(), "").replace("\t", "").replace("_", " ")
+                                                if (list[0].verseText!!.contains('<')) {
+                                                    newText = newText.removeRange(2..newText.indexOf("\n"))
+
+                                                } else if (list[list.lastIndex].id == 31102) {
+                                                    newText = newText.removeRange(newText.indexOf("\n", newText.indexOf("21"))..newText.lastIndex)
+                                                }
+                                                newText = "${it.bookName} ${it.chapterId}:$groupedVerses\n" + newText
+                                                val clip = ClipData.newPlainText("Verse text", newText)
+                                                clipboard?.primaryClip = clip
+
+
+                                            }
+                                            show()
+                                        }
+
+                                    }
+
+                                    //textView.futureSet(ss)
+                                    //ss.removeSpan(ss.getSpans(i0,i1,ForegroundColorSpan::class.java))
+                                    //Selection.setSelection((textView.text as SpannableString), 0);
+                                }
+
+                            }, i0, i1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        // d {"numstart:$numStart sLen:${sText.length} text:${sText.substring(numStart,sText.length)}"}
+
                     }
 
                     //sText.append("\u200B\n\n\n")
@@ -238,7 +368,8 @@ object Page {
 
                     withContext(UI) {
 
-                        if (showDropCap && dropCapView != null) {
+
+                        if (showDropCap && dropCapView != null && capitalizeFirstWord) {
                             //val dText = SpannableStringBuilder("${sText[0]}")
                             // dText.setSpan(RelativeSizeSpan(30f), 0, dText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
 
@@ -250,7 +381,7 @@ object Page {
                         }
                         textView.setTextViewLinkClickable()
                         textView.futureSet(sText)
-                        //textView.movementMethod = LinkMovementMethod.getInstance()
+                        //textView.movementMethod = android.text.method.LinkMovementMethod.getInstance()
                         //textView.movementMethod = ScrollingMovementMethod.getInstance()
                     }
                 }.format(2)

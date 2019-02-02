@@ -16,9 +16,7 @@ import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.main_rv_item.view.*
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.withContext
+import kotlinx.coroutines.withContext
 import na.kephas.kitvei.Prefs
 import na.kephas.kitvei.R
 import na.kephas.kitvei.data.Bible
@@ -26,6 +24,7 @@ import na.kephas.kitvei.page.Formatting
 import na.kephas.kitvei.util.*
 
 
+@Suppress("UNUSED_PARAMETER")
 class MainAdapter(context: Context) : PagedListAdapter<Bible, MainAdapter.ViewHolder>(DIFF_CALLBACK) {
 
     init {

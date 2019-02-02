@@ -160,6 +160,20 @@ class ThemeChooserDialog : ExtendedBottomSheetDialogFragment() {
         }
     }
 
+    private fun setSeekProgress(size: Float) {
+        textSizeSeekBar.post { textSizeSeekBar.progress = size.toInt() } // (fontSize * 10f).toInt() //@ 100
+        textSizePercent.futureSet(
+                "${(fontSize * 10f).toInt()}%".let {
+                    if (it == "100%")
+                        "100% (Default)"
+                    else
+                        it
+                }
+        )
+    }
+
+    private var pTV: TextView? = null
+    private var pDCV: TextControl? = null
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val rootView = inflater.inflate(R.layout.dialog_theme_chooser, container, false)
         //unbinder = ButterKnife.bind(this, rootView)
@@ -183,12 +197,12 @@ class ThemeChooserDialog : ExtendedBottomSheetDialogFragment() {
         buttonThemeDark.setOnClickListener(ThemeButtonListener(Theme.DARK))
         buttonThemeBlack.setOnClickListener(ThemeButtonListener(Theme.BLACK))
 
-        // TODO progress has something to do with the preset Discrete Seekbar, thats why its starting at 180%
-        val vpAdapter = vp.adapter as MainViewPagerAdapter
-        val tv = getTextView()
-        val dcv = getDropCapView()
+        //  progress has something to do with multiplier, that's why its starting at 180%
+        //val vpAdapter = vp.adapter as MainViewPagerAdapter
+        pTV = getTextView()
+        pDCV = getDropCapView()
         textSizeSeekBar.max = 20
-        textSizeSeekBar.progress = fontSize.toInt() // (fontSize * 10f).toInt() //@ 100
+        /*textSizeSeekBar.progress = fontSize.toInt() // (fontSize * 10f).toInt() //@ 100
         textSizePercent.futureSet(
                 "${(fontSize * 10f).toInt()}%".let {
                     if (it == "100%")
@@ -196,28 +210,14 @@ class ThemeChooserDialog : ExtendedBottomSheetDialogFragment() {
                     else
                         it
                 }
-        )
+        )*/
+        setSeekProgress(fontSize)
         textSizeSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar, value: Int, fromUser: Boolean) {
                 if (!fromUser) return
                 //val currentMultiplier = Prefs.mainFontSize
                 fontSize = value.toFloat()
-                Page.setFontSize(fontSize)
-                dcv?.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize * 4.85f)
-                val ss = tv?.text as Spannable
-                ss.removeSpans(0, ss.length, LettrineLeadingMarginSpan2::class.java)
-                ss.setSpan(LettrineLeadingMarginSpan2(2, dcv!!.getWidth), 0, if (Page.showLineNumbers) ss.indexOf("2") - 2 else ss.indexOf("\u200B") - 2, 0)
-                tv.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize)
-
-                textSizePercent.futureSet(
-                        "${(value * 10f).toInt()}%".let {
-                            if (it == "100%")
-                                "100% (Default)"
-                            else
-                                it
-                        }
-                )
-
+                updateFont(fontSize)
 
                 /*
                 val changed = app.setFontSizeMultiplier(textSizeSeekBar.value)
@@ -231,12 +231,14 @@ class ThemeChooserDialog : ExtendedBottomSheetDialogFragment() {
             override fun onStartTrackingTouch(seekBar: SeekBar) {}
             override fun onStopTrackingTouch(seekBar: SeekBar) {}
         })
-        updateComponents()
+        //updateComponents()
         disableBackgroundDim()
         return rootView
     }
 
     override fun onDismiss(dialog: DialogInterface?) {
+        pTV = null
+        pDCV = null
         super.onDismiss(dialog)
         saveFontChanges()
     }
@@ -274,10 +276,13 @@ class ThemeChooserDialog : ExtendedBottomSheetDialogFragment() {
     }
 
     override fun onCancel(dialog: DialogInterface) {
+        pTV = null
+        pDCV = null
         super.onCancel(dialog)
         if (callback() != null)
             callback()?.onCancel()
     }
+
     /*@Subscribe fun on(event:WebViewInvalidateEvent) {
         updatingFont = false
         updateComponents()
@@ -323,9 +328,31 @@ class ThemeChooserDialog : ExtendedBottomSheetDialogFragment() {
             ContextCompat.getColor(getContext()!!, R.color.black26))
     }
 
+
+    private fun updateFont(fontSize: Float) {
+        updatingFont = true
+        fontChangeProgressBar.visibility = View.VISIBLE
+
+
+        Page.setFontSize(fontSize)
+        pDCV?.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize * 4.85f)
+
+        // Box area of Initial letter
+        val ss = pTV?.text as Spannable
+        ss.removeSpans(0, ss.length, LettrineLeadingMarginSpan2::class.java)
+        ss.setSpan(LettrineLeadingMarginSpan2(2, pDCV!!.getWidth), 0, if (Page.showLineNumbers) ss.indexOf("2") - 2 else ss.indexOf("\u200B") - 2, 0)
+
+        pTV?.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize)
+
+        setSeekProgress(fontSize)
+
+        updatingFont = false
+        fontChangeProgressBar.visibility = View.GONE
+    }
+
     private inner class ThemeButtonListener constructor(private val theme: Theme) : View.OnClickListener {
         override fun onClick(v: View?) {
-            v?.toast("This feature is still in development.")
+            //v?.toast("This feature is still in development.")
             return
             @Suppress("UNREACHABLE_CODE")
             if (app.getCurrentTheme() !== theme) {
@@ -337,20 +364,35 @@ class ThemeChooserDialog : ExtendedBottomSheetDialogFragment() {
 
     private inner class FontSizeButtonListener constructor(private val action: FontSizeAction) : View.OnClickListener {
         @Suppress("UNREACHABLE_CODE")
+
         override fun onClick(v: View?) {
-            v?.toast("This feature is still in development.")
-            return
+            //v?.toast("This feature is still in development.")
+            //return
             val changed: Boolean = when (action) {
-                FontSizeAction.INCREASE -> app.setFontSizeMultiplier(Prefs.textSizeMultiplier.toInt() + 1)
-                FontSizeAction.DECREASE -> app.setFontSizeMultiplier(Prefs.textSizeMultiplier.toInt() - 1)
-                FontSizeAction.RESET -> app.setFontSizeMultiplier(0)
+                FontSizeAction.INCREASE -> {
+                    if (fontSize + 1 <= textSizeSeekBar.max) {
+                        fontSize++
+                        updateFont(fontSize)
+                    }
+                    true
+                }
+                FontSizeAction.DECREASE -> {
+                    if (fontSize - 1 >= 0) {
+                        fontSize--
+                        updateFont(fontSize)
+                    }
+                    true
+                }
+                FontSizeAction.RESET -> {
+                    fontSize = 10f
+                    app.setFontSizeMultiplier(0)
+                }
             }
-            val currentMultiplier = Prefs.textSizeMultiplier
+            /*val currentMultiplier = Prefs.textSizeMultiplier
             if (changed) {
-                updatingFont = true
                 updateFontSize()
-                //funnel.logFontSizeChange(currentMultiplier, Prefs.getTextSizeMultiplier())
-            }
+                funnel.logFontSizeChange(currentMultiplier, Prefs.getTextSizeMultiplier())
+            }*/
         }
     }
 

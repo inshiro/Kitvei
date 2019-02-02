@@ -7,6 +7,13 @@ import android.text.style.ClickableSpan
 import android.view.MotionEvent
 import android.widget.TextView
 import androidx.appcompat.widget.AppCompatTextView
+import android.text.TextPaint
+import android.text.style.UpdateAppearance
+import android.text.style.CharacterStyle
+
+
+
+
 
 /**
  * A movement method that traverses links in the text buffer and fires clicks. Unlike
@@ -68,9 +75,24 @@ class ClickableMovementMethod : BaseMovementMethod() {
             }
     }
 }
+internal class ColoredUnderlineSpan(private val mColor: Int) : CharacterStyle(), UpdateAppearance {
 
+    override fun updateDrawState(tp: TextPaint) {
+        try {
+            val method = TextPaint::class.java.getMethod("setUnderlineText",
+                    Integer.TYPE,
+                    java.lang.Float.TYPE)
+            method.invoke(tp, mColor, 1.0f)
+        } catch (e: Exception) {
+            tp.isUnderlineText = true
+        }
+
+    }
+}
 fun AppCompatTextView.setTextViewLinkClickable() {
-    setMovementMethod(ClickableMovementMethod.instance)
-    setClickable(false);
-    setLongClickable(false);
+   // movementMethod = ClickableMovementMethod.instance
+    movementMethod = android.text.method.LinkMovementMethod.getInstance()
+    highlightColor = android.graphics.Color.TRANSPARENT
+    isClickable = false
+    isLongClickable = false
 }
