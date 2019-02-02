@@ -228,7 +228,10 @@ object Page {
                                     if (spans.isNotEmpty()) {
                                         for (span in spans) {
                                             ss.removeSpan(span)
-                                            selectedList.removeIf { e -> e == it.verseId!! }
+                                        }
+
+                                        tryy {
+                                            selectedList.indexOf(it.verseId!!).let { sli -> if (sli >= 0) selectedList.removeAt(sli) }
                                         }
                                         if (showDropCap && it.verseId!! == 1)
                                             (dropCapView?.text as Spannable).removeSpans(0, 1, BackgroundColorSpan::class.java)

@@ -5,7 +5,7 @@ android:
   - tools
   - tools
   - platform-tools
-  - build-tools-27.0.3
+  - build-tools-28.0.3
   - android-28
   - extra-android-m2repository
   - extra-google-m2repository
@@ -18,6 +18,7 @@ before_install:
   - chmod +x gradlew
   - yes | sdkmanager "platforms;android-27" # workaround for accepting the license
   - yes | sdkmanager "platforms;android-28"
+  - yes | sdkmanager --licenses
   - if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
       openssl aes-256-cbc -k $STORE_PASS -in "$PWD/.travis/secrets.tar.enc" -out secrets.tar -d;
       tar xf secrets.tar;
