@@ -27,6 +27,7 @@ Aimed towards providing the best English version.<br>Translations are from the P
 - Search verses.
 - Copy multiple verses.
 - Adjust text size.
+- Toggle paragraphs, line numbers, red letters, and more.
 - Toggle 1611 KJV punctuation and capitalisation.
 
 **Note:** This is a personal project of mine that I've released publicly. Therefore it is a work in-progress. If you break it, let me know!
