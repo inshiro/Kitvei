@@ -158,7 +158,7 @@ class BottomSheetFragment : BottomSheetDialogFragment() {
             seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                     fontSize = progress.toFloat()
-                    Page.setFontSize(fontSize)
+                    Page.textSize = fontSize
                     tv?.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize)
                     fontSizeTextView.futureSet("${( progress  * 10f).toInt()}%")
                     /*(rv?.adapter as MainAdapter).apply {

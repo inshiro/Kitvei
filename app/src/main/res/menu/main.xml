@@ -31,7 +31,7 @@
         app:showAsAction="never"
         appname:ignore="AppCompatResource" />
     <item
-        android:id="@+id/kjvstyling"
+        android:id="@+id/kjv_styling_menu"
         android:orderInCategory="60"
         android:title="KJV Styling"
         app:showAsAction="never"

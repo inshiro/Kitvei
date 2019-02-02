@@ -25,17 +25,21 @@ import na.kephas.kitvei.viewmodels.VerseListViewModel
 
 object Page {
 
-    private var fontSize = Prefs.mainFontSize
     private var showParagraphs = false
     private var newLineEachVerse = true
-    private var capitalizeFirstWord = true
     var showRedLetters = true
     var showDropCap = true
-    var showLineNumbers = true
-    var kjvPunctuation = true
-    fun setFontSize(size: Float) {
-        fontSize = size
-    }
+    var showVerseNumbers = true
+    //var kjvStyling = true
+
+    var kjvStyling: Boolean
+        get() = Prefs.kjvStylingPref
+        set(value) { Prefs.kjvStylingPref = value }
+    var textSize: Float
+        get() = Prefs.mainFontSize
+        set(value) {
+            Prefs.mainFontSize = value
+        }
 
     private val clipboard by lazy { App.instance.applicationContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager? }
     private val audioManager by lazy { App.instance.applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager? }
@@ -56,7 +60,7 @@ object Page {
                     list.forEach {
                         numStart = sText.length
 
-                        verse = if (kjvPunctuation) {
+                        verse = if (kjvStyling) {
                             val kjv = Formatting.kjvList[it.id - 1]
                             Formatting.diffText(it.verseText!!, kjv)
                         } else it.verseText!!
@@ -83,7 +87,7 @@ object Page {
 
 
                         // Apply First Word in Chapter Capitalization
-                        if (capitalizeFirstWord && it.verseId == 1) {
+                        if (showDropCap && it.verseId == 1) {
                             val firstSpace = sText.indexOf(' ')
                             val capitalized = sText.substring(0, firstSpace).toUpperCase()
                             if (firstSpace >= 0)
@@ -123,7 +127,7 @@ object Page {
                                             }
                                         }
 
-                                        if (kjvPunctuation) {
+                                        if (kjvStyling) {
                                             if (verse.length - it.verseText!!.length > 0)
                                                 end += verse.length - it.verseText!!.length
                                             else
@@ -148,8 +152,8 @@ object Page {
                         // Apply Line Numbers
                         val verseId = "${it.verseId}_"
 
-                        if (capitalizeFirstWord) {
-                            if (it.verseId != 1 && showLineNumbers) { // This is the only difference
+                        if (showDropCap) {
+                            if (it.verseId != 1 && showVerseNumbers) { // This is the only difference
                                 sText.insert(numStart, verseId)
                                 // Have number connected to word so they don't get separated
                                 sText.setSpan(ForegroundColorSpan(Formatting.NumColor), numStart, numStart + verseId.length - 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
@@ -158,7 +162,7 @@ object Page {
 
                             }
                         } else {
-                            if (showLineNumbers) {
+                            if (showVerseNumbers) {
                                 sText.insert(numStart, verseId)
                                 // Have number connected to word so they don't get separated
                                 sText.setSpan(ForegroundColorSpan(Formatting.NumColor), numStart, numStart + verseId.length - 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
@@ -191,7 +195,7 @@ object Page {
 
 
                         var i0 = if (it.verseId!! == 1) 2 else numStart + verseId.length + if (newLineEachVerse) 3 else 2
-                        if (capitalizeFirstWord && showDropCap && newLineEachVerse && it.verseId!! == 1) i0 = 0
+                        if (showDropCap && newLineEachVerse && it.verseId!! == 1) i0 = 0
                         // if(it.verseId!! == 0 ) 0 else if (it.verseId!! >10) 5 else 4
                         var i1 = sText.length + if (newLineEachVerse) -1 else 0
                         /*
@@ -207,7 +211,7 @@ object Page {
 
                         //d {"Genesis ${it.chapterId}:${it.verseId} Text: $sText"}
 
-                        if (showLineNumbers)
+                        if (showVerseNumbers)
                             sText.setSpan(object : ClickableSpan() {
 
                                 override fun updateDrawState(ds: TextPaint) {
@@ -338,7 +342,7 @@ object Page {
                                                 if (selectedList.size == 1) newText = newText.removeRange(0, newText.indexOf(" ") + 1)
 
                                                 // Remove newline
-                                                if (newText.last() == '\n') newText = newText.removeRange(newText.lastIndex-1, newText.lastIndex)
+                                                if (newText.last() == '\n') newText = newText.removeRange(newText.lastIndex - 1, newText.lastIndex)
 
                                                 //text.insert(0,"${it.bookName} ${it.chapterId}:$groupedVerses\n")
                                                 newText = "${it.bookName} ${it.chapterId}:$groupedVerses\n" + newText
@@ -383,7 +387,7 @@ object Page {
                     withContext(UI) {
 
 
-                        if (showDropCap && dropCapView != null && capitalizeFirstWord) {
+                        if (showDropCap && dropCapView != null) {
                             //val dText = SpannableStringBuilder("${sText[0]}")
                             // dText.setSpan(RelativeSizeSpan(30f), 0, dText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
 
@@ -391,7 +395,7 @@ object Page {
 
                             sText.delete(0, 1)
 
-                            sText.setSpan(LettrineLeadingMarginSpan2(2, dropCapView.getWidth), 0, if (showLineNumbers) sText.indexOf("2") - 2 else list[0].verseText!!.length - 2, 0)
+                            sText.setSpan(LettrineLeadingMarginSpan2(2, dropCapView.getWidth), 0, if (showVerseNumbers) sText.indexOf("2") - 2 else list[0].verseText!!.length - 2, 0)
                         }
                         textView.setTextViewLinkClickable()
                         textView.futureSet(sText)

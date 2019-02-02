@@ -14,6 +14,7 @@ class Prefs (context: Context) {
     private val MAIN_FONT_SIZE = "MAIN_FONT_SIZE"
     private val FONT_SIZE = "FONT_SIZE"
     private val THEME_ID = "THEME_ID"
+    private val KJVSTYLE_ID = "KJVSTYLE_ID"
     private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_FILENAME, 0)
 
     var Book: Int
@@ -43,6 +44,9 @@ class Prefs (context: Context) {
     var themeId: Int
         get() = prefs.getInt(THEME_ID, 0)
         set(value) = prefs.edit().putInt(THEME_ID, value).apply()
+    var kjvStylingPref: Boolean
+        get() = prefs.getBoolean(KJVSTYLE_ID, true)
+        set(value) = prefs.edit().putBoolean(KJVSTYLE_ID, value).apply()
     /*var shouldDimDarkModeImages: Boolean
         get() = prefs.getFloat(FONT_SIZE, 1f)
         set(value) = prefs.edit().putFloat(FONT_SIZE, value).apply()*/

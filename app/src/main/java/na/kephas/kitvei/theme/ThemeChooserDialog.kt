@@ -127,7 +127,7 @@ class ThemeChooserDialog : ExtendedBottomSheetDialogFragment() {
                 dcv0?.let {
                     val ss = text as Spannable
                     ss.removeSpans(0, ss.length, LettrineLeadingMarginSpan2::class.java)
-                    ss.setSpan(LettrineLeadingMarginSpan2(2, dcv0.getWidth), 0, if (Page.showLineNumbers) ss.indexOf("2") - 2 else ss.indexOf("\u200B") - 2, 0)
+                    ss.setSpan(LettrineLeadingMarginSpan2(2, dcv0.getWidth), 0, if (Page.showVerseNumbers) ss.indexOf("2") - 2 else ss.indexOf("\u200B") - 2, 0)
                 }
             }
             getTextView(1)?.apply {
@@ -135,7 +135,7 @@ class ThemeChooserDialog : ExtendedBottomSheetDialogFragment() {
                 dcv1?.let {
                     val ss = text as Spannable
                     ss.removeSpans(0, ss.length, LettrineLeadingMarginSpan2::class.java)
-                    ss.setSpan(LettrineLeadingMarginSpan2(2, dcv1.getWidth), 0, if (Page.showLineNumbers) ss.indexOf("2") - 2 else ss.indexOf("\u200B") - 2, 0)
+                    ss.setSpan(LettrineLeadingMarginSpan2(2, dcv1.getWidth), 0, if (Page.showVerseNumbers) ss.indexOf("2") - 2 else ss.indexOf("\u200B") - 2, 0)
                 }
             }
 
@@ -334,13 +334,13 @@ class ThemeChooserDialog : ExtendedBottomSheetDialogFragment() {
         fontChangeProgressBar.visibility = View.VISIBLE
 
 
-        Page.setFontSize(fontSize)
+        Page.textSize = fontSize
         pDCV?.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize * 4.85f)
 
         // Box area of Initial letter
         val ss = pTV?.text as Spannable
         ss.removeSpans(0, ss.length, LettrineLeadingMarginSpan2::class.java)
-        ss.setSpan(LettrineLeadingMarginSpan2(2, pDCV!!.getWidth), 0, if (Page.showLineNumbers) ss.indexOf("2") - 2 else ss.indexOf("\u200B") - 2, 0)
+        ss.setSpan(LettrineLeadingMarginSpan2(2, pDCV!!.getWidth), 0, if (Page.showVerseNumbers) ss.indexOf("2") - 2 else ss.indexOf("\u200B") - 2, 0)
 
         pTV?.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize)
 

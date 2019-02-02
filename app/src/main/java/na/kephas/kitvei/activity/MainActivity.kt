@@ -325,10 +325,14 @@ class MainActivity : AppCompatActivity(),
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.main, menu)
         val searchItem = menu.findItem(R.id.search_menu)
+        val kjvStyleItem = menu.findItem(R.id.kjv_styling_menu)
         searchItem?.let {
             tintMenuIcon(searchItem, android.R.color.background_light)
             searchItem.isVisible = !hideSearch // Called when invalidate
 
+        }
+        kjvStyleItem?.let {
+            it.isChecked = Page.kjvStyling
         }
         return retValue
     }
@@ -355,9 +359,9 @@ class MainActivity : AppCompatActivity(),
                     cancelTranslucentNavBar()
                 themeChooserDialog.show(supportFragmentManager, "tcd")
             }
-            R.id.kjvstyling -> {
+            R.id.kjv_styling_menu -> {
                 item.isChecked = !item.isChecked
-                Page.kjvPunctuation = item.isChecked
+                Page.kjvStyling = item.isChecked
                 mainViewPager.adapter?.notifyDataSetChanged()
             }
             else -> super.onOptionsItemSelected(item)
