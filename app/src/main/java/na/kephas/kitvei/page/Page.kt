@@ -449,8 +449,8 @@ object Page {
 
                             // Increase the text size and bring it back to normal to get rid of text clipping.
                             textView.let { itv ->
-                                itv.setTextSize(TypedValue.COMPLEX_UNIT_PT, textSize + 1)
-                                itv.setTextSize(TypedValue.COMPLEX_UNIT_PT, textSize - 1)
+                                itv.setTextSize(TypedValue.COMPLEX_UNIT_PT, textSize + 1f)
+                                itv.setTextSize(TypedValue.COMPLEX_UNIT_PT, textSize)
                             }
                         }
                     }

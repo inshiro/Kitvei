@@ -112,11 +112,8 @@ class ThemeChooserDialog : ExtendedBottomSheetDialogFragment() {
     }
 
     private fun updateSidePages() {
-        //Prefs.mainFontSize = fontSize
-        //getRecyclerView(0)?.adapter?.notifyDataSetChanged()
-        //getRecyclerView(1)?.adapter?.notifyDataSetChanged()
-        val dcv0 = getDropCapView(0) //?.apply { setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize * 4.85f) }
-        val dcv1 = getDropCapView(1) //?.apply { setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize * 4.85f) }
+        val dcv0 = getDropCapView(0)
+        val dcv1 = getDropCapView(1)
         val tv0 = getTextView(0)
         val tv1 = getTextView(1)
         updateDropCapSize(tv0, dcv0)
@@ -155,6 +152,7 @@ class ThemeChooserDialog : ExtendedBottomSheetDialogFragment() {
 
     private var pTV: TextView? = null
     private var pDCV: TextControl? = null
+    private var prevTextSize = 0f
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val rootView = inflater.inflate(R.layout.dialog_theme_chooser, container, false)
         //unbinder = ButterKnife.bind(this, rootView)
@@ -183,20 +181,12 @@ class ThemeChooserDialog : ExtendedBottomSheetDialogFragment() {
         pTV = getTextView()
         pDCV = getDropCapView()
         textSizeSeekBar.max = 20
-        /*textSizeSeekBar.progress = fontSize.toInt() // (fontSize * 10f).toInt() //@ 100
-        textSizePercent.futureSet(
-                "${(fontSize * 10f).toInt()}%".let {
-                    if (it == "100%")
-                        "100% (Default)"
-                    else
-                        it
-                }
-        )*/
         setSeekProgress(fontSize)
         textSizeSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar, value: Int, fromUser: Boolean) {
                 if (!fromUser) return
                 //val currentMultiplier = Prefs.mainFontSize
+                prevTextSize = fontSize
                 fontSize = value.toFloat()
                 updateFont(fontSize)
 
@@ -338,11 +328,19 @@ class ThemeChooserDialog : ExtendedBottomSheetDialogFragment() {
                 if (pDropCapView != null)
                     ss.setSpan(LettrineLeadingMarginSpan2(2, pDropCapView.getWidth), 0, end, 0)
 
+                // If seekbar is not increment or decrement, setTextSize to prevent text clipping
+                val diff = (prevTextSize-1f) - fontSize
+                val diff2 = (prevTextSize+1f) - fontSize
+                val finalDiff = diff == 0f || diff2 == 0f
+
                 // Reduce the text size and bring it back to normal to get rid of text clipping.
                 pTextView.let {
-                    if (it.textSize < prevSize) {
-                        it.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize - 1)
+                    // If current size is smaller than prevSize
+                    if (it.textSize < prevSize || finalDiff) {
+                        it.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize - 1f)
                         it.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize)
+                        d { "Prevented Text Clipping"}
+
                     }
                 }
 
