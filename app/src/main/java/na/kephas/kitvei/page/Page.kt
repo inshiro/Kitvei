@@ -447,13 +447,12 @@ object Page {
                             ss.setSpan(LettrineLeadingMarginSpan2(2, dropCapView.getWidth), 0, end, 0)
                             textView.visibility = View.VISIBLE
 
+                            // Increase the text size and bring it back to normal to get rid of text clipping.
                             textView.let { itv ->
                                 itv.setTextSize(TypedValue.COMPLEX_UNIT_PT, textSize + 1)
                                 itv.setTextSize(TypedValue.COMPLEX_UNIT_PT, textSize - 1)
                             }
                         }
-                        // Increase the text size and bring it back to normal to get rid of text clipping.
-
                     }
                 }
             }.format(2)
