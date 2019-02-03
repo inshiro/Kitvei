@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.viewpager.widget.PagerAdapter
-import androidx.viewpager.widget.PagerAdapter.POSITION_NONE
 import kotlinx.android.synthetic.main.main_rv_item.view.*
 import na.kephas.kitvei.R
 import na.kephas.kitvei.data.Bible
@@ -16,7 +15,6 @@ import na.kephas.kitvei.page.Page
 import na.kephas.kitvei.theme.ThemeChooserDialog.Companion.fontSize
 import na.kephas.kitvei.util.Fonts
 import na.kephas.kitvei.util.TextControl
-import na.kephas.kitvei.util.tryy
 import na.kephas.kitvei.viewmodels.VerseListViewModel
 
 
@@ -49,8 +47,10 @@ class MainViewPagerAdapter(private val act: AppCompatActivity, private val vm: V
             mLayout.addView(dropCapView, 0)
             mLayout.addView(textView, 1)
             scrollView.addView(mLayout)
+            //setAutoSizeTextTypeWithDefaults(textView, TextViewCompat.AUTO_SIZE_TEXT_TYPE_UNIFORM)
         }
         Page.display(vm, row, textView, dropCapView)
+
         return layout
     }
 

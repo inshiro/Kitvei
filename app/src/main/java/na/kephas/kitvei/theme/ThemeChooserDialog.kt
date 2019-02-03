@@ -25,8 +25,10 @@ import na.kephas.kitvei.activity.FragmentUtil
 import na.kephas.kitvei.activity.MainActivity
 import na.kephas.kitvei.page.ExtendedBottomSheetDialogFragment
 import na.kephas.kitvei.page.Page
+import na.kephas.kitvei.page.Page.showDropCap
 import na.kephas.kitvei.util.*
 import na.kephas.kitvei.views.DiscreteSeekBar
+
 
 /*
 import com.squareup.otto.Subscribe
@@ -109,32 +111,17 @@ class ThemeChooserDialog : ExtendedBottomSheetDialogFragment() {
         }
     }
 
-    private fun saveFontChanges() {
-        if (Prefs.mainFontSize != fontSize) {
-            Prefs.mainFontSize = fontSize
-            //getRecyclerView(0)?.adapter?.notifyDataSetChanged()
-            //getRecyclerView(1)?.adapter?.notifyDataSetChanged()
-            val dcv0 = getDropCapView(0)?.apply { setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize * 4.85f) }
-            val dcv1 = getDropCapView(1)?.apply { setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize * 4.85f) }
-            getTextView(0)?.apply {
-                setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize)
-                dcv0?.let {
-                    val ss = text as Spannable
-                    ss.removeSpans(0, ss.length, LettrineLeadingMarginSpan2::class.java)
-                    ss.setSpan(LettrineLeadingMarginSpan2(2, dcv0.getWidth), 0, if (Page.showVerseNumbers) ss.indexOf("2") - 2 else ss.indexOf("\u200B") - 2, 0)
-                }
-            }
-            getTextView(1)?.apply {
-                setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize)
-                dcv1?.let {
-                    val ss = text as Spannable
-                    ss.removeSpans(0, ss.length, LettrineLeadingMarginSpan2::class.java)
-                    ss.setSpan(LettrineLeadingMarginSpan2(2, dcv1.getWidth), 0, if (Page.showVerseNumbers) ss.indexOf("2") - 2 else ss.indexOf("\u200B") - 2, 0)
-                }
-            }
+    private fun updateSidePages() {
+        //Prefs.mainFontSize = fontSize
+        //getRecyclerView(0)?.adapter?.notifyDataSetChanged()
+        //getRecyclerView(1)?.adapter?.notifyDataSetChanged()
+        val dcv0 = getDropCapView(0) //?.apply { setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize * 4.85f) }
+        val dcv1 = getDropCapView(1) //?.apply { setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize * 4.85f) }
+        val tv0 = getTextView(0)
+        val tv1 = getTextView(1)
+        updateDropCapSize(tv0, dcv0)
+        updateDropCapSize(tv1, dcv1)
 
-
-        }
 
         (activity as MainActivity).apply {
             if (currentOrientation == PORTRAIT)
@@ -233,8 +220,8 @@ class ThemeChooserDialog : ExtendedBottomSheetDialogFragment() {
     override fun onDismiss(dialog: DialogInterface?) {
         pTV = null
         pDCV = null
+        updateSidePages()
         super.onDismiss(dialog)
-        saveFontChanges()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -270,8 +257,6 @@ class ThemeChooserDialog : ExtendedBottomSheetDialogFragment() {
     }
 
     override fun onCancel(dialog: DialogInterface) {
-        pTV = null
-        pDCV = null
         super.onCancel(dialog)
         if (callback() != null)
             callback()?.onCancel()
@@ -284,26 +269,27 @@ class ThemeChooserDialog : ExtendedBottomSheetDialogFragment() {
     //@OnCheckedChanged(R.id.theme_chooser_dark_mode_dim_images_switch)
 
     private fun updateComponents() {
-        updateFontSize()
+        // updateFontSize()
         updateThemeButtons()
         updateDimImagesSwitch()
     }
 
-    private fun updateFontSize() {
-        val mult = Prefs.textSizeMultiplier.toInt()
-        textSizeSeekBar.value = mult
-        val percentStr = getString(R.string.text_size_percent,
-                (100 * (1 + mult * DimenUtil.getFloat(R.dimen.textSizeMultiplierFactor))).toInt())
-        textSizePercent.text = if (mult == 0)
-            getString(R.string.text_size_percent_default, percentStr)
-        else
-            percentStr
-        if (updatingFont)
-            fontChangeProgressBar.visibility = View.VISIBLE
-        else
-            fontChangeProgressBar.visibility = View.GONE
-    }
-
+    /*
+        private fun updateFontSize() {
+            val mult = Prefs.textSizeMultiplier.toInt()
+            textSizeSeekBar.value = mult
+            val percentStr = getString(R.string.text_size_percent,
+                    (100 * (1 + mult * DimenUtil.getFloat(R.dimen.textSizeMultiplierFactor))).toInt())
+            textSizePercent.text = if (mult == 0)
+                getString(R.string.text_size_percent_default, percentStr)
+            else
+                percentStr
+            if (updatingFont)
+                fontChangeProgressBar.visibility = View.VISIBLE
+            else
+                fontChangeProgressBar.visibility = View.GONE
+        }
+    */
     private fun updateThemeButtons() {
         buttonThemeLightHighlight.visibility = if (app.getCurrentTheme() === Theme.LIGHT) View.VISIBLE else View.GONE
         buttonThemeLight.isClickable = app.getCurrentTheme() !== Theme.LIGHT
@@ -323,22 +309,60 @@ class ThemeChooserDialog : ExtendedBottomSheetDialogFragment() {
     }
 
 
+    private fun updateDropCapSize(pTVF: TextView? = null, pDCVF: TextControl? = null) {
+        // Box area of Initial letter (Lettrine)
+        var pTextView: TextView? = pTVF
+        var pDropCapView: TextControl? = pDCVF
+        if (pTVF == null) pTextView = pTV
+        if (pDCVF == null) pDropCapView = pDCV
+        if (Page.showDropCap) {
+            // Order of code here is important
+            val prevSize = pTextView?.textSize ?: 0f
+            pDropCapView?.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize * 4.85f)
+            pTextView?.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize)
+            pTextView?.post {
+                val ss = pTextView.text as Spannable
+                var end = 0
+                val whiteSpace = ss.indexOf("\u200B")
+
+                end = if (whiteSpace > 0) {
+                    if (pTextView.layout?.getLineForOffset(whiteSpace) == 0) ss.indexOf("\u200B", whiteSpace + 1) else whiteSpace
+                } else {
+                    ss.length
+                }/*
+                d {"End: $end"}
+                d {"whiteSpace: $whiteSpace"}
+                d {"${ss.substring(0,ss.indexOf("\u200B"))}"}*/
+                ss.removeSpans(0, ss.length, LettrineLeadingMarginSpan2::class.java)
+
+                if (pDropCapView != null)
+                    ss.setSpan(LettrineLeadingMarginSpan2(2, pDropCapView.getWidth), 0, end, 0)
+
+                // Reduce the text size and bring it back to normal to get rid of text clipping.
+                pTextView.let {
+                    if (it.textSize < prevSize) {
+                        it.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize - 1)
+                        it.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize)
+                    }
+                }
+
+            }
+
+        }
+    }
+
     private fun updateFont(fontSize: Float) {
         updatingFont = true
         fontChangeProgressBar.visibility = View.VISIBLE
 
-
-        val ss = pTV?.text as Spannable
+        // Save fontSize
         Page.textSize = fontSize
 
-        // Box area of Initial letter
-        if (Page.showDropCap) {
-            pDCV?.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize * 4.85f)
-            ss.removeSpans(0, ss.length, LettrineLeadingMarginSpan2::class.java)
-            ss.setSpan(LettrineLeadingMarginSpan2(2, pDCV!!.getWidth), 0, if (Page.showVerseNumbers) ss.indexOf("2") - 2 else ss.indexOf("\u200B") - 2, 0)
-        }
 
-        pTV?.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize)
+        if (showDropCap)
+            updateDropCapSize()
+        else
+            pTV?.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize)
 
         setSeekProgress(fontSize)
 

@@ -10,7 +10,6 @@ import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.text.Spannable
-import android.text.SpannableString
 import android.text.style.BackgroundColorSpan
 import android.text.style.CharacterStyle
 import android.util.Log
@@ -325,15 +324,14 @@ class MainActivity : AppCompatActivity(),
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.main, menu)
         val searchItem = menu.findItem(R.id.search_menu)
-        val settingsMenu = menu.findItem(R.id.settings_menu)
-        val kjvStyleItem = menu.findItem(R.id.kjv_styling_menu)
         searchItem?.let {
             tintMenuIcon(searchItem, android.R.color.background_light)
             searchItem.isVisible = !hideSearch // Called when invalidate
-
         }
-        settingsMenu?.let {
-            it.subMenu.run {
+        async(IO) {
+            val settingsMenu = menu.findItem(R.id.settings_menu)
+            settingsMenu?.subMenu?.run {
+                findItem(R.id.kjv_styling_menu).isChecked = Page.kjvStyling
                 findItem(R.id.drop_cap_menu).isChecked = Page.showDropCap
                 findItem(R.id.pbreak_menu).isChecked = Page.showParagraphs
                 findItem(R.id.red_letter_menu).isChecked = Page.showRedLetters
@@ -343,7 +341,6 @@ class MainActivity : AppCompatActivity(),
                 findItem(R.id.subject_footings_menu).isChecked = Page.showFootings
             }
         }
-        kjvStyleItem?.let { it.isChecked = Page.kjvStyling }
         return retValue
     }
 
@@ -364,26 +361,27 @@ class MainActivity : AppCompatActivity(),
             }
                 R.id.settings_menu -> {
                 }*/
-            R.id.font2 -> {
+            R.id.font_and_theme_menu -> {
                 if (isTranslucentNavBar())
                     cancelTranslucentNavBar()
                 themeChooserDialog.show(supportFragmentManager, "tcd")
             }
-            R.id.kjv_styling_menu -> {
-                item.isChecked = !item.isChecked
-                Page.kjvStyling = item.isChecked
-                mainViewPager.adapter?.notifyDataSetChanged()
-            }
-            R.id.drop_cap_menu, R.id.pbreak_menu, R.id.red_letter_menu, R.id.verse_numbers_menu, R.id.seperate_verses_menu, R.id.subject_headings_menu, R.id.subject_footings_menu -> {
+            R.id.kjv_styling_menu, R.id.drop_cap_menu, R.id.pbreak_menu, R.id.red_letter_menu, R.id.verse_numbers_menu, R.id.seperate_verses_menu, R.id.subject_headings_menu, R.id.subject_footings_menu -> {
                 // Keep options menu open
                 item.isChecked = !item.isChecked
                 item.setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
                 item.actionView = View(this);
                 item.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
-                    override fun onMenuItemActionExpand(item: MenuItem?): Boolean { return false }
-                    override fun onMenuItemActionCollapse(item: MenuItem?): Boolean { return false }
+                    override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
+                        return false
+                    }
+
+                    override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
+                        return false
+                    }
                 })
                 when (item.itemId) {
+                    R.id.kjv_styling_menu -> Page.kjvStyling = item.isChecked
                     R.id.drop_cap_menu -> Page.showDropCap = item.isChecked
                     R.id.pbreak_menu -> Page.showParagraphs = item.isChecked
                     R.id.red_letter_menu -> Page.showRedLetters = item.isChecked
@@ -519,6 +517,7 @@ class MainActivity : AppCompatActivity(),
         //setClickListener(fipDownButton, currentPageView)
         val sv = mainViewPager.findViewWithTag<ScrollView>("sv${mainViewPager.currentItem}")
         val tv = mainViewPager.findViewWithTag<AppCompatTextView>("tv${mainViewPager.currentItem}")
+        val dcv = mainViewPager.findViewWithTag<AppCompatTextView>("dcv${mainViewPager.currentItem}")
         var sc = 0
         var idx = 0
         // val fm = tv.paint.fontMetrics
@@ -528,6 +527,7 @@ class MainActivity : AppCompatActivity(),
 
         var pressed = 0
         val ss = tv.text as Spannable
+        val dcvs = dcv.text as Spannable
 
         //val textBounds = Rect()
         //tv.paint.getTextBounds(ss.toString(), 0, 5, textBounds)
@@ -630,6 +630,7 @@ class MainActivity : AppCompatActivity(),
                 if (newText.isBlank()) {
                     fipCountText.text = null
                     spanRemover.RemoveOne(ss, 0, ss.length, BackgroundColorSpan::class.java)
+                    spanRemover.RemoveOne(dcvs, 0, ss.length, BackgroundColorSpan::class.java)
                 } else if (!regex.matches(newText)) {
                     fipCountText.futureSet("0/0")
                     ContextCompat.getColor(fipCountText.context, R.color.search_not_found).let {
@@ -643,6 +644,7 @@ class MainActivity : AppCompatActivity(),
                 } else {
 
                     spanRemover.RemoveOne(ss, 0, ss.length, BackgroundColorSpan::class.java)
+                    spanRemover.RemoveOne(dcvs, 0, ss.length, BackgroundColorSpan::class.java)
 
 
                     matchesCount = tv.text.count(newText, ignoreCase = ignCase) { s, e, _ ->

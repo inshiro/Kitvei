@@ -91,6 +91,7 @@ internal class ColoredUnderlineSpan(private val mColor: Int) : CharacterStyle(),
 }
 fun AppCompatTextView.setTextViewLinkClickable() {
    // movementMethod = ClickableMovementMethod.instance
+   // movementMethod = ScrollingMovementMethod.getInstance()
     movementMethod = android.text.method.LinkMovementMethod.getInstance()
     highlightColor = android.graphics.Color.TRANSPARENT
     isClickable = false
