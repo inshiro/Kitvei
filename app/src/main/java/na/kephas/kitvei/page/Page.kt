@@ -9,6 +9,7 @@ import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.TextPaint
 import android.text.style.*
+import android.util.TypedValue
 import android.view.View
 import android.widget.TextView
 import androidx.appcompat.widget.AppCompatTextView
@@ -445,7 +446,14 @@ object Page {
                             ss.removeSpans(0, ss.length, LettrineLeadingMarginSpan2::class.java)
                             ss.setSpan(LettrineLeadingMarginSpan2(2, dropCapView.getWidth), 0, end, 0)
                             textView.visibility = View.VISIBLE
+
+                            textView.let { itv ->
+                                itv.setTextSize(TypedValue.COMPLEX_UNIT_PT, textSize + 1)
+                                itv.setTextSize(TypedValue.COMPLEX_UNIT_PT, textSize - 1)
+                            }
                         }
+                        // Increase the text size and bring it back to normal to get rid of text clipping.
+
                     }
                 }
             }.format(2)
