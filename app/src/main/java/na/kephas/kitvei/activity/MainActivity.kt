@@ -329,16 +329,15 @@ class MainActivity : AppCompatActivity(),
             searchItem.isVisible = !hideSearch // Called when invalidate
         }
         async(IO) {
-            val settingsMenu = menu.findItem(R.id.settings_menu)
-            settingsMenu?.subMenu?.run {
-                findItem(R.id.kjv_styling_menu).isChecked = Page.kjvStyling
-                findItem(R.id.drop_cap_menu).isChecked = Page.showDropCap
-                findItem(R.id.pbreak_menu).isChecked = Page.showParagraphs
-                findItem(R.id.red_letter_menu).isChecked = Page.showRedLetters
-                findItem(R.id.verse_numbers_menu).isChecked = Page.showVerseNumbers
-                findItem(R.id.seperate_verses_menu).isChecked = Page.newLineEachVerse
-                findItem(R.id.subject_headings_menu).isChecked = Page.showHeadings
-                findItem(R.id.subject_footings_menu).isChecked = Page.showFootings
+            menu.findItem(R.id.settings_menu)?.subMenu?.let {
+                it.findItem(R.id.kjv_styling_menu).isChecked = Page.kjvStyling
+                it.findItem(R.id.drop_cap_menu).isChecked = Page.showDropCap
+                it.findItem(R.id.pbreak_menu).isChecked = Page.showParagraphs
+                it.findItem(R.id.red_letter_menu).isChecked = Page.showRedLetters
+                it.findItem(R.id.verse_numbers_menu).isChecked = Page.showVerseNumbers
+                it.findItem(R.id.seperate_verses_menu).isChecked = Page.newLineEachVerse
+                it.findItem(R.id.subject_headings_menu).isChecked = Page.showHeadings
+                it.findItem(R.id.subject_footings_menu).isChecked = Page.showFootings
             }
         }
         return retValue
