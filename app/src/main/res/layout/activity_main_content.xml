@@ -178,6 +178,7 @@
         android:layout_marginTop="0dp"
         android:layout_marginRight="0dp"
         android:visibility="gone"
+        android:splitMotionEvents="false"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         card_view:cardCornerRadius="2dp"
         card_view:cardElevation="4dp"
@@ -190,6 +191,7 @@
             android:id="@+id/stuffLinearLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:splitMotionEvents="false"
             android:orientation="vertical">
 
             <com.google.android.material.tabs.TabLayout
@@ -199,6 +201,7 @@
                 android:background="?attr/colorPrimary"
                 android:gravity="bottom"
                 android:minHeight="?android:attr/actionBarSize"
+                android:splitMotionEvents="false"
                 app:tabGravity="fill"
                 app:tabMode="fixed"
                 app:tabSelectedTextColor="@android:color/white"
@@ -207,6 +210,7 @@
             <androidx.viewpager.widget.ViewPager
                 android:id="@+id/viewpager"
                 android:layout_width="match_parent"
+                android:splitMotionEvents="false"
                 android:layout_height="wrap_content" />
             <!-- android:background="?android:attr/colorBackground" -->
         </LinearLayout>
