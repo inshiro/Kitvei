@@ -339,8 +339,6 @@ class ThemeChooserDialog : ExtendedBottomSheetDialogFragment() {
                     if (it.textSize < prevSize || finalDiff) {
                         it.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize - 1f)
                         it.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize)
-                        d { "Prevented Text Clipping"}
-
                     }
                 }
 

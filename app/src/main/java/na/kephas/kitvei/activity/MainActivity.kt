@@ -17,6 +17,7 @@ import android.util.TypedValue
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.ViewTreeObserver
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.view.inputmethod.InputMethodManager
@@ -33,6 +34,7 @@ import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.text.TextUtilsCompat
 import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
+import androidx.core.view.doOnPreDraw
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager.widget.ViewPager
@@ -328,17 +330,15 @@ class MainActivity : AppCompatActivity(),
             tintMenuIcon(searchItem, android.R.color.background_light)
             searchItem.isVisible = !hideSearch // Called when invalidate
         }
-        async(IO) {
-            menu.findItem(R.id.settings_menu)?.subMenu?.let {
-                it.findItem(R.id.kjv_styling_menu).isChecked = Page.kjvStyling
-                it.findItem(R.id.drop_cap_menu).isChecked = Page.showDropCap
-                it.findItem(R.id.pbreak_menu).isChecked = Page.showParagraphs
-                it.findItem(R.id.red_letter_menu).isChecked = Page.showRedLetters
-                it.findItem(R.id.verse_numbers_menu).isChecked = Page.showVerseNumbers
-                it.findItem(R.id.seperate_verses_menu).isChecked = Page.newLineEachVerse
-                it.findItem(R.id.subject_headings_menu).isChecked = Page.showHeadings
-                it.findItem(R.id.subject_footings_menu).isChecked = Page.showFootings
-            }
+        menu.findItem(R.id.settings_menu)?.subMenu?.let {
+            it.findItem(R.id.kjv_styling_menu).isChecked = Page.kjvStyling
+            it.findItem(R.id.drop_cap_menu).isChecked = Page.showDropCap
+            it.findItem(R.id.pbreak_menu).isChecked = Page.showParagraphs
+            it.findItem(R.id.red_letter_menu).isChecked = Page.showRedLetters
+            it.findItem(R.id.verse_numbers_menu).isChecked = Page.showVerseNumbers
+            it.findItem(R.id.seperate_verses_menu).isChecked = Page.newLineEachVerse
+            it.findItem(R.id.subject_headings_menu).isChecked = Page.showHeadings
+            it.findItem(R.id.subject_footings_menu).isChecked = Page.showFootings
         }
         return retValue
     }
@@ -428,33 +428,36 @@ class MainActivity : AppCompatActivity(),
     }
 
     override fun onItemSelectedFV(position: Int) {
-        getPosition(tBook, tChapter).let {
-            if (mainViewPager.currentItem != it)
-                mainViewPager.setCurrentItem(it, true)
-
-        }
         //val ma = (mainViewPager.adapter as MainViewPagerAdapter)
+        val cPosition = getPosition(tBook, tChapter)
         queryFinished = true
         finishSearch()
-        tryy {
-            launch(UI) {
-                val sv = mainViewPager.findViewWithTag<ScrollView>("sv${mainViewPager.currentItem}")
-                sv?.findViewWithTag<AppCompatTextView>("tv${mainViewPager.currentItem}")?.run {
-                    while (text.isEmpty())
-                        delay(10)
-                    this.post {
-                        if (position == 0) {
-                            sv.smoothScrollTo(0, sv.top - sv.paddingTop)
-                        } else {
-                            var i = text.indexOf("\u200B\n\t\t${position + 1}_")
-                            if (i < 0) i = text.indexOf("\u200B ${position + 1}_")
-                            if (i >= 0)
-                                sv.smoothScrollTo(0, layout.getLineTop(layout.getLineForOffset(i)))
-                        }
+        if (mainViewPager.currentItem != cPosition) {
+            mainViewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
+                override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {}
+                override fun onPageSelected(position: Int) {}
+                override fun onPageScrollStateChanged(state: Int) {
+                    if (ViewPager.SCROLL_STATE_IDLE == state) {
+                        val sv = mainViewPager.findViewWithTag<ScrollView>("sv${mainViewPager.currentItem}")
+                        sv?.findViewWithTag<AppCompatTextView>("tv${mainViewPager.currentItem}")?.let { tv ->
+                            if (position == 0) {
+                                sv.post { sv.smoothScrollTo(0, sv.top - sv.paddingTop) }
+                            } else {
+                                tv.post {
+                                    val i = if (Page.showVerseNumbers) tv.text.indexOf("${position + 1}") else 0
+                                    //var i = tv.text.indexOf("\u200B\n\t\t${position + 1}_")
+                                    //if (i < 0) i = tv.text.indexOf("\u200B ${position + 1}_")
+                                    if (i >= 0 && tv.layout != null)
+                                        sv.post { sv.smoothScrollTo(0, tv.layout.getLineTop(tv.layout.getLineForOffset(i))) }
 
+                                }
+                            }
+                        }
+                        mainViewPager.removeOnPageChangeListener(this)
                     }
                 }
-            }
+            })
+            mainViewPager.setCurrentItem(cPosition, true)
         }
     }
 
@@ -487,14 +490,6 @@ class MainActivity : AppCompatActivity(),
     }
 
     private val vbs by lazy { getSystemService(VIBRATOR_SERVICE) as Vibrator }
-    private fun vibrate(duration: Long) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vbs.vibrate(VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE))
-        } else {
-            @Suppress("DEPRECATION")
-            vbs.vibrate(duration)
-        }
-    }
 
     private fun View.vibrate() {
         this.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
@@ -526,7 +521,7 @@ class MainActivity : AppCompatActivity(),
 
         var pressed = 0
         val ss = tv.text as Spannable
-        val dcvs = dcv.text as Spannable
+        val dcvs = dcv?.text as? Spannable
 
         //val textBounds = Rect()
         //tv.paint.getTextBounds(ss.toString(), 0, 5, textBounds)
@@ -629,7 +624,8 @@ class MainActivity : AppCompatActivity(),
                 if (newText.isBlank()) {
                     fipCountText.text = null
                     spanRemover.RemoveOne(ss, 0, ss.length, BackgroundColorSpan::class.java)
-                    spanRemover.RemoveOne(dcvs, 0, ss.length, BackgroundColorSpan::class.java)
+                    if (Page.showDropCap)
+                        spanRemover.RemoveOne(dcvs!!, 0, ss.length, BackgroundColorSpan::class.java)
                 } else if (!regex.matches(newText)) {
                     fipCountText.futureSet("0/0")
                     ContextCompat.getColor(fipCountText.context, R.color.search_not_found).let {
@@ -643,7 +639,8 @@ class MainActivity : AppCompatActivity(),
                 } else {
 
                     spanRemover.RemoveOne(ss, 0, ss.length, BackgroundColorSpan::class.java)
-                    spanRemover.RemoveOne(dcvs, 0, ss.length, BackgroundColorSpan::class.java)
+                    if (Page.showDropCap)
+                        spanRemover.RemoveOne(dcvs!!, 0, ss.length, BackgroundColorSpan::class.java)
 
 
                     matchesCount = tv.text.count(newText, ignoreCase = ignCase) { s, e, _ ->
