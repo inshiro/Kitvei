@@ -143,26 +143,26 @@ class MainActivity : AppCompatActivity(),
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
-        GlobalScope.launch(IO) {
+        //GlobalScope.launch(IO) {
 
-            val navHeaderView: View = nav_view.inflateHeaderView(R.layout.nav_header_main)
-            val coverView: KenBurnsView = navHeaderView.findViewById(R.id.coverView)
-            actionBarDrawerToggle = ActionBarDrawerToggle(this@MainActivity, drawer_layout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
-            drawer_layout.addDrawerListener(actionBarDrawerToggle)
-            actionBarDrawerToggle.syncState()
-            nav_view.setNavigationItemSelectedListener(this@MainActivity)
-            supportActionBar?.setDisplayShowTitleEnabled(false)
-            supportActionBar?.setHomeButtonEnabled(true)
+        val navHeaderView: View = nav_view.inflateHeaderView(R.layout.nav_header_main)
+        val coverView: KenBurnsView = navHeaderView.findViewById(R.id.coverView)
+        actionBarDrawerToggle = ActionBarDrawerToggle(this@MainActivity, drawer_layout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
+        drawer_layout.addDrawerListener(actionBarDrawerToggle)
+        actionBarDrawerToggle.syncState()
+        nav_view.setNavigationItemSelectedListener(this@MainActivity)
+        supportActionBar?.setDisplayShowTitleEnabled(false)
+        supportActionBar?.setHomeButtonEnabled(true)
 
-            withContext(UI) {
-                Picasso.get().load(R.drawable.cover).into(coverView)
-            }
-        }
+        // withContext(UI) {
+        Picasso.get().load(R.drawable.cover).into(coverView)
+        //}
+        //}
 
         row = bible[viewPagerPosition]
 
         // Toolbar Title
-        toolbarTitle.apply {
+        toolbarTitle.run {
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 20.5f)
             setTypeface(Typeface.SANS_SERIF, Typeface.NORMAL)
             setTextColor(ResourcesCompat.getColor(resources, android.R.color.background_light, null))
@@ -173,6 +173,7 @@ class MainActivity : AppCompatActivity(),
         if (Prefs.VP_Position == 0) toolbarTitle.futureSet("Genesis 1") //Init
 
         mainViewPager = findViewById(R.id.mainViewPager)
+
 
         mainViewPager.adapter = MainViewPagerAdapter(this, viewModel, bible)
 
@@ -201,7 +202,7 @@ class MainActivity : AppCompatActivity(),
         stuffLinearLayout.isFocusable = false
         stuffLinearLayout.clearFocus()
 
-        // ViewPager Setup
+        // SearchViewPager Setup
         searchViewPager = findViewById<View>(R.id.viewpager) as androidx.viewpager.widget.ViewPager
         tabLayout = findViewById<View>(R.id.tablayout) as com.google.android.material.tabs.TabLayout
         miniSearchViewPagerAdapter = MiniSearchViewPagerAdapter(supportFragmentManager)
@@ -432,32 +433,23 @@ class MainActivity : AppCompatActivity(),
         val cPosition = getPosition(tBook, tChapter)
         queryFinished = true
         finishSearch()
-        if (mainViewPager.currentItem != cPosition) {
-            mainViewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
-                override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {}
-                override fun onPageSelected(position: Int) {}
-                override fun onPageScrollStateChanged(state: Int) {
-                    if (ViewPager.SCROLL_STATE_IDLE == state) {
-                        val sv = mainViewPager.findViewWithTag<ScrollView>("sv${mainViewPager.currentItem}")
-                        sv?.findViewWithTag<AppCompatTextView>("tv${mainViewPager.currentItem}")?.let { tv ->
-                            if (position == 0) {
-                                sv.post { sv.smoothScrollTo(0, sv.top - sv.paddingTop) }
-                            } else {
-                                tv.post {
-                                    val i = if (Page.showVerseNumbers) tv.text.indexOf("${position + 1}") else 0
-                                    //var i = tv.text.indexOf("\u200B\n\t\t${position + 1}_")
-                                    //if (i < 0) i = tv.text.indexOf("\u200B ${position + 1}_")
-                                    if (i >= 0 && tv.layout != null)
-                                        sv.post { sv.smoothScrollTo(0, tv.layout.getLineTop(tv.layout.getLineForOffset(i))) }
-
-                                }
-                            }
-                        }
-                        mainViewPager.removeOnPageChangeListener(this)
+        val MAX_SETTLE_DURATION = 600L
+        mainViewPager.setCurrentItem(cPosition, true)
+        @Suppress("DeferredResultUnused")
+        GlobalScope.async {
+            delay(MAX_SETTLE_DURATION/2L)
+            val sv = mainViewPager.findViewWithTag<ScrollView>("sv${mainViewPager.currentItem}")
+            sv.findViewWithTag<AppCompatTextView>("tv${mainViewPager.currentItem}")?.let { tv ->
+                val idx = if (Page.showVerseNumbers) tv.text.indexOf("${position + 1}") else 0
+                if (position == 0)
+                    sv.post { sv.smoothScrollTo(0, sv.top - sv.paddingTop) }
+                else {
+                    tv.post {
+                        if (idx >= 0 && tv.layout != null)
+                            sv.post { sv.smoothScrollTo(0, tv.layout.getLineTop(tv.layout.getLineForOffset(idx))) }
                     }
                 }
-            })
-            mainViewPager.setCurrentItem(cPosition, true)
+            }
         }
     }
 
