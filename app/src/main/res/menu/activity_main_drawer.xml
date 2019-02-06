@@ -14,7 +14,7 @@
             android:title="@string/drawer_translators_notes" />
         <item
             android:id="@+id/nav_howto"
-            android:icon="@drawable/ic_book_black_24dp"
+            android:icon="@drawable/ic_glasses"
             android:title="@string/drawer_howto" />
     </group>
 

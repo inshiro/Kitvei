@@ -182,9 +182,7 @@ class MainActivity : AppCompatActivity(),
             mainViewPager.addOnPageChangeListener(onPageListener)
             mainViewPager.currentItem = Prefs.VP_Position
 
-        })
 
-        viewModel.getPages2()
 
         // Fragment height
         val linearParams = stuffLinearLayout.layoutParams
@@ -249,6 +247,9 @@ class MainActivity : AppCompatActivity(),
                 finishSearch()
             true
         }
+        })
+
+        viewModel.getPages2()
 
     }
 
