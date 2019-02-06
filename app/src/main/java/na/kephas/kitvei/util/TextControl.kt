@@ -2,17 +2,12 @@ package na.kephas.kitvei.util
 
 import android.content.Context
 import android.graphics.Canvas
-import android.graphics.Paint
 import android.util.AttributeSet
-import android.util.Log
-import android.view.Gravity
-import android.webkit.WebSettings
-import androidx.appcompat.widget.AppCompatTextView
 import android.util.TypedValue
+import android.view.Gravity
 import android.view.View
 import android.widget.TextView
-import androidx.core.view.setPadding
-
+import androidx.appcompat.widget.AppCompatTextView
 
 
 /*
@@ -76,38 +71,34 @@ class TextControl : AppCompatTextView {
     }
 
     private fun init() {
-        includeFontPadding = false
+        //includeFontPadding = false
         gravity = gravity or Gravity.TOP
     }
 
     override fun onDraw(canvas: Canvas) {
-        //val yOff = -mAdditionalPadding / 6
-        val offset = textSize - lineHeight //WebSettings.TextSize - LineHeight;
-        canvas.translate(0f, offset)
-        //canvas.translate(0f, yOff.toFloat())
+        //val yOff = -mAdditionalPadding / 0.85 // 6f
+        val yOff = (textSize - lineHeight) / if (text.contains("J")) 0.715f else 0.793f
+        canvas.translate(0f, yOff)
         super.onDraw(canvas)
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpecc: Int) {
         var heightMeasureSpec = heightMeasureSpecc
         additionalPadding
-
         val mode = View.MeasureSpec.getMode(heightMeasureSpec)
         if (mode != View.MeasureSpec.EXACTLY) {
             val measureHeight = measureHeight(text.toString(), widthMeasureSpec)
-
             var height = measureHeight - mAdditionalPadding
             height += paddingTop + paddingBottom
             heightMeasureSpec = View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY)
-            if (text.contains("J")) heightMeasureSpec += additionalPadding else heightMeasureSpec += additionalPadding/3
-            if(text.contains("U")||text.contains("G")) heightMeasureSpec += 20
+            if (text.contains("J")) heightMeasureSpec += 75
+            heightMeasureSpec += additionalPadding
         }
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     }
 
     private fun measureHeight(text: String, widthMeasureSpec: Int): Int {
         val textSize = textSize
-
         val textView = TextView(context)
         textView.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize)
         textView.text = text

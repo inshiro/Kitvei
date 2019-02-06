@@ -432,8 +432,8 @@ object Page {
                     textView.futureSet(sText)
 
                     if (showDropCap && dropCapView != null) {
-                        dropCapView.visibility = View.GONE
-                        textView.visibility = View.GONE
+                        dropCapView.visibility = View.INVISIBLE
+                        textView.visibility = View.INVISIBLE
                         textView.post {
                             val ss = textView.text as Spannable
                             var end = 0
@@ -445,15 +445,19 @@ object Page {
                                 ss.length
                             }
                             ss.removeSpans(0, ss.length, LettrineLeadingMarginSpan2::class.java)
-                            ss.setSpan(LettrineLeadingMarginSpan2(2, dropCapView.getWidth), 0, end, 0)
-                            dropCapView.visibility = View.VISIBLE
-                            textView.visibility = View.VISIBLE
+                            dropCapView.post {
+                                ss.setSpan(LettrineLeadingMarginSpan2(2, dropCapView.getWidth), 0, end, 0)
 
-                            // Increase the text size and bring it back to normal to get rid of text clipping.
-                            textView.let { itv ->
-                                itv.setTextSize(TypedValue.COMPLEX_UNIT_PT, textSize + 1f)
-                                itv.setTextSize(TypedValue.COMPLEX_UNIT_PT, textSize)
+                                // Increase the text size and bring it back to normal to get rid of text clipping.
+                                textView.let { itv ->
+                                    itv.setTextSize(TypedValue.COMPLEX_UNIT_PT, textSize + 1f)
+                                    itv.setTextSize(TypedValue.COMPLEX_UNIT_PT, textSize)
+                                }
+
+                                dropCapView.visibility = View.VISIBLE
+                                textView.visibility = View.VISIBLE
                             }
+
                         }
                     }
                 }

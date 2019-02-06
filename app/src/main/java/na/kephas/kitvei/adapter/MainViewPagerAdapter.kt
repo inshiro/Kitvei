@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.viewpager.widget.PagerAdapter
 import kotlinx.android.synthetic.main.main_rv_item.view.*
@@ -36,12 +37,11 @@ class MainViewPagerAdapter(private val act: AppCompatActivity, private val vm: V
             mLayout.layoutParams = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT)
             textView.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             dropCapView = TextControl(act).apply {
-                layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                 tag = "dcv$position"
                 typeface = Fonts.GentiumPlus_R
                 setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize * 4.85f)
                 setTextColor(Formatting.TextColorPrimary)
-                setPadding(0, 0, 12, 0)
             }
             scrollView.removeAllViews()
             mLayout.addView(dropCapView, 0)

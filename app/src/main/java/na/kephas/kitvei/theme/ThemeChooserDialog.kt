@@ -306,6 +306,8 @@ class ThemeChooserDialog : ExtendedBottomSheetDialogFragment() {
         if (pTVF == null) pTextView = pTV
         if (pDCVF == null) pDropCapView = pDCV
         if (Page.showDropCap) {
+            pDropCapView?.visibility = View.INVISIBLE
+            pTextView?.visibility = View.INVISIBLE
             // Order of code here is important
             val prevSize = pTextView?.textSize ?: 0f
             pDropCapView?.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize * 4.85f)
@@ -326,27 +328,30 @@ class ThemeChooserDialog : ExtendedBottomSheetDialogFragment() {
                 ss.removeSpans(0, ss.length, LettrineLeadingMarginSpan2::class.java)
 
                 if (pDropCapView != null)
-                    ss.setSpan(LettrineLeadingMarginSpan2(2, pDropCapView.getWidth), 0, end, 0)
+                    pDropCapView.post {
+                        ss.setSpan(LettrineLeadingMarginSpan2(2, pDropCapView.getWidth), 0, end, 0)
 
-                // If seekbar is not increment or decrement, setTextSize to prevent text clipping
-                val diff = (prevTextSize-1f) - fontSize
-                val diff2 = (prevTextSize+1f) - fontSize
-                val isIncrement = diff == 0f || diff2 == 0f
+                        // If seekbar is not increment or decrement, setTextSize to prevent text clipping
+                        val diff = (prevTextSize - 1f) - fontSize
+                        val diff2 = (prevTextSize + 1f) - fontSize
+                        val isIncrement = diff == 0f || diff2 == 0f
 
-                // Reduce the text size and bring it back to normal to get rid of text clipping.
-                pTextView.let {
-                    // If current size is smaller than prevSize
-                    if (it.textSize < prevSize || !isIncrement) {
-                        it.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize - 1f)
-                        it.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize)
-                    } else if (it.textSize > prevSize) {
-                        it.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize + 1f)
-                        it.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize)
+                        // Reduce the text size and bring it back to normal to get rid of text clipping.
+                        pTextView.let {
+                            // If current size is smaller than prevSize
+                            if (it.textSize < prevSize || !isIncrement) {
+                                it.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize - 1f)
+                                it.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize)
+                            } else if (it.textSize > prevSize) {
+                                it.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize + 1f)
+                                it.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize)
+                            }
+                        }
+
+                        pDropCapView.visibility = View.VISIBLE
+                        pTextView.visibility = View.VISIBLE
                     }
-                }
-
             }
-
         }
     }
 
