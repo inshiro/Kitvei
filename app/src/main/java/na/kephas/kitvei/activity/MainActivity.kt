@@ -1,13 +1,11 @@
 package na.kephas.kitvei.activity
 
-import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
-import android.os.VibrationEffect
 import android.os.Vibrator
 import android.text.Spannable
 import android.text.style.BackgroundColorSpan
@@ -17,7 +15,6 @@ import android.util.TypedValue
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.view.ViewTreeObserver
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.view.inputmethod.InputMethodManager
@@ -31,12 +28,10 @@ import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.DrawableCompat
-import androidx.core.text.TextUtilsCompat
 import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
-import androidx.core.view.doOnPreDraw
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
-import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager.widget.ViewPager
 import com.flaviofaria.kenburnsview.KenBurnsView
 import com.google.android.material.navigation.NavigationView
@@ -60,6 +55,7 @@ import na.kephas.kitvei.theme.ThemeChooserDialog
 import na.kephas.kitvei.util.*
 import na.kephas.kitvei.viewmodels.VerseListViewModel
 import java.lang.reflect.Field
+import kotlin.properties.Delegates
 
 class MainActivity : AppCompatActivity(),
         NavigationView.OnNavigationItemSelectedListener,
@@ -77,8 +73,6 @@ class MainActivity : AppCompatActivity(),
     private lateinit var verseFragment: FragmentVerse
 
     private val imm by lazy(LazyThreadSafetyMode.NONE) { getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager }
-    private val isRTL by lazy(LazyThreadSafetyMode.NONE) { TextUtilsCompat.getLayoutDirectionFromLocale(java.util.Locale.getDefault()) != ViewCompat.LAYOUT_DIRECTION_LTR }
-    private val activityManager by lazy(LazyThreadSafetyMode.NONE) { baseContext.getSystemService<ActivityManager>() }
     private val bottomSheetFragment by lazy { BottomSheetFragment() }
     private val themeChooserDialog by lazy { ThemeChooserDialog() }
     private val viewModel by lazy(LazyThreadSafetyMode.NONE) {
@@ -89,12 +83,10 @@ class MainActivity : AppCompatActivity(),
         // use requireContext() on a fragment?
 
     }
-    private val bible: List<Bible> by lazy(LazyThreadSafetyMode.NONE) {
-        runBlocking(IO) {
-            //viewModel.getRow(0)
-            viewModel.getPages()
-        }
-    }
+    //private val bible: List<Bible> by lazy(LazyThreadSafetyMode.NONE) {
+    //     viewModel.getPages()
+    // }
+    private lateinit var bible: List<Bible>
     private lateinit var actionBarDrawerToggle: ActionBarDrawerToggle
     private val miniSearchListener: SearchView.OnQueryTextListener  by lazy {
         object : SearchView.OnQueryTextListener {
@@ -126,6 +118,7 @@ class MainActivity : AppCompatActivity(),
     private var matchesList: MutableList<Int> = mutableListOf()
     private var findInPageMatch = 1
     private var matchesCount = 0
+    private lateinit var disposable: Any
 
     companion object {
         private var row: Bible? = null
@@ -133,67 +126,65 @@ class MainActivity : AppCompatActivity(),
         private var viewPagerPosition = 0
         private var tBook = 1
         private var tChapter = 1
-        //private var pos = 0
         private var queryFinished = false
-        private lateinit var currentPageView: RecyclerView
     }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
-
-        //GlobalScope.launch(IO) {
-
-        val navHeaderView: View = nav_view.inflateHeaderView(R.layout.nav_header_main)
-        val coverView: KenBurnsView = navHeaderView.findViewById(R.id.coverView)
-        actionBarDrawerToggle = ActionBarDrawerToggle(this@MainActivity, drawer_layout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
-        drawer_layout.addDrawerListener(actionBarDrawerToggle)
-        actionBarDrawerToggle.syncState()
-        nav_view.setNavigationItemSelectedListener(this@MainActivity)
         supportActionBar?.setDisplayShowTitleEnabled(false)
         supportActionBar?.setHomeButtonEnabled(true)
 
-        // withContext(UI) {
+        val navHeaderView: View = nav_view.inflateHeaderView(R.layout.nav_header_main)
+        actionBarDrawerToggle = ActionBarDrawerToggle(this, drawer_layout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
+        drawer_layout.addDrawerListener(actionBarDrawerToggle)
+        actionBarDrawerToggle.syncState()
+        nav_view.setNavigationItemSelectedListener(this)
+
+        val coverView: KenBurnsView = navHeaderView.findViewById(R.id.coverView)
         Picasso.get().load(R.drawable.cover).into(coverView)
-        //}
-        //}
 
-        row = bible[viewPagerPosition]
+        viewPagerPosition = Prefs.VP_Position
 
-        // Toolbar Title
-        toolbarTitle.run {
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 20.5f)
-            setTypeface(Typeface.SANS_SERIF, Typeface.NORMAL)
-            setTextColor(ResourcesCompat.getColor(resources, android.R.color.background_light, null))
-            //typeface = Fonts.Merriweather_Black
-        }
-        blink(toolbarTitle, 4, 1000)
+        viewModel.list.observe(this, Observer {
+            bible = it
+            row = bible[viewPagerPosition]
 
-        if (Prefs.VP_Position == 0) toolbarTitle.futureSet("Genesis 1") //Init
+            // Toolbar Title
+            toolbarTitle.setTextColor(ResourcesCompat.getColor(resources, android.R.color.background_light, null))
+            toolbarTitle.setTypeface(Typeface.SANS_SERIF, Typeface.NORMAL)
+            toolbarTitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20.5f)
+            blink(toolbarTitle, 4, 1000)
 
-        mainViewPager = findViewById(R.id.mainViewPager)
+            if (Prefs.VP_Position == 0) toolbarTitle.futureSet("Genesis 1") //Init
 
+            mainViewPager = findViewById(R.id.mainViewPager)
+            mainViewPager.adapter = MainViewPagerAdapter(this, viewModel, bible)
 
-        mainViewPager.adapter = MainViewPagerAdapter(this, viewModel, bible)
+            val onPageListener = object : ViewPager.OnPageChangeListener {
+                override fun onPageScrollStateChanged(state: Int) {}
 
-        val onPageListener = object : ViewPager.OnPageChangeListener {
-            override fun onPageScrollStateChanged(state: Int) {}
+                override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {}
 
-            override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {}
+                override fun onPageSelected(position: Int) {
 
-            override fun onPageSelected(position: Int) {
-                viewPagerPosition = position
-                row = bible[viewPagerPosition]//viewModel.getRow(position)
-                toolbarTitle.futureSet("${row?.bookName} ${row?.chapterId}")
-                if (toolbarSearchView.visibility == View.VISIBLE && findInPageMenu)
-                    closeFindInPageSearch()
+                    viewPagerPosition = position
+                    row = bible[viewPagerPosition]//viewModel.getRow(position)
+                    toolbarTitle.futureSet("${row?.bookName} ${row?.chapterId}")
+                    if (toolbarSearchView.visibility == View.VISIBLE && findInPageMenu)
+                        closeFindInPageSearch()
+
+                }
 
             }
+            mainViewPager.addOnPageChangeListener(onPageListener)
+            mainViewPager.currentItem = Prefs.VP_Position
 
-        }
-        mainViewPager.addOnPageChangeListener(onPageListener)
-        mainViewPager.currentItem = Prefs.VP_Position
+        })
+
+        viewModel.getPages2()
 
         // Fragment height
         val linearParams = stuffLinearLayout.layoutParams
@@ -245,7 +236,6 @@ class MainActivity : AppCompatActivity(),
             if (verseFragment.isAdded) verseFragment.updateList(tBook, tChapter)
 
         }
-
 
         fipCloseButton.setOnClickListener {
             if (findInPageMenu)
@@ -431,15 +421,18 @@ class MainActivity : AppCompatActivity(),
     override fun onItemSelectedFV(position: Int) {
         //val ma = (mainViewPager.adapter as MainViewPagerAdapter)
         val cPosition = getPosition(tBook, tChapter)
+        val newPage = mainViewPager.currentItem != cPosition
         queryFinished = true
         finishSearch()
         val MAX_SETTLE_DURATION = 600L
         mainViewPager.setCurrentItem(cPosition, true)
         @Suppress("DeferredResultUnused")
         GlobalScope.async {
-            delay(MAX_SETTLE_DURATION/2L)
+            // Scrolling will fail only if there's lag. Perhaps the first 2 scrolls to warm up.
             val sv = mainViewPager.findViewWithTag<ScrollView>("sv${mainViewPager.currentItem}")
             sv.findViewWithTag<AppCompatTextView>("tv${mainViewPager.currentItem}")?.let { tv ->
+                if (newPage)
+                    while (tv.text.isBlank()) delay(100)
                 val idx = if (Page.showVerseNumbers) tv.text.indexOf("${position + 1}") else 0
                 if (position == 0)
                     sv.post { sv.smoothScrollTo(0, sv.top - sv.paddingTop) }
@@ -481,14 +474,8 @@ class MainActivity : AppCompatActivity(),
         findInPageMenu = false
     }
 
-    private val vbs by lazy { getSystemService(VIBRATOR_SERVICE) as Vibrator }
-
     private fun View.vibrate() {
         this.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
-    }
-
-    private fun spToPx(sp: Float): Int {
-        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sp, this.resources.displayMetrics).toInt()
     }
 
     private fun showFindInPageSearch() {

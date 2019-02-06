@@ -432,6 +432,7 @@ object Page {
                     textView.futureSet(sText)
 
                     if (showDropCap && dropCapView != null) {
+                        dropCapView.visibility = View.GONE
                         textView.visibility = View.GONE
                         textView.post {
                             val ss = textView.text as Spannable
@@ -445,6 +446,7 @@ object Page {
                             }
                             ss.removeSpans(0, ss.length, LettrineLeadingMarginSpan2::class.java)
                             ss.setSpan(LettrineLeadingMarginSpan2(2, dropCapView.getWidth), 0, end, 0)
+                            dropCapView.visibility = View.VISIBLE
                             textView.visibility = View.VISIBLE
 
                             // Increase the text size and bring it back to normal to get rid of text clipping.

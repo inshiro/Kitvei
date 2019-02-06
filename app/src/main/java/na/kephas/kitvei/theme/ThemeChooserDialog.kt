@@ -331,13 +331,16 @@ class ThemeChooserDialog : ExtendedBottomSheetDialogFragment() {
                 // If seekbar is not increment or decrement, setTextSize to prevent text clipping
                 val diff = (prevTextSize-1f) - fontSize
                 val diff2 = (prevTextSize+1f) - fontSize
-                val finalDiff = diff == 0f || diff2 == 0f
+                val isIncrement = diff == 0f || diff2 == 0f
 
                 // Reduce the text size and bring it back to normal to get rid of text clipping.
                 pTextView.let {
                     // If current size is smaller than prevSize
-                    if (it.textSize < prevSize || finalDiff) {
+                    if (it.textSize < prevSize || !isIncrement) {
                         it.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize - 1f)
+                        it.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize)
+                    } else if (it.textSize > prevSize) {
+                        it.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize + 1f)
                         it.setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize)
                     }
                 }
@@ -384,6 +387,7 @@ class ThemeChooserDialog : ExtendedBottomSheetDialogFragment() {
         override fun onClick(v: View?) {
             //v?.toast("This feature is still in development.")
             //return
+            prevTextSize = fontSize
             val changed: Boolean = when (action) {
                 FontSizeAction.INCREASE -> {
                     if (fontSize + 1 <= textSizeSeekBar.max) {

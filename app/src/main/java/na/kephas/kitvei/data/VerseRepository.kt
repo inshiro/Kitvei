@@ -1,5 +1,6 @@
 package na.kephas.kitvei.data
 
+import androidx.annotation.WorkerThread
 import androidx.sqlite.db.SimpleSQLiteQuery
 import java.text.FieldPosition
 
@@ -11,6 +12,7 @@ class VerseRepository private constructor(private val verseDao: VerseDao) {
     fun getRow(position: Int) = verseDao.getRow(position)
     fun getPagePosition(book: Int, chapter: Int) = verseDao.getPagePosition(book,chapter)
 
+    @WorkerThread
     fun getPages() = verseDao.getPages()
 
     fun getVersesRaw(book: Int, chapter: Int) = verseDao.getVersesRaw(SimpleSQLiteQuery("SELECT * FROM Bible WHERE book_id=? AND chapter_id=?", arrayOf<Any>(book, chapter)))
