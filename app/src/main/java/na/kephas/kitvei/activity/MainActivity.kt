@@ -149,108 +149,114 @@ class MainActivity : AppCompatActivity(),
         viewPagerPosition = Prefs.VP_Position
 
         viewModel.list.observe(this, Observer {
-            bible = it
-            row = bible[viewPagerPosition]
+            if (it.isNotEmpty()) {
+                bible = it
+                row = bible[viewPagerPosition]
 
-            // Toolbar Title
-            toolbarTitle.setTextColor(ResourcesCompat.getColor(resources, android.R.color.background_light, null))
-            toolbarTitle.setTypeface(Typeface.SANS_SERIF, Typeface.NORMAL)
-            toolbarTitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20.5f)
-            blink(toolbarTitle, 4, 1000)
+                // Toolbar Title
+                toolbarTitle.setTextColor(ResourcesCompat.getColor(resources, android.R.color.background_light, null))
+                toolbarTitle.setTypeface(Typeface.SANS_SERIF, Typeface.NORMAL)
+                toolbarTitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20.5f)
+                blink(toolbarTitle, 4, 1000)
 
-            if (Prefs.VP_Position == 0) toolbarTitle.futureSet("Genesis 1") //Init
+                if (Prefs.VP_Position == 0) toolbarTitle.futureSet("Genesis 1") //Init
 
-            mainViewPager = findViewById(R.id.mainViewPager)
-            mainViewPager.adapter = MainViewPagerAdapter(this, viewModel, bible)
+                mainViewPager = findViewById(R.id.mainViewPager)
+                mainViewPager.adapter = MainViewPagerAdapter(this, viewModel, bible)
 
-            val onPageListener = object : ViewPager.OnPageChangeListener {
-                override fun onPageScrollStateChanged(state: Int) {}
+                val onPageListener = object : ViewPager.OnPageChangeListener {
+                    override fun onPageScrollStateChanged(state: Int) {}
 
-                override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {}
+                    override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {}
 
-                override fun onPageSelected(position: Int) {
+                    override fun onPageSelected(position: Int) {
 
-                    viewPagerPosition = position
-                    row = bible[viewPagerPosition]//viewModel.getRow(position)
-                    toolbarTitle.futureSet("${row?.bookName} ${row?.chapterId}")
-                    if (toolbarSearchView.visibility == View.VISIBLE && findInPageMenu)
-                        closeFindInPageSearch()
+                        viewPagerPosition = position
+                        row = bible[viewPagerPosition]//viewModel.getRow(position)
+                        toolbarTitle.futureSet("${row?.bookName} ${row?.chapterId}")
+                        if (toolbarSearchView.visibility == View.VISIBLE && findInPageMenu)
+                            closeFindInPageSearch()
+
+                    }
+
+                }
+                mainViewPager.addOnPageChangeListener(onPageListener)
+                mainViewPager.currentItem = Prefs.VP_Position
+
+
+                // Fragment height
+                val linearParams = stuffLinearLayout.layoutParams
+                linearParams.height = (getScreenHeight() * 0.5f).toInt()
+                stuffLinearLayout.layoutParams = linearParams
+                stuffLinearLayout.isFocusable = false
+                stuffLinearLayout.clearFocus()
+
+                // SearchViewPager Setup
+                searchViewPager = findViewById<View>(R.id.viewpager) as androidx.viewpager.widget.ViewPager
+                tabLayout = findViewById<View>(R.id.tablayout) as com.google.android.material.tabs.TabLayout
+                miniSearchViewPagerAdapter = MiniSearchViewPagerAdapter(supportFragmentManager)
+                searchViewPager.adapter = miniSearchViewPagerAdapter
+                tabLayout.setupWithViewPager(searchViewPager)
+                searchViewPager.offscreenPageLimit = 2
+
+                // Create an initial view to display; must be a subclass of FrameLayout.
+                miniSearchViewPagerAdapter.startUpdate(searchViewPager)
+                bookFragment = miniSearchViewPagerAdapter.instantiateItem(searchViewPager, 0) as FragmentBook
+                chapterFragment = miniSearchViewPagerAdapter.instantiateItem(searchViewPager, 1) as FragmentChapter
+                verseFragment = miniSearchViewPagerAdapter.instantiateItem(searchViewPager, 2) as FragmentVerse
+                miniSearchViewPagerAdapter.finishUpdate(searchViewPager)
+
+
+                // Open SearchView. Prevent keyboard show
+                toolbarSearchView.post {
+                    toolbarSearchView.apply {
+                        isFocusable = false
+                        isIconified = false
+                        clearFocus()
+                        hideSoftInput(this)
+                    }
+                }
+
+                toolbarTitle.setOnClickListener {
+                    searchViewPager.currentItem = 0
+
+                    showSearch()
+
+                    topStuff.alpha = 0f
+                    topStuff.visibility = View.VISIBLE
+                    topStuff.animate().alpha(1f)
+                    topStuff.bringToFront()
+
+                    tBook = row?.bookId!!
+                    tChapter = row?.chapterId!!
+                    updateHintTemp(tBook, tChapter)
+                    if (chapterFragment.isAdded) chapterFragment.updateList(tBook)
+                    if (verseFragment.isAdded) verseFragment.updateList(tBook, tChapter)
 
                 }
 
+                fipCloseButton.setOnClickListener {
+                    if (findInPageMenu)
+                        closeFindInPageSearch()
+                }
+
+                toolbarSearchView.setOnCloseListener {
+                    if (findInPageMenu)
+                        closeFindInPageSearch()
+                    else
+                        finishSearch()
+                    true
+                }
             }
-            mainViewPager.addOnPageChangeListener(onPageListener)
-            mainViewPager.currentItem = Prefs.VP_Position
 
 
-
-        // Fragment height
-        val linearParams = stuffLinearLayout.layoutParams
-        linearParams.height = (getScreenHeight() * 0.5f).toInt()
-        stuffLinearLayout.layoutParams = linearParams
-        stuffLinearLayout.isFocusable = false
-        stuffLinearLayout.clearFocus()
-
-        // SearchViewPager Setup
-        searchViewPager = findViewById<View>(R.id.viewpager) as androidx.viewpager.widget.ViewPager
-        tabLayout = findViewById<View>(R.id.tablayout) as com.google.android.material.tabs.TabLayout
-        miniSearchViewPagerAdapter = MiniSearchViewPagerAdapter(supportFragmentManager)
-        searchViewPager.adapter = miniSearchViewPagerAdapter
-        tabLayout.setupWithViewPager(searchViewPager)
-        searchViewPager.offscreenPageLimit = 2
-
-        // Create an initial view to display; must be a subclass of FrameLayout.
-        miniSearchViewPagerAdapter.startUpdate(searchViewPager)
-        bookFragment = miniSearchViewPagerAdapter.instantiateItem(searchViewPager, 0) as FragmentBook
-        chapterFragment = miniSearchViewPagerAdapter.instantiateItem(searchViewPager, 1) as FragmentChapter
-        verseFragment = miniSearchViewPagerAdapter.instantiateItem(searchViewPager, 2) as FragmentVerse
-        miniSearchViewPagerAdapter.finishUpdate(searchViewPager)
-
-
-        // Open SearchView. Prevent keyboard show
-        toolbarSearchView.post {
-            toolbarSearchView.apply {
-                isFocusable = false
-                isIconified = false
-                clearFocus()
-                hideSoftInput(this)
-            }
-        }
-
-        toolbarTitle.setOnClickListener {
-            searchViewPager.currentItem = 0
-
-            showSearch()
-
-            topStuff.alpha = 0f
-            topStuff.visibility = View.VISIBLE
-            topStuff.animate().alpha(1f)
-            topStuff.bringToFront()
-
-            tBook = row?.bookId!!
-            tChapter = row?.chapterId!!
-            updateHintTemp(tBook, tChapter)
-            if (chapterFragment.isAdded) chapterFragment.updateList(tBook)
-            if (verseFragment.isAdded) verseFragment.updateList(tBook, tChapter)
-
-        }
-
-        fipCloseButton.setOnClickListener {
-            if (findInPageMenu)
-                closeFindInPageSearch()
-        }
-
-        toolbarSearchView.setOnCloseListener {
-            if (findInPageMenu)
-                closeFindInPageSearch()
-            else
-                finishSearch()
-            true
-        }
         })
 
-        viewModel.getPages2()
+    }
 
+    override fun onStart() {
+        super.onStart()
+        viewModel.getPages2()
     }
 
     override fun onPause() {
@@ -329,8 +335,8 @@ class MainActivity : AppCompatActivity(),
             it.findItem(R.id.red_letter_menu).isChecked = Page.showRedLetters
             it.findItem(R.id.verse_numbers_menu).isChecked = Page.showVerseNumbers
             it.findItem(R.id.seperate_verses_menu).isChecked = Page.newLineEachVerse
-            it.findItem(R.id.subject_headings_menu).isChecked = Page.showHeadings
-            it.findItem(R.id.subject_footings_menu).isChecked = Page.showFootings
+            //it.findItem(R.id.subject_headings_menu).isChecked = Page.showHeadings
+            //it.findItem(R.id.subject_footings_menu).isChecked = Page.showFootings
         }
         return retValue
     }
@@ -357,7 +363,7 @@ class MainActivity : AppCompatActivity(),
                     cancelTranslucentNavBar()
                 themeChooserDialog.show(supportFragmentManager, "tcd")
             }
-            R.id.kjv_styling_menu, R.id.drop_cap_menu, R.id.pbreak_menu, R.id.red_letter_menu, R.id.verse_numbers_menu, R.id.seperate_verses_menu, R.id.subject_headings_menu, R.id.subject_footings_menu -> {
+            R.id.kjv_styling_menu, R.id.drop_cap_menu, R.id.pbreak_menu, R.id.red_letter_menu, R.id.verse_numbers_menu, R.id.seperate_verses_menu /*, R.id.subject_headings_menu, R.id.subject_footings_menu*/ -> {
                 // Keep options menu open
                 item.isChecked = !item.isChecked
                 item.setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
@@ -378,8 +384,8 @@ class MainActivity : AppCompatActivity(),
                     R.id.red_letter_menu -> Page.showRedLetters = item.isChecked
                     R.id.verse_numbers_menu -> Page.showVerseNumbers = item.isChecked
                     R.id.seperate_verses_menu -> Page.newLineEachVerse = item.isChecked
-                    R.id.subject_headings_menu -> Page.showHeadings = item.isChecked
-                    R.id.subject_footings_menu -> Page.showFootings = item.isChecked
+                    //R.id.subject_headings_menu -> Page.showHeadings = item.isChecked
+                    //R.id.subject_footings_menu -> Page.showFootings = item.isChecked
                 }
                 mainViewPager.adapter?.notifyDataSetChanged()
                 return false

@@ -14,6 +14,9 @@ import android.view.View
 import android.widget.TextView
 import androidx.appcompat.widget.AppCompatTextView
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import na.kephas.kitvei.App
 import na.kephas.kitvei.Prefs
@@ -53,7 +56,7 @@ object Page {
             Prefs.seperateVersePref = value
         }
 
-    var showHeadings: Boolean
+    /*var showHeadings: Boolean
         get() = Prefs.headingsPref
         set(value) {
             Prefs.headingsPref = value
@@ -63,7 +66,7 @@ object Page {
         get() = Prefs.footingsPref
         set(value) {
             Prefs.footingsPref = value
-        }
+        }*/
 
     var kjvStyling: Boolean
         get() = Prefs.kjvStylingPref
@@ -438,20 +441,59 @@ object Page {
                             val ss = textView.text as Spannable
                             var end = 0
                             val whiteSpace = ss.indexOf("\u200B")
-
+                            val lo = textView.layout?.getLineForOffset(whiteSpace)
                             end = if (whiteSpace > 0) {
-                                if (textView.layout?.getLineForOffset(whiteSpace) == 0) ss.indexOf("\u200B", whiteSpace + 1) else whiteSpace
+                                if (lo == 0) ss.indexOf("\u200B", whiteSpace + 1) else whiteSpace
                             } else {
                                 ss.length
                             }
                             ss.removeSpans(0, ss.length, LettrineLeadingMarginSpan2::class.java)
-                            dropCapView.post {
+                            if (dropCapView.getWidth <= 0) {
+
+                                // Only difference
+                                dropCapView.post {
+                                    ss.setSpan(LettrineLeadingMarginSpan2(2, dropCapView.getWidth), 0, end, 0)
+
+                                    // Increase the text size and bring it back to normal to get rid of text clipping.
+                                    textView.let { itv ->
+                                        itv.setTextSize(TypedValue.COMPLEX_UNIT_PT, textSize + 1f)
+                                        itv.setTextSize(TypedValue.COMPLEX_UNIT_PT, textSize)
+                                    }
+
+                                    textView.post {
+                                        textView.layout?.let { tvl ->
+                                            end = if (whiteSpace > 0) {
+                                                if (tvl.getLineForOffset(whiteSpace) == 0) ss.indexOf("\u200B", whiteSpace + 1) else whiteSpace
+                                            } else {
+                                                ss.length
+                                            }
+                                            ss.removeSpans(0, ss.length, LettrineLeadingMarginSpan2::class.java)
+                                            ss.setSpan(LettrineLeadingMarginSpan2(2, dropCapView.getWidth), 0, end, 0)
+                                        }
+                                    }
+
+                                    dropCapView.visibility = View.VISIBLE
+                                    textView.visibility = View.VISIBLE
+                                }
+                            } else {
                                 ss.setSpan(LettrineLeadingMarginSpan2(2, dropCapView.getWidth), 0, end, 0)
 
                                 // Increase the text size and bring it back to normal to get rid of text clipping.
                                 textView.let { itv ->
                                     itv.setTextSize(TypedValue.COMPLEX_UNIT_PT, textSize + 1f)
                                     itv.setTextSize(TypedValue.COMPLEX_UNIT_PT, textSize)
+                                }
+
+                                textView.post {
+                                    textView.layout?.let { tvl ->
+                                        end = if (whiteSpace > 0) {
+                                            if (tvl.getLineForOffset(whiteSpace) == 0) ss.indexOf("\u200B", whiteSpace + 1) else whiteSpace
+                                        } else {
+                                            ss.length
+                                        }
+                                        ss.removeSpans(0, ss.length, LettrineLeadingMarginSpan2::class.java)
+                                        ss.setSpan(LettrineLeadingMarginSpan2(2, dropCapView.getWidth), 0, end, 0)
+                                    }
                                 }
 
                                 dropCapView.visibility = View.VISIBLE

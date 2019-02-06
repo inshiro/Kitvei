@@ -55,12 +55,15 @@ class VerseListViewModel internal constructor(
     // When called this method runs in the background and when it's done it updates the value.
     // When the value is updated, the observer reacts to it.
     @UiThread
-    fun getPages2(): LiveData<List<Bible>>  {
-        Coroutines.ioThenMain({
-            verseRepository.getPages()
-        }) {
-            _list.value = it
-        }
+    fun getPages2(): LiveData<List<Bible>> {
+
+        if (_list.value == null)
+            Coroutines.ioThenMain({
+                verseRepository.getPages()
+            }) {
+                _list.value = it
+            }
+
         return list
     }
 

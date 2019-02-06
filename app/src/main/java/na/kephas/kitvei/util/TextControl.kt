@@ -8,6 +8,7 @@ import android.view.Gravity
 import android.view.View
 import android.widget.TextView
 import androidx.appcompat.widget.AppCompatTextView
+import androidx.core.view.updatePadding
 
 
 /*
@@ -73,11 +74,12 @@ class TextControl : AppCompatTextView {
     private fun init() {
         //includeFontPadding = false
         gravity = gravity or Gravity.TOP
+        updatePadding(0,0,0,0)
     }
 
     override fun onDraw(canvas: Canvas) {
-        //val yOff = -mAdditionalPadding / 0.85 // 6f
-        val yOff = (textSize - lineHeight) / if (text.contains("J")) 0.715f else 0.793f
+        //val yOff = -mAdditionalPadding / 0.85f // 6f
+        val yOff = (textSize - lineHeight) / if (text.contains("J")) 0.715f else 0.805f
         canvas.translate(0f, yOff)
         super.onDraw(canvas)
     }

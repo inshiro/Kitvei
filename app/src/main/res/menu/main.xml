@@ -24,6 +24,7 @@
         app:showAsAction="never"
         appname:ignore="AppCompatResource">
         <menu>
+            <!--
             <item
                 android:id="@+id/copying_menu"
                 android:title="Copying"
@@ -48,6 +49,7 @@
                         appname:ignore="AppCompatResource" />
                 </menu>
             </item>
+            -->
             <item
                 android:id="@+id/kjv_styling_menu"
                 android:checkable="true"
@@ -90,6 +92,7 @@
                 android:title="Separate verses"
                 app:showAsAction="never"
                 appname:ignore="AppCompatResource" />
+            <!--
             <item
                 android:id="@+id/subject_headings_menu"
                 android:checkable="true"
@@ -104,6 +107,7 @@
                 android:title="Subject footings"
                 app:showAsAction="never"
                 appname:ignore="AppCompatResource" />
+            -->
         </menu>
     </item>
 

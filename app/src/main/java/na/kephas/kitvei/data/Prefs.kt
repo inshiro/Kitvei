@@ -69,12 +69,12 @@ class Prefs (context: Context) {
     var seperateVersePref: Boolean
         get() = prefs.getBoolean(NEW_LINE_EACH_VERSE_ID, true)
         set(value) = prefs.edit().putBoolean(NEW_LINE_EACH_VERSE_ID, value).apply()
-    var headingsPref: Boolean
+    /*var headingsPref: Boolean
         get() = prefs.getBoolean(HEADINGS_ID, true)
         set(value) = prefs.edit().putBoolean(HEADINGS_ID, value).apply()
     var footingsPref: Boolean
         get() = prefs.getBoolean(FOOTINGS_ID, true)
-        set(value) = prefs.edit().putBoolean(FOOTINGS_ID, value).apply()
+        set(value) = prefs.edit().putBoolean(FOOTINGS_ID, value).apply()*/
     /*var shouldDimDarkModeImages: Boolean
         get() = prefs.getFloat(FONT_SIZE, 1f)
         set(value) = prefs.edit().putFloat(FONT_SIZE, value).apply()*/
