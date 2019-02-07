@@ -65,13 +65,6 @@
                 app:showAsAction="never"
                 appname:ignore="AppCompatResource" />
             <item
-                android:id="@+id/pbreak_menu"
-                android:checkable="true"
-                android:checked="false"
-                android:title="Paragraph breaks"
-                app:showAsAction="never"
-                appname:ignore="AppCompatResource" />
-            <item
                 android:id="@+id/red_letter_menu"
                 android:checkable="true"
                 android:checked="true"
@@ -90,6 +83,13 @@
                 android:checkable="true"
                 android:checked="true"
                 android:title="Separate verses"
+                app:showAsAction="never"
+                appname:ignore="AppCompatResource" />
+            <item
+                android:id="@+id/pbreak_menu"
+                android:checkable="true"
+                android:checked="false"
+                android:title="Paragraph breaks"
                 app:showAsAction="never"
                 appname:ignore="AppCompatResource" />
             <!--

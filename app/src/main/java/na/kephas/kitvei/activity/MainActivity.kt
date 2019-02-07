@@ -19,6 +19,7 @@ import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.view.inputmethod.InputMethodManager
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.ScrollView
 import androidx.annotation.ColorRes
 import androidx.appcompat.app.ActionBarDrawerToggle
@@ -53,6 +54,7 @@ import na.kephas.kitvei.page.Formatting
 import na.kephas.kitvei.page.Page
 import na.kephas.kitvei.theme.ThemeChooserDialog
 import na.kephas.kitvei.util.*
+import na.kephas.kitvei.viewmodels.Coroutines
 import na.kephas.kitvei.viewmodels.VerseListViewModel
 import java.lang.reflect.Field
 import kotlin.properties.Delegates
@@ -148,9 +150,13 @@ class MainActivity : AppCompatActivity(),
 
         viewPagerPosition = Prefs.VP_Position
 
-        viewModel.list.observe(this, Observer {
-            if (it.isNotEmpty()) {
-                bible = it
+        val progressBar = findViewById<ProgressBar>(R.id.progressBar)
+
+        Coroutines.ioThenMain({
+            viewModel.getPages()
+        }) {
+            it?.let { list ->
+                bible = list
                 row = bible[viewPagerPosition]
 
                 // Toolbar Title
@@ -183,6 +189,21 @@ class MainActivity : AppCompatActivity(),
                 mainViewPager.addOnPageChangeListener(onPageListener)
                 mainViewPager.currentItem = Prefs.VP_Position
 
+                // Inital ProgressBar
+                GlobalScope.launch {
+                    while (mainViewPager.findViewWithTag<AppCompatTextView>("tv${mainViewPager.currentItem}") == null) delay(100)
+                    mainViewPager.findViewWithTag<AppCompatTextView>("tv${mainViewPager.currentItem}")?.let { tv ->
+                        while (tv.text.isNullOrBlank()) delay(100)
+                        withContext(UI) {
+                            tv.post {
+                                if (tv.text.isNotEmpty()) {
+                                    progressBar.visibility = View.GONE
+
+                                }
+                            }
+                        }
+                    }
+                }
 
                 // Fragment height
                 val linearParams = stuffLinearLayout.layoutParams
@@ -249,15 +270,18 @@ class MainActivity : AppCompatActivity(),
                 }
             }
 
+        }
+        //viewModel.list.observe(this, Observer {
 
-        })
+
+        // })
 
     }
 
-    override fun onStart() {
+    /*override fun onStart() {
         super.onStart()
         viewModel.getPages2()
-    }
+    }*/
 
     override fun onPause() {
         super.onPause()

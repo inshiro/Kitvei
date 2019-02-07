@@ -66,11 +66,11 @@ private String generateVersionName() {
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     // Android support library
-    def androidx_verison = "1.0.0"
-    implementation "com.google.android.material:material:$androidx_verison"
-    implementation "androidx.appcompat:appcompat:$androidx_verison"
-    implementation "androidx.recyclerview:recyclerview:$androidx_verison"
-    implementation "androidx.core:core-ktx:$androidx_verison"
+    def androidx_version = "1.0.0"
+    implementation "com.google.android.material:material:$androidx_version"
+    implementation "androidx.appcompat:appcompat:1.0.2"
+    implementation "androidx.recyclerview:recyclerview:$androidx_version"
+    implementation "androidx.core:core-ktx:$androidx_version"
     implementation "androidx.constraintlayout:constraintlayout:2.0.0-alpha3"
 
     // ViewModel-LiveData
@@ -91,7 +91,7 @@ dependencies {
     kapt "androidx.room:room-compiler:$room_version"
 
     // Paging
-    def paging_version = "2.0.0"
+    def paging_version = "2.1.0"
     implementation "androidx.paging:paging-runtime:$paging_version"
 
     // Image library

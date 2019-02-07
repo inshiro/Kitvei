@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.viewpager.widget.PagerAdapter
 import kotlinx.android.synthetic.main.main_rv_item.view.*
@@ -14,8 +15,7 @@ import na.kephas.kitvei.data.Bible
 import na.kephas.kitvei.page.Formatting
 import na.kephas.kitvei.page.Page
 import na.kephas.kitvei.theme.ThemeChooserDialog.Companion.fontSize
-import na.kephas.kitvei.util.Fonts
-import na.kephas.kitvei.util.TextControl
+import na.kephas.kitvei.util.*
 import na.kephas.kitvei.viewmodels.VerseListViewModel
 
 
@@ -37,7 +37,7 @@ class MainViewPagerAdapter(private val act: AppCompatActivity, private val vm: V
             mLayout.layoutParams = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT)
             textView.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             dropCapView = TextControl(act).apply {
-                layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                 tag = "dcv$position"
                 typeface = Fonts.GentiumPlus_R
                 setTextSize(TypedValue.COMPLEX_UNIT_PT, fontSize * 4.85f)
@@ -49,11 +49,18 @@ class MainViewPagerAdapter(private val act: AppCompatActivity, private val vm: V
             scrollView.addView(mLayout)
             //setAutoSizeTextTypeWithDefaults(textView, TextViewCompat.AUTO_SIZE_TEXT_TYPE_UNIFORM)
         }
-        Page.display(vm, row, textView, dropCapView)
+        //val runTime = measureTime {
+            Page.display(vm, row, textView, dropCapView)
+        //}.format(2)
+        //d { runTime }
+
 
         return layout
     }
 
+    fun getItem(position: Int) {
+        return
+    }
     override fun getItemPosition(`object`: Any): Int {
         return POSITION_NONE
     }

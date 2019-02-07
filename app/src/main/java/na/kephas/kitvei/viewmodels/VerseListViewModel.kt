@@ -42,10 +42,8 @@ class VerseListViewModel internal constructor(
         verseRepository.getPagePosition(book, chapter)
     }
 
-    fun getPages(): List<Bible> {
-        val pages = verseRepository.getPages()
-        return pages
-    }
+    fun getPages(): List<Bible> = verseRepository.getPages()
+
 
 
     private val _list = MutableLiveData<List<Bible>>()
@@ -67,9 +65,11 @@ class VerseListViewModel internal constructor(
         return list
     }
 
-    fun getVersesRaw(book: Int, chapter: Int) = runBlocking(IO) {
-        verseRepository.getVersesRaw(book, chapter)
-    }
+   // fun getVersesRaw(book: Int, chapter: Int) = runBlocking(IO) {
+    //    verseRepository.getVersesRaw(book, chapter)
+    //}
+    fun getVersesRaw(book: Int, chapter: Int) = verseRepository.getVersesRaw(book, chapter)
+    //}
 
     fun getVerses(book: Int, chapter: Int): LiveData<PagedList<Bible>> = runBlocking(IO) {
         LivePagedListBuilder(verseRepository.getVerses(book, chapter),

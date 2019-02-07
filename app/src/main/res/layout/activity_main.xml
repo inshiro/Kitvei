@@ -10,6 +10,12 @@
     tools:openDrawer="start">
 
 
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true" />
     <include
         layout="@layout/activity_main_content"
         android:layout_width="match_parent"
@@ -21,7 +27,6 @@
         android:layout_height="match_parent"
         android:layout_gravity="start"
         android:fitsSystemWindows="true"
-
         app:menu="@menu/activity_main_drawer" />
         <!--
         app:itemIconTint="@android:color/black"
