@@ -304,7 +304,6 @@ object Page {
                                     var c = 0
                                     groupedVersesList.forEachIndexed { index, lst ->
                                         for (id in lst.min()!!..lst.max()!!) {
-                                            //if (groupedVersesList.size == 1) text.append("$id ")
                                             if (selectedListVerses[c].first == 0 && showDropCap) {
                                                 val d = textView.text.substring(selectedListVerses[c].first, selectedListVerses[c].second)
                                                 val di = d.indexOf(" ")
@@ -316,6 +315,10 @@ object Page {
                                             c++
                                         }
                                     }
+
+                                    // Remove verse number if selected only one verse to copy from
+                                    if (groupedVersesList.size == 1)
+                                        text.delete(0, 2)
 
                                     // Remove newline
                                     if (text.last() == '\n') text.delete(text.length - 1, text.length)
