@@ -139,7 +139,7 @@ object Page {
                             val end = sText.indexOf(']', start)
                             sText.delete(start, start + 1)
                             sText.delete(end - 1, end)
-                            sText.setSpan(CharacterStyle.wrap(Formatting.Italics), start, end, 0)
+                            sText.setSpan(CharacterStyle.wrap(Formatting.Italics), start, if (end <= sText.length) end else sText.length, 0)
                         }
                     }
                 }
@@ -407,32 +407,35 @@ object Page {
                         ss.length
                     }
                     ss.removeSpans(0, ss.length, LettrineLeadingMarginSpan2::class.java)
-                    dropCapView.post {
-                        if (dropCapView.width > 0) {
-                            ss.setSpan(LettrineLeadingMarginSpan2(2, dropCapView.width), 0, end, 0)
+                    Coroutines.ioThenMain({
+                        while (dropCapView.width <= 0) delay(100)
+                        dropCapView.width
+                    }) { dWidth ->
 
-                            // Increase the text size and bring it back to normal to get rid of text clipping.
-                            textView.let { itv ->
-                                itv.setTextSize(TypedValue.COMPLEX_UNIT_PT, textSize + 1f)
-                                itv.setTextSize(TypedValue.COMPLEX_UNIT_PT, textSize)
-                            }
+                        dropCapView.post {
+                            if (dWidth != null && dWidth > 0) {
+                                ss.setSpan(LettrineLeadingMarginSpan2(2, dWidth), 0, end, 0)
 
-                            textView.post {
-                                textView.layout?.let { tvl ->
-                                    end = if (whiteSpace > 0) {
-                                        if (tvl.getLineForOffset(whiteSpace) == 0) ss.indexOf("\u200B", whiteSpace + 1) else whiteSpace
-                                    } else {
-                                        ss.length
+                                // Increase the text size and bring it back to normal to get rid of text clipping.
+                                textView.let { itv ->
+                                    itv.setTextSize(TypedValue.COMPLEX_UNIT_PT, textSize + 1f)
+                                    itv.setTextSize(TypedValue.COMPLEX_UNIT_PT, textSize)
+                                    itv.post {
+                                        textView.layout?.let { tvl ->
+                                            end = if (whiteSpace > 0) {
+                                                if (tvl.getLineForOffset(whiteSpace) == 0) ss.indexOf("\u200B", whiteSpace + 1) else whiteSpace
+                                            } else {
+                                                ss.length
+                                            }
+                                            ss.removeSpans(0, ss.length, LettrineLeadingMarginSpan2::class.java)
+                                            ss.setSpan(LettrineLeadingMarginSpan2(2, dWidth), 0, end, 0)
+                                        }
+                                        dropCapView.visibility = View.VISIBLE
+                                        textView.visibility = View.VISIBLE
                                     }
-                                    ss.removeSpans(0, ss.length, LettrineLeadingMarginSpan2::class.java)
-                                    ss.setSpan(LettrineLeadingMarginSpan2(2, dropCapView.getWidth), 0, end, 0)
                                 }
-                                dropCapView.visibility = View.VISIBLE
-                                textView.visibility = View.VISIBLE
-
 
                             }
-
                         }
                     }
 

@@ -50,7 +50,7 @@ class MainViewPagerAdapter(private val act: AppCompatActivity, private val vm: V
             //setAutoSizeTextTypeWithDefaults(textView, TextViewCompat.AUTO_SIZE_TEXT_TYPE_UNIFORM)
         }
         //val runTime = measureTime {
-            Page.display(vm, row, textView, dropCapView)
+            tryy {Page.display(vm, row, textView, dropCapView)}
         //}.format(2)
         //d { runTime }
 

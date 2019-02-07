@@ -7,6 +7,7 @@ import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
 import android.os.Vibrator
+import android.text.Layout
 import android.text.Spannable
 import android.text.style.BackgroundColorSpan
 import android.text.style.CharacterStyle
@@ -155,8 +156,8 @@ class MainActivity : AppCompatActivity(),
         Coroutines.ioThenMain({
             viewModel.getPages()
         }) {
-            it?.let { list ->
-                bible = list
+            if (it != null) {
+                bible = it
                 row = bible[viewPagerPosition]
 
                 // Toolbar Title
@@ -190,7 +191,7 @@ class MainActivity : AppCompatActivity(),
                 mainViewPager.currentItem = Prefs.VP_Position
 
                 // Inital ProgressBar
-                GlobalScope.launch {
+                CoroutineScope(Dispatchers.IO).async {
                     while (mainViewPager.findViewWithTag<AppCompatTextView>("tv${mainViewPager.currentItem}") == null) delay(100)
                     mainViewPager.findViewWithTag<AppCompatTextView>("tv${mainViewPager.currentItem}")?.let { tv ->
                         while (tv.text.isNullOrBlank()) delay(100)
@@ -457,24 +458,33 @@ class MainActivity : AppCompatActivity(),
         finishSearch()
         val MAX_SETTLE_DURATION = 600L
         mainViewPager.setCurrentItem(cPosition, true)
-        @Suppress("DeferredResultUnused")
-        GlobalScope.async {
-            // Scrolling will fail only if there's lag. Perhaps the first 2 scrolls to warm up.
-            val sv = mainViewPager.findViewWithTag<ScrollView>("sv${mainViewPager.currentItem}")
-            sv.findViewWithTag<AppCompatTextView>("tv${mainViewPager.currentItem}")?.let { tv ->
-                if (newPage)
-                    while (tv.text.isBlank()) delay(100)
+        Coroutines.ioThenMain({
+            if (newPage)
+                delay(250) // Does not account for UI lag
+            var layout: Layout? = null
+            while (
+                    mainViewPager.findViewWithTag<ScrollView>("sv${mainViewPager.currentItem}").findViewWithTag<AppCompatTextView>("tv${mainViewPager.currentItem}").let {
+                        if (!(it == null && it?.layout == null))
+                            layout = it.layout
+                        (it == null && it?.layout == null)
+                    }
+            ) delay(100)
+            layout
+
+        }) {
+            if (it != null) {
+                val sv = mainViewPager.findViewWithTag<ScrollView>("sv${mainViewPager.currentItem}")
+                val tv = sv.findViewWithTag<AppCompatTextView>("tv${mainViewPager.currentItem}")
                 val idx = if (Page.showVerseNumbers) tv.text.indexOf("${position + 1}") else 0
                 if (position == 0)
                     sv.post { sv.smoothScrollTo(0, sv.top - sv.paddingTop) }
                 else {
-                    tv.post {
-                        if (idx >= 0 && tv.layout != null)
-                            sv.post { sv.smoothScrollTo(0, tv.layout.getLineTop(tv.layout.getLineForOffset(idx))) }
-                    }
+                    if (idx >= 0)
+                        sv.post { sv.smoothScrollTo(0, it.getLineTop(it.getLineForOffset(idx))) }
                 }
             }
         }
+
     }
 
     private fun toggleSearchViewCloseButton(close: Boolean) {
