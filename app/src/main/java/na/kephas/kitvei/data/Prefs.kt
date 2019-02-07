@@ -52,7 +52,7 @@ class Prefs (context: Context) {
         get() = prefs.getInt(THEME_ID, 0)
         set(value) = prefs.edit().putInt(THEME_ID, value).apply()
     var kjvStylingPref: Boolean
-        get() = prefs.getBoolean(KJVSTYLE_ID, true)
+        get() = prefs.getBoolean(KJVSTYLE_ID, false)
         set(value) = prefs.edit().putBoolean(KJVSTYLE_ID, value).apply()
     var dropCapPref: Boolean
         get() = prefs.getBoolean(DROP_CAP_ID, true)

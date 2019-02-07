@@ -53,7 +53,7 @@
             <item
                 android:id="@+id/kjv_styling_menu"
                 android:checkable="true"
-                android:checked="true"
+                android:checked="false"
                 android:title="KJV Styling"
                 app:showAsAction="never"
                 appname:ignore="AppCompatResource" />

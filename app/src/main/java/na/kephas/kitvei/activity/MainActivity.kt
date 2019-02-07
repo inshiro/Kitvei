@@ -521,9 +521,10 @@ class MainActivity : AppCompatActivity(),
 
     private fun showFindInPageSearch() {
         val regex = Regex("""([a-zA-Z,.;:()'? ]+)""")
-        val versesRaw = viewModel.getVersesRaw(row!!.bookId!!, row!!.chapterId!!)
         findInPageMenu = true
-        matchesList.reset(versesRaw.size)
+        Coroutines.ioThenMain({ viewModel.getVersesRaw(row!!.bookId!!, row!!.chapterId!!).size }) {
+            if (it != null) matchesList.reset(it)
+        }
 
         // Find in page views
         showSearch()
