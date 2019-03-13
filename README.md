@@ -1,4 +1,4 @@
-This project has [moved](https://github.com/inshiro/Kodesh)
+This project has [moved](https://github.com/inshiro/kodesh)
 ========
 
 
